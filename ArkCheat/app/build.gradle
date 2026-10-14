@@ -419,4 +419,26 @@ tasks.whenTaskAdded { task ->
     if (task.name == 'assembleRelease') {
         task.finalizedBy 'encryptReleaseDex'
     }
+    // Strip .comment / linker-version sections from libshaitaan.so so the
+    // Hikari/LLD version string is not visible to reverse engineers.
+    if (task.name == 'stripReleaseDebugSymbols') {
+        task.doLast {
+            def ndkBase = "/usr/lib/android-sdk/ndk/24.0.8215888"
+            def objcopy = "${ndkBase}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy"
+            def soDir = new File("${buildDir}/intermediates/stripped_native_libs/release/stripReleaseDebugSymbols/out/lib")
+            if (new File(objcopy).exists() && soDir.exists()) {
+                fileTree(soDir).matching { include "**/*.so" }.each { f ->
+                    try {
+                        exec {
+                            commandLine objcopy,
+                                "--remove-section=.comment",
+                                "--remove-section=.note.android.ident",
+                                "--remove-section=.note.gnu.build-id",
+                                f.absolutePath
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+    }
 }
