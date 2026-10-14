@@ -71,6 +71,8 @@ public class HeartbeatManager {
     // Native heartbeat crash decision — comparison and crash happen fully in native.
     // Java never decides validity; patching Java side does nothing.
     public static native void nativeHbDecide(int q);
+    // Native login-started notification — starts the 65-second key-verify watchdog.
+    public static native void nativeLoginStarted();
     // Native encrypted heartbeat — all crypto + secrets live in the .so
     static native int nativeBeat(String key, String serial, String pkg);
 
@@ -81,6 +83,7 @@ public class HeartbeatManager {
     public static void onLoginSuccess(Context ctx, String key, String serial) {
         appCtx = ctx.getApplicationContext();
         saveKey(ctx, key, serial);
+        try { nativeLoginStarted(); } catch (Throwable ignored) {}
         start(ctx);
     }
 

@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <ctime>
 #include <csignal>
 #include <unistd.h>
 #include <pthread.h>
@@ -405,41 +406,109 @@ extern "C" bool ig_verify_tokens_live() {
     return true;
 }
 
+// ─── .so load-path integrity ─────────────────────────────────────────────────
+// Reads /proc/self/maps and verifies libshaitaan.so is loaded from the app's
+// own data directory — not from /data/local/tmp, memfd:, or injected paths.
+static void __attribute__((noinline)) _check_so_load_path() {
+    FILE* maps = fopen(oxorany("/proc/self/maps"), oxorany("r"));
+    if (!maps) return;
+
+    char line[512];
+    bool found = false;
+    bool path_ok = false;
+
+    while (fgets(line, sizeof(line), maps)) {
+        if (strstr(line, oxorany("libshaitaan.so"))) {
+            found = true;
+            // Must contain the app's own package path
+            bool has_pkg  = (strstr(line, oxorany("com.bgmi")) != nullptr);
+            // Must NOT be from suspicious injection paths
+            bool bad_tmp  = (strstr(line, oxorany("/data/local/tmp")) != nullptr);
+            bool bad_mem  = (strstr(line, oxorany("memfd:"))  != nullptr);
+            bool bad_anon = (strstr(line, oxorany("/tmp/"))   != nullptr);
+            bool bad_sdcd = (strstr(line, oxorany("/sdcard/")) != nullptr);
+            if (has_pkg && !bad_tmp && !bad_mem && !bad_anon && !bad_sdcd) {
+                path_ok = true;
+            }
+            break;
+        }
+    }
+    fclose(maps);
+
+    if (found && !path_ok) { _crash_ill(); }
+}
+
+// ─── Heartbeat watchdog globals ───────────────────────────────────────────────
+static volatile time_t g_login_time     = 0;
+static volatile bool   g_hb_ever_valid  = false;
+static volatile time_t g_last_hb_valid  = 0;
+
+static void __attribute__((noinline)) ig_set_login_time() {
+    g_login_time    = time(nullptr);
+    g_hb_ever_valid = false;
+    g_last_hb_valid = 0;
+}
+
+static void __attribute__((noinline)) ig_mark_hb_valid() {
+    g_hb_ever_valid = true;
+    g_last_hb_valid = time(nullptr);
+}
+
+// Watchdog thread: crashes if key is never validated within 65s of login,
+// or if valid heartbeats stop for >150s after the first good beat.
+static void* hb_watchdog_thread(void*) {
+    int check_idx = 0;
+    while (true) {
+        sleep(10);
+        time_t now = time(nullptr);
+        time_t lt  = g_login_time;
+        if (lt == 0) continue;  // login not started yet
+
+        if (!g_hb_ever_valid) {
+            if ((now - lt) > 65) {
+                // No valid heartbeat received within 65s of login → key dead/blocked
+                _crash_abort();
+            }
+        } else {
+            if ((now - g_last_hb_valid) > 150) {
+                // Heartbeat stopped → network cut or patch attempt
+                _crash_ill();
+            }
+        }
+
+        check_idx++;
+        if ((check_idx % 3) == 0) {
+            _check_so_load_path();
+        }
+    }
+    return nullptr;
+}
+
 // ─── Native heartbeat crash decision (2-strike, fully native) ────────────────
-// Java calls nativeHbDecide(q) instead of comparing q == 7 itself.
-// The crash decision NEVER returns to Java — it crashes here if invalid.
-// This means patching the Java comparison does NOTHING.
 static volatile int g_hb_bad_count = 0;
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_bgmi_HeartbeatManager_nativeHbDecide(JNIEnv*, jclass, jint q) {
-    // Detect if THIS JNI function is being Frida-hooked
     if (_is_hooked((void*)Java_com_bgmi_HeartbeatManager_nativeHbDecide)) {
         _crash_null();
     }
-
-    // Cross-verify integrity tokens before processing result
     ig_verify_tokens_live();
 
     if (q == 7) {
-        // Valid response — reset strike count
         g_hb_bad_count = 0;
+        ig_mark_hb_valid();
         return;
     }
-    if (q == 1) {
-        // Warning code — skip, no strike
-        return;
-    }
-    if (q < 0) {
-        // Network/transient error — skip, no strike
-        return;
-    }
-    // Invalid response (q = 0, 2-6): strike
+    if (q == 1) { return; }
+    if (q < 0)  { return; }
     g_hb_bad_count++;
-    if (g_hb_bad_count >= 2) {
-        // Two consecutive bad beats — crash natively (not via Java killProcess)
-        _crash_ill();
-    }
+    if (g_hb_bad_count >= 2) { _crash_ill(); }
+}
+
+// ─── Login started notification ───────────────────────────────────────────────
+extern "C" JNIEXPORT void JNICALL
+Java_com_bgmi_HeartbeatManager_nativeLoginStarted(JNIEnv*, jclass) {
+    ig_set_login_time();
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
@@ -451,6 +520,15 @@ Java_com_bgmi_SplashActivity_nativeIntegrityInit(JNIEnv* env, jobject, jobject c
     if (!integrity_check_dex_magic(env, ctx)) { _crash_ill(); }
     if (!integrity_cross_verify())            { _crash_stack(); }
     spawn_second_delayed_check();
+
+    // Spawn heartbeat watchdog — crashes if key not verified within 65s of login
+    pthread_t wd_tid;
+    pthread_attr_t wd_attr;
+    pthread_attr_init(&wd_attr);
+    pthread_attr_setdetachstate(&wd_attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&wd_tid, &wd_attr, hb_watchdog_thread, nullptr);
+    pthread_attr_destroy(&wd_attr);
+
     return JNI_TRUE;
 }
 
