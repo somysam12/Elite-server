@@ -53,12 +53,8 @@
     }
   },
   "toolchains": {
-    "toolchain-arm64-v8a": {
-      "cppCompilerExecutable": "/usr/lib/android-sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
-    }
+    "toolchain-arm64-v8a": {}
   },
   "cFileExtensions": [],
-  "cppFileExtensions": [
-    "cpp"
-  ]
+  "cppFileExtensions": []
 }
