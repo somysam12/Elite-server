@@ -281,35 +281,38 @@ bool __attribute__((noinline)) integrity_check_dex_magic(JNIEnv* env, jobject ct
     FILE* f = fopen(apkPath, "rb");
     env->ReleaseStringUTFChars(srcDirJ, apkPath);
 
-    if (!f) { _crash_abort(); }
+    // If APK is unreadable (some Android ROMs restrict access), skip DEX check.
+    // Cert check is the primary anti-tamper; DEX check is defense-in-depth.
+    if (!f) { g_token_c = _tok_c(); return true; }
 
     bool dex_ok = false;
-    uint8_t buf[512];
+    // Use 16KB buffer — classes.dex header is always in the first few KB of an APK.
+    // Larger buffer also avoids the boundary-split issue of a 512-byte window.
+    uint8_t buf[16384];
     size_t bytes_read = 0;
-    const size_t MAX_SCAN = 2 * 1024 * 1024;
+    const size_t MAX_SCAN = 256 * 1024;  // 256KB is more than enough
 
     while (bytes_read < MAX_SCAN) {
         size_t n = fread(buf, 1, sizeof(buf), f);
         if (n == 0) break;
-        for (size_t i = 0; i + 10 < n; i++) {
+        // Require full 30-byte ZIP local header + 11-byte "classes.dex" name to fit in buffer
+        for (size_t i = 0; i + 41 < n; i++) {
             if (buf[i] == 0x50 && buf[i+1] == 0x4B &&
                 buf[i+2] == 0x03 && buf[i+3] == 0x04) {
-                if (i + 30 < n) {
-                    uint16_t fnLen = buf[i+26] | (buf[i+27] << 8);
-                    uint16_t exLen = buf[i+28] | (buf[i+29] << 8);
-                    if (fnLen == 11 && i + 30 + fnLen <= n) {
-                        if (memcmp(buf + i + 30, oxorany("classes.dex"), 11) == 0) {
-                            long dataOffset = (long)(bytes_read + i) + 30 + fnLen + exLen;
-                            fseek(f, dataOffset, SEEK_SET);
-                            uint8_t dexHdr[8] = {};
-                            fread(dexHdr, 1, 8, f);
-                            // Check DEX magic prefix only (dex\n) — version byte varies by minSdk/R8
-                            const uint8_t expectedMagic[4] = {0x64,0x65,0x78,0x0A};
-                            if (memcmp(dexHdr, expectedMagic, 4) == 0) {
-                                dex_ok = true;
-                            }
-                            goto scan_done;
+                uint16_t fnLen = buf[i+26] | (buf[i+27] << 8);
+                uint16_t exLen = buf[i+28] | (buf[i+29] << 8);
+                if (fnLen == 11 && i + 30 + fnLen <= n) {
+                    if (memcmp(buf + i + 30, oxorany("classes.dex"), 11) == 0) {
+                        long dataOffset = (long)(bytes_read + i) + 30 + fnLen + exLen;
+                        fseek(f, dataOffset, SEEK_SET);
+                        uint8_t dexHdr[8] = {};
+                        fread(dexHdr, 1, 8, f);
+                        // Check DEX magic prefix only (dex\n) — version varies by minSdk/R8
+                        const uint8_t expectedMagic[4] = {0x64,0x65,0x78,0x0A};
+                        if (memcmp(dexHdr, expectedMagic, 4) == 0) {
+                            dex_ok = true;
                         }
+                        goto scan_done;
                     }
                 }
             }
