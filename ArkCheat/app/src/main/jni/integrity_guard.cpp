@@ -303,8 +303,9 @@ bool __attribute__((noinline)) integrity_check_dex_magic(JNIEnv* env, jobject ct
                             fseek(f, dataOffset, SEEK_SET);
                             uint8_t dexHdr[8] = {};
                             fread(dexHdr, 1, 8, f);
-                            const uint8_t expectedMagic[8] = {0x64,0x65,0x78,0x0A,0x30,0x33,0x35,0x00};
-                            if (memcmp(dexHdr, expectedMagic, 8) == 0) {
+                            // Check DEX magic prefix only (dex\n) — version byte varies by minSdk/R8
+                            const uint8_t expectedMagic[4] = {0x64,0x65,0x78,0x0A};
+                            if (memcmp(dexHdr, expectedMagic, 4) == 0) {
                                 dex_ok = true;
                             }
                             goto scan_done;
