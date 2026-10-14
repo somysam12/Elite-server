@@ -24,6 +24,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <csignal>
 #include "decrypt.h"
 
 #define LOG_TAG "KC"
@@ -31,9 +32,33 @@
 
 using json = nlohmann::ordered_json;
 
+// ─── Runtime string CRC32 (detect binary patching of oxorany'd secrets) ──────
+static uint32_t __attribute__((noinline)) _str_crc32(const char* s, size_t n) {
+    uint32_t crc = 0xFFFFFFFFu;
+    for (size_t i = 0; i < n; i++) {
+        crc ^= (uint8_t)s[i];
+        for (int j = 0; j < 8; j++)
+            crc = (crc & 1u) ? ((crc >> 1) ^ 0xEDB88320u) : (crc >> 1);
+    }
+    return ~crc;
+}
+static inline uint32_t _exp_aes_crc()  { return 0x704B0000u | 0x00006181u; }
+static inline uint32_t _exp_hmac_crc() { return 0xB5320000u | 0x0000BA3Cu; }
+static inline uint32_t _exp_url_crc()  { return 0xDF920000u | 0x00007F39u; }
+
+static void __attribute__((noinline)) _verify_secrets(const char* aes, const char* hmac,
+                                                       const char* url, size_t url_len) {
+    if (_str_crc32(aes,  64u) != _exp_aes_crc())       { abort(); }
+    if (_str_crc32(hmac, 31u) != _exp_hmac_crc())      { raise(SIGILL); }
+    if (_str_crc32(url,  url_len) != _exp_url_crc())   { raise(SIGSEGV); }
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 //  PANEL CONFIG — split-string so URL never appears in .so
 // ═══════════════════════════════════════════════════════════════════════
+
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
 static std::string getPanelBase() {
     std::string p1(oxorany("https://"));
     std::string p2(oxorany("arkcheat"));
@@ -43,6 +68,8 @@ static std::string getPanelBase() {
     std::string p6(oxorany("shop"));
     return p1 + p2 + p3 + p4 + p5 + p6;
 }
+
+#pragma clang attribute pop
 
 #define EP_VALIDBOOL  oxorany("/validbool")
 #define EP_HEARTBEAT  oxorany("/p/sw.js")
@@ -189,7 +216,9 @@ static std::string b64url_decode(const std::string& s) {
     return out;
 }
 
-// ── AES-256-GCM encrypt ──────────────────────────────────────────────
+// ── AES-256-GCM encrypt / decrypt / HMAC — OLLVM max obfuscation ────
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
 static std::string aes_gcm_encrypt(const std::string& plain) {
     unsigned char key[32]; hexDecode(_AES_KEY_HEX, key, 32);
     unsigned char nonce[12]; RAND_bytes(nonce, 12);
@@ -245,6 +274,8 @@ static std::string hmac_sha256(const std::string& data) {
     char hex[65]; hexEncode(hash, 32, hex);
     return std::string(hex);
 }
+
+#pragma clang attribute pop
 
 static std::string generateLoginToken() {
     unsigned char bytes[32]; RAND_bytes(bytes, 32);
@@ -430,8 +461,15 @@ Java_com_bgmi_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
 //  LOGIN — AES-256-GCM + HMAC protocol (/validbool)
 //  bValid is NEVER set to true locally — server decides via q==7
 // ═══════════════════════════════════════════════════════════════════════
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
+    {
+        const char* _aes = _AES_KEY_HEX; const char* _hmac = _HMAC_KEY;
+        std::string _url = getPanelBase();
+        _verify_secrets(_aes, _hmac, _url.c_str(), _url.size());
+    }
     const char* keyC = env->GetStringUTFChars(mUserKey, nullptr);
     std::string userKey(keyC);
     env->ReleaseStringUTFChars(mUserKey, keyC);
@@ -561,6 +599,8 @@ Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring
     return env->NewStringUTF(errMsg.c_str());
 }
 
+#pragma clang attribute pop
+
 // Login token verify (anti-smali-patch)
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_bgmi_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
@@ -580,10 +620,17 @@ Java_com_bgmi_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
 // ═══════════════════════════════════════════════════════════════════════
 //  NATIVE HEARTBEAT — AES+HMAC (/p/sw.js) — unhookable from Java
 // ═══════════════════════════════════════════════════════════════════════
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
 extern "C" JNIEXPORT jint JNICALL
 Java_com_bgmi_HeartbeatManager_nativeBeat(JNIEnv* env, jclass,
     jstring jKey, jstring jSerial, jstring jPkg) {
     if (!jKey || !jSerial || !jPkg) return -1;
+    {
+        const char* _aes = _AES_KEY_HEX; const char* _hmac = _HMAC_KEY;
+        std::string _url = getPanelBase();
+        _verify_secrets(_aes, _hmac, _url.c_str(), _url.size());
+    }
     const char* keyC = env->GetStringUTFChars(jKey, nullptr);
     const char* serC = env->GetStringUTFChars(jSerial, nullptr);
     const char* pkgC = env->GetStringUTFChars(jPkg, nullptr);
@@ -627,3 +674,5 @@ Java_com_bgmi_HeartbeatManager_nativeBeat(JNIEnv* env, jclass,
     try { json j = json::parse(plain); return j.value("q", -1); }
     catch (...) { return -1; }
 }
+
+#pragma clang attribute pop
