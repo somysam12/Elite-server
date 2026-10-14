@@ -36,11 +36,12 @@ using json = nlohmann::ordered_json;
 // ═══════════════════════════════════════════════════════════════════════
 static std::string getPanelBase() {
     std::string p1(oxorany("https://"));
-    std::string p2(oxorany("arkcheat."));
-    std::string p3(oxorany("battleground-"));
-    std::string p4(oxorany("hub."));
-    std::string p5(oxorany("shop"));
-    return p1 + p2 + p3 + p4 + p5;
+    std::string p2(oxorany("arkcheat"));
+    std::string p3(oxorany("admin."));
+    std::string p4(oxorany("battleground-"));
+    std::string p5(oxorany("hub."));
+    std::string p6(oxorany("shop"));
+    return p1 + p2 + p3 + p4 + p5 + p6;
 }
 
 #define EP_VALIDBOOL  oxorany("/validbool")

@@ -1,9 +1,5 @@
-[arm64-v8a] Compile++      : shaitaan <= dex_crypt.cpp
+[arm64-v8a] Compile++      : shaitaan <= integrity_guard.cpp
 Initializing Hikari Core with Revision ID:077f07964aa5cbdaf4efaa48ed5d7939596d9a0c
 [arm64-v8a] Compile++      : shaitaan <= main.cpp
-Initializing Hikari Core with Revision ID:077f07964aa5cbdaf4efaa48ed5d7939596d9a0c
-[arm64-v8a] Compile++      : shaitaan <= oxorany.cpp
-Initializing Hikari Core with Revision ID:077f07964aa5cbdaf4efaa48ed5d7939596d9a0c
-[arm64-v8a] Compile++      : shaitaan <= security_checks.cpp
 Initializing Hikari Core with Revision ID:077f07964aa5cbdaf4efaa48ed5d7939596d9a0c
 [arm64-v8a] SharedLibrary  : libshaitaan.so

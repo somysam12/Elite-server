@@ -67,6 +67,8 @@ public class HeartbeatManager {
 
     // Native integrity (security_checks.cpp) — libnull.so / sniffer / resign check
     static native boolean nativeIntegrityOk(Context ctx);
+    // Native re-check from integrity_guard.cpp — cross-token XOR re-verification
+    public static native boolean nativeIntegrityRecheck();
     // Native encrypted heartbeat — all crypto + secrets live in the .so
     static native int nativeBeat(String key, String serial, String pkg);
 
@@ -99,6 +101,10 @@ public class HeartbeatManager {
                 try { ok = nativeIntegrityOk(ctx); }
                 catch (Throwable t) { ok = true; }   // don't crash on link error alone
                 if (!ok) { crash("integrity"); return; }
+
+                // integrity_guard.cpp re-validates token XOR cross-check
+                try { if (!nativeIntegrityRecheck()) { crash("recheck"); return; } }
+                catch (Throwable t) { /* native not yet loaded — skip silently */ }
 
                 String key = loadKey(ctx), dev = loadDev(ctx);
                 if (key == null || key.isEmpty() || dev == null) { bad("no_key"); return; }

@@ -101,7 +101,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_fragment_open_exit.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/animator/fragment_open_exit.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/animator/fragment_open_exit.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/drawable-hdpi-v4_notification_bg_normal_pressed.9.png.flat",
@@ -241,7 +241,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_fragment_close_enter.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/animator/fragment_close_enter.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/animator/fragment_close_enter.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/color_material_slider_halo_color.xml.flat",
@@ -681,7 +681,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/anim-v21_fragment_fast_out_extra_slow_in.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/anim-v21/fragment_fast_out_extra_slow_in.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/anim-v21/fragment_fast_out_extra_slow_in.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/anim_zoom_in_enter.xml.flat",
@@ -689,7 +689,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_fragment_close_exit.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/animator/fragment_close_exit.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/animator/fragment_close_exit.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/drawable_mtrl_ic_error.xml.flat",
@@ -1913,7 +1913,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_fragment_fade_enter.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/animator/fragment_fade_enter.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/animator/fragment_fade_enter.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/color-v23_abc_btn_colored_text_material.xml.flat",
@@ -2017,7 +2017,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_fragment_fade_exit.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/animator/fragment_fade_exit.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/animator/fragment_fade_exit.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/drawable-xxhdpi-v4_abc_btn_switch_to_on_mtrl_00012.9.png.flat",
@@ -2245,7 +2245,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/layout_activity_webview.xml.flat",
-        "source": "com.bgmi.app-Hcore-release-29:/layout/activity_webview.xml"
+        "source": "com.bgmi.app-Hcore-release-16:/layout/activity_webview.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/drawable_mtrl_switch_thumb_unchecked_checked.xml.flat",
@@ -2493,7 +2493,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/xml_filepath.xml.flat",
-        "source": "com.bgmi.app-Hcore-release-29:/xml/filepath.xml"
+        "source": "com.bgmi.app-Hcore-release-16:/xml/filepath.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/color_mtrl_fab_icon_text_color_selector.xml.flat",
@@ -2797,7 +2797,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/layout_activity_launcher.xml.flat",
-        "source": "com.bgmi.app-Hcore-release-29:/layout/activity_launcher.xml"
+        "source": "com.bgmi.app-Hcore-release-16:/layout/activity_launcher.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/drawable-ldrtl-xhdpi-v17_abc_spinner_mtrl_am_alpha.9.png.flat",
@@ -3021,7 +3021,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_fragment_open_enter.xml.flat",
-        "source": "com.bgmi.app-fragment-1.3.6-22:/animator/fragment_open_enter.xml"
+        "source": "com.bgmi.app-fragment-1.3.6-23:/animator/fragment_open_enter.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/interpolator-v21_mtrl_fast_out_linear_in.xml.flat",
@@ -3153,7 +3153,7 @@
     },
     {
         "merged": "com.bgmi.app-release-5:/drawable_abc_vector_test.xml.flat",
-        "source": "com.bgmi.app-appcompat-resources-1.6.1-25:/drawable/abc_vector_test.xml"
+        "source": "com.bgmi.app-appcompat-resources-1.6.1-26:/drawable/abc_vector_test.xml"
     },
     {
         "merged": "com.bgmi.app-release-5:/animator_m3_card_state_list_anim.xml.flat",

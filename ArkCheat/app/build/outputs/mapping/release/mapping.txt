@@ -3,8 +3,8 @@
 # min_api: 24
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.2"}
-# pg_map_id: 639393a
-# pg_map_hash: SHA-256 639393a940b7d6ddef8f0be770ed736d8ad8a6445204a539a2c3f985106dcaca
+# pg_map_id: 6b3f3ba
+# pg_map_hash: SHA-256 6b3f3ba2732ee8a4c983290b21fce783da70c2f347950740f73c435e14f4b3db
 android.Meta.IRemoteManager -> android.Meta.IRemoteManager:
 # {"id":"sourceFile","fileName":"SourceFile"}
 android.Meta.IRemoteManager$Default -> android.Meta.IRemoteManager$Default:
@@ -37538,6 +37538,12 @@ black.android.app.BRISearchManagerStub -> black.android.app.BRISearchManagerStub
     2:2:black.android.app.ISearchManagerStubStatic get():0:0 -> get
     1:1:black.android.app.ISearchManagerStubContext getWithException(java.lang.Object):0:0 -> getWithException
     2:2:black.android.app.ISearchManagerStubStatic getWithException():0:0 -> getWithException
+black.android.app.BRIServiceConnectionBaklava -> black.android.app.BRIServiceConnectionBaklava:
+# {"id":"sourceFile","fileName":"SourceFile"}
+    1:1:black.android.app.IServiceConnectionBaklavaContext get(java.lang.Object):0:0 -> get
+    2:2:black.android.app.IServiceConnectionBaklavaStatic get():0:0 -> get
+    1:1:black.android.app.IServiceConnectionBaklavaContext getWithException(java.lang.Object):0:0 -> getWithException
+    2:2:black.android.app.IServiceConnectionBaklavaStatic getWithException():0:0 -> getWithException
 black.android.app.BRIServiceConnectionO -> black.android.app.BRIServiceConnectionO:
 # {"id":"sourceFile","fileName":"SourceFile"}
     1:1:black.android.app.IServiceConnectionOContext get(java.lang.Object):0:0 -> get
@@ -37831,6 +37837,12 @@ black.android.app.ISearchManagerStatic -> black.android.app.ISearchManagerStatic
 black.android.app.ISearchManagerStubContext -> black.android.app.ISearchManagerStubContext:
 # {"id":"sourceFile","fileName":"SourceFile"}
 black.android.app.ISearchManagerStubStatic -> black.android.app.ISearchManagerStubStatic:
+# {"id":"sourceFile","fileName":"SourceFile"}
+black.android.app.IServiceConnectionBaklava -> black.android.app.IServiceConnectionBaklava:
+# {"id":"sourceFile","fileName":"SourceFile"}
+black.android.app.IServiceConnectionBaklavaContext -> black.android.app.IServiceConnectionBaklavaContext:
+# {"id":"sourceFile","fileName":"SourceFile"}
+black.android.app.IServiceConnectionBaklavaStatic -> black.android.app.IServiceConnectionBaklavaStatic:
 # {"id":"sourceFile","fileName":"SourceFile"}
 black.android.app.IServiceConnectionO -> black.android.app.IServiceConnectionO:
 # {"id":"sourceFile","fileName":"SourceFile"}
@@ -41654,16 +41666,19 @@ com.bgmi.HeartbeatManager -> com.bgmi.HeartbeatManager:
     14:21:java.lang.Thread lambda$start$0(java.lang.Runnable):0:0 -> lambda$start$0
     17:20:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
     17:20:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    21:78:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    79:82:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    79:82:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    83:101:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    102:105:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    102:105:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    106:114:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    115:125:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    115:125:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    126:129:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
+    21:37:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
+    38:41:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
+    38:41:void lambda$start$1(android.content.Context):0 -> lambda$start$1
+    42:97:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
+    98:101:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
+    98:101:void lambda$start$1(android.content.Context):0 -> lambda$start$1
+    102:120:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
+    121:124:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
+    121:124:void lambda$start$1(android.content.Context):0 -> lambda$start$1
+    125:133:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
+    134:144:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
+    134:144:void lambda$start$1(android.content.Context):0 -> lambda$start$1
+    145:148:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
     1:12:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> loadDev
     1:12:java.lang.String loadDev(android.content.Context):0 -> loadDev
     13:21:java.lang.String loadDev(android.content.Context):0:0 -> loadDev

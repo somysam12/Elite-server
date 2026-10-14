@@ -2145,8 +2145,8 @@ xx
 com.android.internal.telecom.ITelecom...
 android.content.IContentService
 com.android.internal.content.NativeLi...
-android.permission.CAPTURE_AUDIO_OUTPUT
 android.app.IServiceConnection
+android.permission.CAPTURE_AUDIO_OUTPUT
 none
 /dialog/oauth
 type

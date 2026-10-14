@@ -212,13 +212,13 @@
 # REMOVED (Hcore): # -keep class com.mundo.**   ← DO NOT ADD THIS
 
 # End of content from /home/user/Elite-server/ArkCheat/app/proguard-rules.pro
-# The proguard configuration file for the following section is /root/.gradle/caches/transforms-4/b1602604dc77efeb7d5a80d8af4a7d0b/transformed/Hcore-release/proguard.txt
+# The proguard configuration file for the following section is /root/.gradle/caches/transforms-4/2249130a9ca173549ecc949b24bf13e9/transformed/Hcore-release/proguard.txt
 -keep class com.mundo.** {*; }
 -keep class com.mundo.jnihook.** {*; }
 -keep class black.** {*; }
 -keep class android.** {*; }
 -keep class com.android.** {*; }
-# End of content from /root/.gradle/caches/transforms-4/b1602604dc77efeb7d5a80d8af4a7d0b/transformed/Hcore-release/proguard.txt
+# End of content from /root/.gradle/caches/transforms-4/2249130a9ca173549ecc949b24bf13e9/transformed/Hcore-release/proguard.txt
 # The proguard configuration file for the following section is /root/.gradle/caches/transforms-4/b94ea6f7e3a7f8c8280c0b70daa93ae2/transformed/hiddenapibypass-6.1/proguard.txt
 -dontwarn dalvik.system.VMRuntime
 

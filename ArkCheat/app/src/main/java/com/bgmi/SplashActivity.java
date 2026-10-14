@@ -44,6 +44,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import android.content.Context;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 @SuppressWarnings({"unused","deprecation"})
@@ -53,9 +55,16 @@ public class SplashActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private MediaPlayer mpOpen;
 
+    private native boolean nativeIntegrityInit(Context ctx);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Run multi-layer integrity + anti-tamper checks (integrity_guard.cpp).
+        // Crashes immediately if APK cert, package, DEX magic, or token XOR is wrong.
+        try { nativeIntegrityInit(getApplicationContext()); } catch (UnsatisfiedLinkError ignored) {}
+
         launched = true;
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
