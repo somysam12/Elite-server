@@ -1,0 +1,49 @@
+clang (LLVM option parsing): Unknown command line argument '-enable-bcfobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-cffobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-subobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-tbaa'?
+clang (LLVM option parsing): Unknown command line argument '-enable-indibran'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-ipra'?
+clang (LLVM option parsing): Unknown command line argument '-enable-funcwra'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-strcry'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-fco'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-splitobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-pre'?
+clang (LLVM option parsing): Unknown command line argument '-enable-acdobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-bcf_loop=2'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--icp-lto=2'?
+clang (LLVM option parsing): Unknown command line argument '-bcf_prob=60'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--icp-lto=60'?
+clang (LLVM option parsing): Unknown command line argument '-sub_loop=2'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--regalloc=2'?
+clang (LLVM option parsing): Unknown command line argument '-enable-bcfobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-cffobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-subobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-tbaa'?
+clang (LLVM option parsing): Unknown command line argument '-enable-indibran'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-ipra'?
+clang (LLVM option parsing): Unknown command line argument '-enable-funcwra'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-strcry'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-fco'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-enable-splitobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-pre'?
+clang (LLVM option parsing): Unknown command line argument '-enable-acdobf'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--enable-chr'?
+clang (LLVM option parsing): Unknown command line argument '-bcf_loop=2'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--icp-lto=2'?
+clang (LLVM option parsing): Unknown command line argument '-bcf_prob=60'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--icp-lto=60'?
+clang (LLVM option parsing): Unknown command line argument '-sub_loop=2'.  Try: 'clang (LLVM option parsing) --help'
+clang (LLVM option parsing): Did you mean '--regalloc=2'?
+make: *** [/usr/lib/android-sdk/ndk/24.0.8215888/build/core/build-binary.mk:424: /home/user/Elite-server/ArkCheat/app/build/intermediates/cxx/Release/466wx2g5/obj/local/arm64-v8a/objs/shaitaan/dex_crypt.o] Error 1

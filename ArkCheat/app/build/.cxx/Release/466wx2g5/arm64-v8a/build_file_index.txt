@@ -1,0 +1,2 @@
+/home/user/Elite-server/ArkCheat/app/src/main/jni/Android.mk
+/home/user/Elite-server/ArkCheat/app/src/main/jni/Application.mk

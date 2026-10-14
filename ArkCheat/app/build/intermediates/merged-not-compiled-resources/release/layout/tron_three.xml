@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/fire_bg">
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
+        android:fillViewport="true" android:scrollbars="none">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="50dp" android:paddingStart="22dp"
+            android:paddingEnd="22dp" android:paddingBottom="36dp">
+
+            <!-- Header -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Welcome back," android:textColor="#9A8C7A"
+                android:textSize="15sp" android:layout_marginBottom="2dp"/>
+
+            <TextView android:id="@+id/appNameText"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Ark Cheat"
+                android:textColor="#FFFFFF" android:textSize="46sp"
+                android:fontFamily="@font/pacifico"
+                android:shadowColor="#FFFF6A02"
+                android:shadowDx="0" android:shadowDy="0" android:shadowRadius="28"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="DOMINATE · UNDETECTED · SUPREME"
+                android:textColor="#FF6A02" android:textSize="10sp"
+                android:letterSpacing="0.16"
+                android:layout_marginBottom="30dp"/>
+
+            <!-- FIRE GAME CARD -->
+            <LinearLayout android:id="@+id/licenseLayout"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="@drawable/fire_launch_card"
+                android:orientation="vertical"
+                android:paddingStart="24dp" android:paddingEnd="24dp"
+                android:paddingTop="34dp" android:paddingBottom="34dp"
+                android:gravity="center_horizontal">
+
+                <!-- Logo in double fire ring frame -->
+                <FrameLayout android:layout_width="150dp" android:layout_height="150dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/fire_double_ring"
+                    android:layout_marginBottom="26dp">
+
+                    <ImageView android:id="@+id/gameIcon"
+                        android:layout_width="match_parent" android:layout_height="match_parent"
+                        android:src="@drawable/ark_logo_circle" android:scaleType="fitCenter"
+                        android:padding="26dp"/>
+
+                </FrameLayout>
+
+                <TextView android:id="@+id/gameName"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="BATTLEGROUNDS MOBILE INDIA"
+                    android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold"
+                    android:letterSpacing="0.04"
+                    android:gravity="center" android:layout_marginBottom="28dp"/>
+
+                <!-- Hidden desc + badges (kept as gone so code refs don't crash) -->
+                <TextView android:id="@+id/gameDesc"
+                    android:layout_width="0dp" android:layout_height="0dp"
+                    android:text="" android:visibility="gone"/>
+                <TextView android:id="@+id/badgeSafe"
+                    android:layout_width="0dp" android:layout_height="0dp"
+                    android:text="" android:visibility="gone"/>
+                <TextView android:id="@+id/badgeVersion"
+                    android:layout_width="0dp" android:layout_height="0dp"
+                    android:text="" android:visibility="gone"/>
+
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/startgame"
+                    android:layout_width="match_parent" android:layout_height="58dp"
+                    android:layout_marginStart="20dp" android:layout_marginEnd="20dp"
+                    android:background="@drawable/fire_button"
+                    android:text="LAUNCH ARK"
+                    android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold"
+                    android:letterSpacing="0.20"
+                    android:stateListAnimator="@null"/>
+
+                <Space android:layout_width="0dp" android:layout_height="10dp"/>
+
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnOk"
+                    android:layout_width="match_parent" android:layout_height="54dp"
+                    android:background="@drawable/fire_button"
+                    android:text="OK" android:textColor="#FFFFFF"
+                    android:textSize="16sp" android:textStyle="bold"
+                    android:stateListAnimator="@null" android:visibility="gone"/>
+
+            </LinearLayout>
+
+            <Space android:layout_width="0dp" android:layout_height="18dp"/>
+
+            <!-- PROCESSING / OBB COPY LAYOUT -->
+            <LinearLayout android:id="@+id/processingLayout"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="@drawable/fire_launch_card"
+                android:orientation="vertical"
+                android:paddingStart="22dp" android:paddingEnd="22dp"
+                android:paddingTop="20dp" android:paddingBottom="20dp"
+                android:visibility="gone">
+
+                <TextView android:id="@+id/statusText"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="" android:textColor="#FFFFFF"
+                    android:textSize="15sp" android:textStyle="bold"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView android:id="@+id/syncText"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Copying OBB..." android:textColor="#A89A88"
+                    android:textSize="12sp" android:layout_marginBottom="14dp"/>
+
+                <ProgressBar android:id="@+id/obbProgressBar"
+                    android:layout_width="match_parent" android:layout_height="8dp"
+                    android:progressDrawable="@drawable/progressbar_purple"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:max="100" android:progress="0"
+                    android:layout_marginBottom="8dp"/>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/obbSizeText"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="0 MB / 0 MB" android:textColor="#FF6A02"
+                        android:textSize="12sp" android:textStyle="bold"/>
+
+                    <TextView android:id="@+id/obbPercentText"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0%" android:textColor="#FF3D0A"
+                        android:textSize="13sp" android:textStyle="bold"/>
+
+                </LinearLayout>
+
+                <ProgressBar android:id="@+id/progress"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:indeterminate="true" style="?android:attr/progressBarStyle"
+                    android:indeterminateTint="#FF3D0A"
+                    android:visibility="gone" android:layout_marginTop="8dp"/>
+
+            </LinearLayout>
+
+            <!-- hidden refs to keep code safe -->
+            <TextView android:id="@+id/downloadSizeText"
+                android:layout_width="0dp" android:layout_height="0dp"
+                android:text="" android:visibility="gone"/>
+
+            <Space android:layout_width="0dp" android:layout_height="44dp"/>
+
+            <!-- LICENSE COUNTDOWN — premium card style -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="center_horizontal"
+                android:background="@drawable/ark_expiry_card"
+                android:padding="20dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp" android:layout_marginEnd="4dp">
+
+                <!-- Header row with dot -->
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <View android:layout_width="6dp" android:layout_height="6dp"
+                        android:background="@drawable/status_dot_green"
+                        android:layout_marginEnd="8dp"/>
+
+                    <TextView android:id="@+id/validUntilLabel"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="LICENSE ACTIVE" android:textColor="#4DDD6A"
+                        android:textSize="11sp" android:letterSpacing="0.18"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+
+                <!-- Countdown boxes -->
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <!-- DAYS -->
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center"
+                        android:background="@drawable/ark_time_box"
+                        android:paddingStart="14dp" android:paddingEnd="14dp"
+                        android:paddingTop="10dp" android:paddingBottom="8dp">
+                        <TextView android:id="@+id/tvD"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="00" android:textColor="#FF7A18" android:textSize="26sp"
+                            android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="DAYS" android:textColor="#6A5A48" android:textSize="9sp"
+                            android:letterSpacing="0.12" android:layout_marginTop="2dp"/>
+                    </LinearLayout>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text=":" android:textColor="#4A3A28" android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="6dp" android:layout_marginEnd="6dp"
+                        android:layout_marginBottom="14dp"/>
+
+                    <!-- HOURS -->
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center"
+                        android:background="@drawable/ark_time_box"
+                        android:paddingStart="14dp" android:paddingEnd="14dp"
+                        android:paddingTop="10dp" android:paddingBottom="8dp">
+                        <TextView android:id="@+id/tvH"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="00" android:textColor="#FFFFFF" android:textSize="26sp"
+                            android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="HRS" android:textColor="#6A5A48" android:textSize="9sp"
+                            android:letterSpacing="0.12" android:layout_marginTop="2dp"/>
+                    </LinearLayout>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text=":" android:textColor="#4A3A28" android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="6dp" android:layout_marginEnd="6dp"
+                        android:layout_marginBottom="14dp"/>
+
+                    <!-- MINUTES -->
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center"
+                        android:background="@drawable/ark_time_box"
+                        android:paddingStart="14dp" android:paddingEnd="14dp"
+                        android:paddingTop="10dp" android:paddingBottom="8dp">
+                        <TextView android:id="@+id/tvM"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="00" android:textColor="#FFFFFF" android:textSize="26sp"
+                            android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="MIN" android:textColor="#6A5A48" android:textSize="9sp"
+                            android:letterSpacing="0.12" android:layout_marginTop="2dp"/>
+                    </LinearLayout>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text=":" android:textColor="#4A3A28" android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="6dp" android:layout_marginEnd="6dp"
+                        android:layout_marginBottom="14dp"/>
+
+                    <!-- SECONDS -->
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center"
+                        android:background="@drawable/ark_time_box"
+                        android:paddingStart="14dp" android:paddingEnd="14dp"
+                        android:paddingTop="10dp" android:paddingBottom="8dp">
+                        <TextView android:id="@+id/tvS"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="00" android:textColor="#FF3D0A" android:textSize="26sp"
+                            android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="SEC" android:textColor="#6A5A48" android:textSize="9sp"
+                            android:letterSpacing="0.12" android:layout_marginTop="2dp"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Expiry date -->
+                <TextView android:id="@+id/expiryDateTv"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="" android:textColor="#7A6A58" android:textSize="11sp"
+                    android:letterSpacing="0.05" android:layout_marginBottom="12dp"/>
+
+                <!-- Divider -->
+                <View android:layout_width="60dp" android:layout_height="1dp"
+                    android:background="#33FF7A18" android:layout_marginBottom="12dp"/>
+
+                <TextView android:id="@+id/happyCheating"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Rule the Battleground"
+                    android:textColor="#FF7A18" android:textSize="14sp"
+                    android:letterSpacing="0.06"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Required ID - hidden -->
+    <LinearLayout
+        android:id="@+id/bgmiInstalledRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+</FrameLayout>
