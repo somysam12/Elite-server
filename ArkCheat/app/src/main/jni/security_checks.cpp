@@ -32,6 +32,9 @@ static std::string get_prop(const char* key) {
     return std::string(val);
 }
 
+// ── All security check functions — OLLVM max obfuscation ────────────
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
 // ── 1. Anti-Debug (TracerPid) ────────────────────────────────────────
 static bool check_debug() {
     char buf[256] = {};
@@ -277,6 +280,39 @@ static bool check_dex_integrity(JNIEnv* env, jobject ctx) {
 
     return false;
 }
+
+#pragma clang attribute pop
+
+// ─── Byte-array string providers (3rd copy for tamper/integrity scheme) ───────
+// Encoded as: enc[i] = char[i] ^ ((i*17 + 0x5C) & 0xFF). No plain string anywhere.
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
+static inline __attribute__((always_inline)) uint8_t _sc_dec(uint8_t e, int i) {
+    return e ^ (uint8_t)((i * 17 + 0x5C) & 0xFF);
+}
+
+extern "C" __attribute__((noinline)) void sc_get_expected_sig(char out[65]) {
+    static const uint8_t _sc_sig_enc[64] = {
+        0x6B, 0x5A, 0x18, 0xBF, 0x95, 0xD5, 0xF7, 0xE0,
+        0x87, 0x90, 0x3E, 0x75, 0x4E, 0x08, 0x72, 0x6E,
+        0x59, 0x1E, 0xEF, 0xFA, 0xD6, 0xF2, 0xEA, 0x80,
+        0x91, 0x3D, 0x21, 0x41, 0x09, 0x7A, 0x3B, 0x53,
+        0x1E, 0xEF, 0xAC, 0xCD, 0xF1, 0xB3, 0xD0, 0x90,
+        0x60, 0x71, 0x14, 0x53, 0x7C, 0x61, 0x0E, 0x1A,
+        0xB5, 0xF9, 0x9D, 0xDD, 0xB1, 0xD9, 0xCB, 0x34,
+        0x71, 0x44, 0x55, 0x73, 0x6D, 0x5D, 0x43, 0xEE,
+    };
+    for (int i = 0; i < 64; i++) out[i] = (char)_sc_dec(_sc_sig_enc[i], i);
+    out[64] = '\0';
+}
+
+extern "C" __attribute__((noinline)) void sc_get_expected_pkg(char out[9]) {
+    static const uint8_t _sc_pkg_enc[8] = { 0x3F, 0x02, 0x13, 0xA1, 0xC2, 0xD6, 0xAF, 0xBA };
+    for (int i = 0; i < 8; i++) out[i] = (char)_sc_dec(_sc_pkg_enc[i], i);
+    out[8] = '\0';
+}
+
+#pragma clang attribute pop
 
 // ── Combined gate ─────────────────────────────────────────────────────
 bool ff_security_ok(JNIEnv* env, jobject ctx) {

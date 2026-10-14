@@ -115,6 +115,7 @@ public class LoginActivity extends BaseActivity {
     private static native boolean nativeVerifyLoginToken(String token);
     private static native String nativeGetSerial();
     private static native String Check(android.content.Context ctx, String key);
+    private static native boolean nativeAntiTamperCheck(android.content.Context context);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -962,6 +963,7 @@ public class LoginActivity extends BaseActivity {
                 return true;
             });
         new Thread(() -> {
+            nativeAntiTamperCheck(LoginActivity.this);
             String result = "";
             boolean loginSuccess = false;
             try {

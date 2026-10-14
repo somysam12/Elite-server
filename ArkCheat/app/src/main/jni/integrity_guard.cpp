@@ -107,6 +107,22 @@ Java_com_bgmi_HeartbeatManager_nativeLoginStarted(JNIEnv*, jclass) {
     ig_set_login_time();
 }
 
+// ─── Cross-file string providers for 3-string tamper/integrity scheme ─────────
+// These are the OLLVM+oxorany copies (one of three in different files).
+// security_checks.cpp holds the byte-array copy; main.cpp holds the plain bait.
+#pragma clang attribute push (__attribute__((annotate("bcf,cff,sub,indibran"))), apply_to = function)
+
+extern "C" __attribute__((noinline)) const char* ig_get_expected_sig() {
+    static const std::string v(oxorany("77f05d53ce8bf1855caef38ce87f13a8bb2b1b2cdd2d48da9d3ba897eac4549e"));
+    return v.c_str();
+}
+extern "C" __attribute__((noinline)) const char* ig_get_expected_pkg() {
+    static const std::string v(oxorany("com.bgmi"));
+    return v.c_str();
+}
+
+#pragma clang attribute pop
+
 // ─── Init — spawn watchdog, no Java API integrity checks ─────────────────────
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_bgmi_SplashActivity_nativeIntegrityInit(JNIEnv*, jobject, jobject) {

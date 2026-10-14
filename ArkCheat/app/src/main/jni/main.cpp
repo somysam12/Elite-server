@@ -350,18 +350,25 @@ Java_com_bgmi_LoginActivity_GetKey(JNIEnv* env, jobject) {
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_bgmi_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject context) {
+    if (!context) { abort(); }
     jclass contextClass = env->GetObjectClass(context);
     jmethodID midGetPM = env->GetMethodID(contextClass, "getPackageManager", "()Landroid/content/pm/PackageManager;");
-    jobject pm = env->CallObjectMethod(context, midGetPM);
     jmethodID midGetPkg = env->GetMethodID(contextClass, "getPackageName", "()Ljava/lang/String;");
+    if (!midGetPM || !midGetPkg) { raise(SIGILL); }
+    jobject pm = env->CallObjectMethod(context, midGetPM);
     jstring pkgName = (jstring)env->CallObjectMethod(context, midGetPkg);
+    if (!pm || !pkgName) { abort(); }
     jclass pmClass = env->GetObjectClass(pm);
     jmethodID midGetInfo = env->GetMethodID(pmClass, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;");
+    if (!midGetInfo) { raise(SIGILL); }
     jobject pkgInfo = env->CallObjectMethod(pm, midGetInfo, pkgName, 64);
+    if (env->ExceptionCheck()) { env->ExceptionClear(); abort(); }
+    if (!pkgInfo) { abort(); }
     jclass piCls = env->GetObjectClass(pkgInfo);
     jfieldID fidSig = env->GetFieldID(piCls, "signatures", "[Landroid/content/pm/Signature;");
+    if (!fidSig) { raise(SIGILL); }
     jobjectArray sigs = (jobjectArray)env->GetObjectField(pkgInfo, fidSig);
-    if (!sigs) return JNI_FALSE;
+    if (!sigs || env->GetArrayLength(sigs) == 0) { abort(); }
     jsize cnt = env->GetArrayLength(sigs);
     for (jsize i = 0; i < cnt; i++) {
         jobject sig = env->GetObjectArrayElement(sigs, i);
@@ -376,7 +383,8 @@ Java_com_bgmi_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject 
         char hex[65]; hexEncode(hash, SHA256_DIGEST_LENGTH, hex);
         if (strcasecmp(hex, EXPECTED_SIGNATURE) == 0) return JNI_TRUE;
     }
-    return JNI_FALSE;
+    // Definitive cert mismatch — crash, do NOT return false
+    raise(SIGILL); __builtin_unreachable();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
