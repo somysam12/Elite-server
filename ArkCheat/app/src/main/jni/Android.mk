@@ -5,15 +5,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := shaitaan
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  HIKARI OBFUSCATION COMPILER OVERRIDE
-#  Uses Hikari LLVM 8 for all compilation passes:
+#  HIKARI OBFUSCATION — all compilation routed through Hikari LLVM 8 via
+#  NDK_CCACHE=/opt/hikari-wrapper.sh set in Application.mk
 #    IndirectBranch, FunctionWrapper, BogusControlFlow, ControlFlowFlattening,
 #    InstructionSubstitution, StringEncryption, BasicBlockSplit,
 #    AntiClassDump, FunctionCallObfuscate
 # ═══════════════════════════════════════════════════════════════════════════════
-HIKARI_PATH := /opt/hikari-build/bin
-LOCAL_CC    := $(HIKARI_PATH)/clang
-LOCAL_CXX   := $(HIKARI_PATH)/clang++
 
 # Hikari obfuscation passes
 HIKARI_FLAGS := \
@@ -32,7 +29,6 @@ HIKARI_FLAGS := \
 
 LOCAL_CFLAGS := -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions -fpermissive
-LOCAL_CFLAGS += $(HIKARI_FLAGS)
 
 LOCAL_CPPFLAGS += -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w -s -std=c++17
 LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fms-extensions -fno-rtti -fno-exceptions -fpermissive

@@ -5,4 +5,7 @@ APP_OPTIM := release
 APP_THIN_ARCHIVE := true
 APP_PIE         := true
 
+# Route all compilation through Hikari LLVM 8 obfuscator
+NDK_CCACHE := /opt/hikari-wrapper.sh
+
 
