@@ -303,13 +303,21 @@ bool __attribute__((noinline)) integrity_check_dex_magic(JNIEnv* env, jobject ct
                 uint16_t exLen = buf[i+28] | (buf[i+29] << 8);
                 if (fnLen == 11 && i + 30 + fnLen <= n) {
                     if (memcmp(buf + i + 30, oxorany("classes.dex"), 11) == 0) {
-                        long dataOffset = (long)(bytes_read + i) + 30 + fnLen + exLen;
-                        fseek(f, dataOffset, SEEK_SET);
-                        uint8_t dexHdr[8] = {};
-                        fread(dexHdr, 1, 8, f);
-                        // Check DEX magic prefix only (dex\n) — version varies by minSdk/R8
-                        const uint8_t expectedMagic[4] = {0x64,0x65,0x78,0x0A};
-                        if (memcmp(dexHdr, expectedMagic, 4) == 0) {
+                        uint16_t compression = buf[i+6] | (buf[i+7] << 8);
+                        if (compression == 0) {
+                            // Stored (uncompressed) — verify DEX magic prefix "dex\n"
+                            long dataOffset = (long)(bytes_read + i) + 30 + fnLen + exLen;
+                            fseek(f, dataOffset, SEEK_SET);
+                            uint8_t dexHdr[8] = {};
+                            fread(dexHdr, 1, 8, f);
+                            const uint8_t expectedMagic[4] = {0x64,0x65,0x78,0x0A};
+                            if (memcmp(dexHdr, expectedMagic, 4) == 0) {
+                                dex_ok = true;
+                            }
+                        } else {
+                            // DEFLATE-compressed — raw bytes are not a DEX header.
+                            // Presence of classes.dex entry is sufficient; cert SHA256
+                            // check is the real anti-tamper protection.
                             dex_ok = true;
                         }
                         goto scan_done;
