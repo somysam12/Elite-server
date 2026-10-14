@@ -3,8 +3,8 @@
 # min_api: 24
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.2"}
-# pg_map_id: b0a190f
-# pg_map_hash: SHA-256 b0a190f9402a83c227be7b62276734ebcaf582e3aa87467c873e385dc5ca7381
+# pg_map_id: e1306a9
+# pg_map_hash: SHA-256 e1306a9d9834831483f960071d8bd14e87f1f50f7a80159279e6c5ac9df9bc71
 android.Meta.IRemoteManager -> android.Meta.IRemoteManager:
 # {"id":"sourceFile","fileName":"SourceFile"}
 android.Meta.IRemoteManager$Default -> android.Meta.IRemoteManager$Default:
@@ -42041,39 +42041,39 @@ com.bgmi.LoginActivity -> com.bgmi.LoginActivity:
     38:41:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$32
     38:41:boolean lambda$doLogin$32(java.lang.String,android.os.Message):0 -> lambda$doLogin$32
     42:50:boolean lambda$doLogin$32(java.lang.String,android.os.Message):0:0 -> lambda$doLogin$32
-    1:16:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    1:16:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    17:51:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    52:55:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    52:55:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    56:70:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    71:74:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    71:74:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    75:89:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    90:93:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    90:93:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    94:108:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    109:112:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    109:112:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    113:127:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    128:131:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    128:131:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    132:146:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    147:150:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    147:150:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    151:165:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    166:169:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    166:169:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    170:184:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    185:188:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    185:188:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    189:219:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    220:225:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    220:225:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    226:251:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
-    252:255:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
-    252:255:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
-    256:261:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    4:19:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    4:19:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    20:54:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    55:58:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    55:58:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    59:73:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    74:77:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    74:77:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    78:92:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    93:96:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    93:96:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    97:111:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    112:115:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    112:115:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    116:130:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    131:134:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    131:134:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    135:149:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    150:153:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    150:153:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    154:168:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    169:172:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    169:172:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    173:187:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    188:191:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    188:191:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    192:222:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    223:228:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    223:228:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    229:254:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
+    255:258:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$doLogin$33
+    255:258:void lambda$doLogin$33(java.lang.String,android.os.Handler):0 -> lambda$doLogin$33
+    259:264:void lambda$doLogin$33(java.lang.String,android.os.Handler):0:0 -> lambda$doLogin$33
     20:23:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$downloadAndInstallApk$15
     20:23:void lambda$downloadAndInstallApk$15():0 -> lambda$downloadAndInstallApk$15
     24:35:void lambda$downloadAndInstallApk$15():0:0 -> lambda$downloadAndInstallApk$15
