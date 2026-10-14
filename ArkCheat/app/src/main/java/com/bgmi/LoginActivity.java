@@ -953,7 +953,6 @@ public class LoginActivity extends BaseActivity {
                 return true;
             });
         new Thread(() -> {
-            nativeAntiTamperCheck(LoginActivity.this);
             String result = "";
             boolean loginSuccess = false;
             try {
