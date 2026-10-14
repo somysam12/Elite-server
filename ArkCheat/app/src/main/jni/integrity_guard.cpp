@@ -250,88 +250,10 @@ bool __attribute__((noinline)) integrity_check_pkg_hash(JNIEnv* env, jobject ctx
     return true;
 }
 
-// ─── [4] DEX MAGIC + DECOY SENTINEL ─────────────────────────────────────────
+// ─── [4] DECOY SENTINEL CHECK ────────────────────────────────────────────────
 bool __attribute__((noinline)) integrity_check_dex_magic(JNIEnv* env, jobject ctx) {
-    if (!env || !ctx) { _crash_null(); }
-
-    if (g_decoy_sentinel != _sentinel_ok()) {
-        _crash_stack();
-    }
-
-    jclass ctxCls = env->GetObjectClass(ctx);
-    jmethodID getAppInfo = env->GetMethodID(ctxCls,
-        oxorany("getApplicationInfo"),
-        oxorany("()Landroid/content/pm/ApplicationInfo;"));
-    if (!getAppInfo) { _crash_null(); }
-
-    jobject appInfo = env->CallObjectMethod(ctx, getAppInfo);
-    if (!appInfo) { _crash_null(); }
-
-    jclass aiCls = env->GetObjectClass(appInfo);
-    jfieldID srcDirFld = env->GetFieldID(aiCls,
-        oxorany("sourceDir"),
-        oxorany("Ljava/lang/String;"));
-    if (!srcDirFld) { _crash_null(); }
-
-    jstring srcDirJ = (jstring)env->GetObjectField(appInfo, srcDirFld);
-    if (!srcDirJ) { _crash_null(); }
-
-    const char* apkPath = env->GetStringUTFChars(srcDirJ, nullptr);
-
-    FILE* f = fopen(apkPath, "rb");
-    env->ReleaseStringUTFChars(srcDirJ, apkPath);
-
-    // If APK is unreadable (some Android ROMs restrict access), skip DEX check.
-    // Cert check is the primary anti-tamper; DEX check is defense-in-depth.
-    if (!f) { g_token_c = _tok_c(); return true; }
-
-    bool dex_ok = false;
-    // Use 16KB buffer — classes.dex header is always in the first few KB of an APK.
-    // Larger buffer also avoids the boundary-split issue of a 512-byte window.
-    uint8_t buf[16384];
-    size_t bytes_read = 0;
-    const size_t MAX_SCAN = 256 * 1024;  // 256KB is more than enough
-
-    while (bytes_read < MAX_SCAN) {
-        size_t n = fread(buf, 1, sizeof(buf), f);
-        if (n == 0) break;
-        // Require full 30-byte ZIP local header + 11-byte "classes.dex" name to fit in buffer
-        for (size_t i = 0; i + 41 < n; i++) {
-            if (buf[i] == 0x50 && buf[i+1] == 0x4B &&
-                buf[i+2] == 0x03 && buf[i+3] == 0x04) {
-                uint16_t fnLen = buf[i+26] | (buf[i+27] << 8);
-                uint16_t exLen = buf[i+28] | (buf[i+29] << 8);
-                if (fnLen == 11 && i + 30 + fnLen <= n) {
-                    if (memcmp(buf + i + 30, oxorany("classes.dex"), 11) == 0) {
-                        uint16_t compression = buf[i+6] | (buf[i+7] << 8);
-                        if (compression == 0) {
-                            // Stored (uncompressed) — verify DEX magic prefix "dex\n"
-                            long dataOffset = (long)(bytes_read + i) + 30 + fnLen + exLen;
-                            fseek(f, dataOffset, SEEK_SET);
-                            uint8_t dexHdr[8] = {};
-                            fread(dexHdr, 1, 8, f);
-                            const uint8_t expectedMagic[4] = {0x64,0x65,0x78,0x0A};
-                            if (memcmp(dexHdr, expectedMagic, 4) == 0) {
-                                dex_ok = true;
-                            }
-                        } else {
-                            // DEFLATE-compressed — raw bytes are not a DEX header.
-                            // Presence of classes.dex entry is sufficient; cert SHA256
-                            // check is the real anti-tamper protection.
-                            dex_ok = true;
-                        }
-                        goto scan_done;
-                    }
-                }
-            }
-        }
-        bytes_read += n;
-    }
-scan_done:
-    fclose(f);
-
-    if (!dex_ok) { _crash_ill(); }
-
+    (void)env; (void)ctx;
+    if (g_decoy_sentinel != _sentinel_ok()) { _crash_stack(); }
     g_token_c = _tok_c();
     return true;
 }
@@ -418,38 +340,6 @@ extern "C" bool ig_verify_tokens_live() {
     return true;
 }
 
-// ─── .so load-path integrity ─────────────────────────────────────────────────
-// Reads /proc/self/maps and verifies libshaitaan.so is loaded from the app's
-// own data directory — not from /data/local/tmp, memfd:, or injected paths.
-static void __attribute__((noinline)) _check_so_load_path() {
-    FILE* maps = fopen(oxorany("/proc/self/maps"), oxorany("r"));
-    if (!maps) return;
-
-    char line[512];
-    bool found = false;
-    bool path_ok = false;
-
-    while (fgets(line, sizeof(line), maps)) {
-        if (strstr(line, oxorany("libshaitaan.so"))) {
-            found = true;
-            // Must contain the app's own package path
-            bool has_pkg  = (strstr(line, oxorany("com.bgmi")) != nullptr);
-            // Must NOT be from suspicious injection paths
-            bool bad_tmp  = (strstr(line, oxorany("/data/local/tmp")) != nullptr);
-            bool bad_mem  = (strstr(line, oxorany("memfd:"))  != nullptr);
-            bool bad_anon = (strstr(line, oxorany("/tmp/"))   != nullptr);
-            bool bad_sdcd = (strstr(line, oxorany("/sdcard/")) != nullptr);
-            if (has_pkg && !bad_tmp && !bad_mem && !bad_anon && !bad_sdcd) {
-                path_ok = true;
-            }
-            break;
-        }
-    }
-    fclose(maps);
-
-    if (found && !path_ok) { _crash_ill(); }
-}
-
 // ─── Heartbeat watchdog globals ───────────────────────────────────────────────
 static volatile time_t g_login_time     = 0;
 static volatile bool   g_hb_ever_valid  = false;
@@ -489,9 +379,6 @@ static void* hb_watchdog_thread(void*) {
         }
 
         check_idx++;
-        if ((check_idx % 3) == 0) {
-            _check_so_load_path();
-        }
     }
     return nullptr;
 }
