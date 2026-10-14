@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ═══ LIQUID GLASS PALETTE (iOS 26 style) ═══ -->
+    <!-- Deep ambient background -->
+    <color name="bg_deep">#0A0705</color>
+    <color name="bg_mid">#130C07</color>
+    <color name="background">#0A0705</color>
+    <color name="background2">#130C07</color>
+    <color name="secondary">#130C07</color>
+    <color name="secodary2">#0A0705</color>
+
+    <!-- Glass surfaces (translucent whites/tints) -->
+    <color name="glass_white_8">#14FFFFFF</color>
+    <color name="glass_white_12">#1FFFFFFF</color>
+    <color name="glass_white_18">#2EFFFFFF</color>
+    <color name="glass_white_25">#40FFFFFF</color>
+    <color name="glass_border">#33FFFFFF</color>
+    <color name="glass_border_soft">#1AFFFFFF</color>
+    <color name="card_background">#16FFFFFF</color>
+    <color name="crbgdm">#16FFFFFF</color>
+
+    <!-- Liquid accent gradient stops (gold → orange → red) -->
+    <color name="liquid_cyan">#FFC021</color>
+    <color name="liquid_blue">#FF7A18</color>
+    <color name="liquid_violet">#FF3D0A</color>
+    <color name="liquid_pink">#FF2400</color>
+    <color name="primary">#FFC021</color>
+    <color name="colorAccent">#FF3D0A</color>
+    <color name="buttonPrimary">#FFC021</color>
+    <color name="button">#FFFFC021</color>
+    <color name="button_cyan">#FFC021</color>
+    <color name="nr_purple">#FF3D0A</color>
+    <color name="nr_pink">#FF2400</color>
+    <color name="nr_orange">#F59E0B</color>
+    <color name="nr_blue">#FF7A18</color>
+    <color name="home">#FFC021</color>
+
+    <!-- Text -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="primaryText">#FFFFFF</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9A8C7A</color>
+    <color name="hintText">#6E5F4E</color>
+    <color name="text_muted">#6E5F4E</color>
+
+    <!-- Status -->
+    <color name="status_live">#34D399</color>
+    <color name="success">#34D399</color>
+    <color name="error">#FF453A</color>
+    <color name="red">#FF453A</color>
+    <color name="stopbtn">#FF453A</color>
+    <color name="MERAH">#FF453A</color>
+    <color name="package_red">#F59E0B</color>
+
+    <!-- Greys -->
+    <color name="darker_gray">#221B14</color>
+    <color name="button_gray">#1C1712</color>
+    <color name="yellow_light">#F59E0B</color>
+    <color name="yellow_dark">#D97706</color>
+</resources>
