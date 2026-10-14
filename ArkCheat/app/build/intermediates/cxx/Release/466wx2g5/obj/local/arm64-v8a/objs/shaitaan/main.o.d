@@ -107,6 +107,7 @@
   /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/bitset \
   /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/clocale \
   /home/user/Elite-server/ArkCheat/app/src/main/jni/oxorany.h \
+  /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/csignal \
   /home/user/Elite-server/ArkCheat/app/src/main/jni/decrypt.h
 
 /home/user/Elite-server/ArkCheat/app/src/main/jni/protection_notice.h:
@@ -322,5 +323,7 @@
 /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/clocale:
 
 /home/user/Elite-server/ArkCheat/app/src/main/jni/oxorany.h:
+
+/usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/csignal:
 
 /home/user/Elite-server/ArkCheat/app/src/main/jni/decrypt.h:

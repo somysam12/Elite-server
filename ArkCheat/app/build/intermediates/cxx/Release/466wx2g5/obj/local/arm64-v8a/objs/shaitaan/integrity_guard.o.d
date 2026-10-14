@@ -48,10 +48,6 @@
   /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/ctype.h \
   /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/wctype.h \
   /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/csignal \
-  /home/user/Elite-server/ArkCheat/app/src/main/jni/includes/curl/openssl-android-arm64-v8a/include/openssl/sha.h \
-  /home/user/Elite-server/ArkCheat/app/src/main/jni/includes/curl/openssl-android-arm64-v8a/include/openssl/e_os2.h \
-  /home/user/Elite-server/ArkCheat/app/src/main/jni/includes/curl/openssl-android-arm64-v8a/include/openssl/opensslconf.h \
-  /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/stddef.h \
   /home/user/Elite-server/ArkCheat/app/src/main/jni/oxorany.h
 
 /home/user/Elite-server/ArkCheat/app/src/main/jni/protection_notice.h:
@@ -149,13 +145,5 @@
 /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/wctype.h:
 
 /usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/csignal:
-
-/home/user/Elite-server/ArkCheat/app/src/main/jni/includes/curl/openssl-android-arm64-v8a/include/openssl/sha.h:
-
-/home/user/Elite-server/ArkCheat/app/src/main/jni/includes/curl/openssl-android-arm64-v8a/include/openssl/e_os2.h:
-
-/home/user/Elite-server/ArkCheat/app/src/main/jni/includes/curl/openssl-android-arm64-v8a/include/openssl/opensslconf.h:
-
-/usr/lib/android-sdk/ndk/24.0.8215888/sources/cxx-stl/llvm-libc++/include/stddef.h:
 
 /home/user/Elite-server/ArkCheat/app/src/main/jni/oxorany.h:
