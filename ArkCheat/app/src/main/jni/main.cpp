@@ -44,7 +44,7 @@ static uint32_t __attribute__((noinline)) _str_crc32(const char* s, size_t n) {
 }
 static inline uint32_t _exp_aes_crc()  { return 0x704B0000u | 0x00006181u; }
 static inline uint32_t _exp_hmac_crc() { return 0xB5320000u | 0x0000BA3Cu; }
-static inline uint32_t _exp_url_crc()  { return 0xDF920000u | 0x00007F39u; }
+static inline uint32_t _exp_url_crc()  { return 0xE8A40000u | 0x0000D495u; }
 
 static void __attribute__((noinline)) _verify_secrets(const char* aes, const char* hmac,
                                                        const char* url, size_t url_len) {
