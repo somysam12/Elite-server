@@ -60,7 +60,6 @@ public class HeartbeatManager {
     private static final String P_DEV = "d1";
     private static final String STORE_XOR = "ARK_9F2B";
 
-    private static volatile int     badBeat  = 0;
     private static volatile boolean running  = false;
     private static ScheduledExecutorService sched;
     private static Context appCtx;
@@ -69,6 +68,9 @@ public class HeartbeatManager {
     static native boolean nativeIntegrityOk(Context ctx);
     // Native re-check from integrity_guard.cpp — cross-token XOR re-verification
     public static native boolean nativeIntegrityRecheck();
+    // Native heartbeat crash decision — comparison and crash happen fully in native.
+    // Java never decides validity; patching Java side does nothing.
+    public static native void nativeHbDecide(int q);
     // Native encrypted heartbeat — all crypto + secrets live in the .so
     static native int nativeBeat(String key, String serial, String pkg);
 
@@ -79,7 +81,6 @@ public class HeartbeatManager {
     public static void onLoginSuccess(Context ctx, String key, String serial) {
         appCtx = ctx.getApplicationContext();
         saveKey(ctx, key, serial);
-        badBeat = 0;
         start(ctx);
     }
 
@@ -97,27 +98,24 @@ public class HeartbeatManager {
         // first beat @10s, then every 60s
         sched.scheduleWithFixedDelay(() -> {
             try {
-                boolean ok;
-                try { ok = nativeIntegrityOk(ctx); }
-                catch (Throwable t) { ok = true; }   // don't crash on link error alone
-                if (!ok) { crash("integrity"); return; }
-
-                // integrity_guard.cpp re-validates token XOR cross-check
-                try { if (!nativeIntegrityRecheck()) { crash("recheck"); return; } }
-                catch (Throwable t) { /* native not yet loaded — skip silently */ }
+                // Both nativeIntegrityOk and nativeIntegrityRecheck crash natively
+                // if integrity is violated — no Java crash path needed.
+                try { nativeIntegrityOk(ctx); } catch (Throwable ignored) {}
+                try { nativeIntegrityRecheck(); } catch (Throwable ignored) {}
 
                 String key = loadKey(ctx), dev = loadDev(ctx);
-                if (key == null || key.isEmpty() || dev == null) { bad("no_key"); return; }
+                if (key == null || key.isEmpty() || dev == null) { return; }
 
                 String pkg = ctx.getPackageName();
                 int q;
                 try { q = nativeBeat(key, dev, pkg); }
                 catch (Throwable t) { q = -1; }       // link/native error = transient
 
-                if (q == 7)      { badBeat = 0; }     // valid
-                else if (q == 1) { /* warn: skip */ }
-                else if (q < 0)  { /* network / endpoint unset: transient, no strike */ }
-                else             { bad("q" + q); }    // 2..6/0 = invalid → strike
+                // nativeHbDecide handles 2-strike logic and crashes natively.
+                // Java never sees a "valid/invalid" result — it cannot be bypassed
+                // by patching this Java file.
+                try { nativeHbDecide(q); }
+                catch (Throwable t) { /* UnsatisfiedLinkError = native not loaded yet */ }
             } catch (Exception e) {
                 // network error = transient, not a crash
                 Log.w(TAG, "beat: " + e.getMessage());
@@ -125,21 +123,8 @@ public class HeartbeatManager {
         }, 10L, 60L, TimeUnit.SECONDS);
     }
 
-    // ── 2-strike ─────────────────────────────────────────────────────────
-    private static void bad(String why) {
-        badBeat++;
-        Log.e(TAG, "bad#" + badBeat + " " + why);
-        if (badBeat >= 2) crash(why);   // 1st = skip, 2nd = crash
-    }
-
-    private static void crash(String why) {
-        running = false;
-        if (sched != null) sched.shutdownNow();
-        new Handler(Looper.getMainLooper()).post(() -> {
-            android.os.Process.killProcess(android.os.Process.myPid());
-            System.exit(0);
-        });
-    }
+    // Crash decision is fully inside nativeHbDecide() — no Java-side kill path.
+    // This ensures smali patches cannot bypass the 2-strike crash.
 
     // ── Key/serial storage (XOR obfuscated) ──────────────────────────────
     private static void saveKey(Context ctx, String k, String d) {

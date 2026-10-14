@@ -3,8 +3,8 @@
 # min_api: 24
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.2"}
-# pg_map_id: 6b3f3ba
-# pg_map_hash: SHA-256 6b3f3ba2732ee8a4c983290b21fce783da70c2f347950740f73c435e14f4b3db
+# pg_map_id: b0a190f
+# pg_map_hash: SHA-256 b0a190f9402a83c227be7b62276734ebcaf582e3aa87467c873e385dc5ca7381
 android.Meta.IRemoteManager -> android.Meta.IRemoteManager:
 # {"id":"sourceFile","fileName":"SourceFile"}
 android.Meta.IRemoteManager$Default -> android.Meta.IRemoteManager$Default:
@@ -41648,37 +41648,20 @@ com.bgmi.HeartbeatManager -> com.bgmi.HeartbeatManager:
     45:51:void <clinit>():0:0 -> <clinit>
     52:55:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> <clinit>
     52:55:void <clinit>():0 -> <clinit>
-    56:67:void <clinit>():0:0 -> <clinit>
-    68:71:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> <clinit>
-    68:71:void <clinit>():0 -> <clinit>
-    72:75:void <clinit>():0:0 -> <clinit>
-    1:1:void $r8$lambda$-5PrQCwAHlSakOglthhdT5hVChA():0:0 -> a
+    56:65:void <clinit>():0:0 -> <clinit>
+    66:69:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> <clinit>
+    66:69:void <clinit>():0 -> <clinit>
+    70:73:void <clinit>():0:0 -> <clinit>
+    1:1:java.lang.Thread $r8$lambda$WkCmb5H5vgXi7vygW1yCiGdFdxE(java.lang.Runnable):0:0 -> a
       # {"id":"com.android.tools.r8.synthesized"}
-    1:1:java.lang.Thread $r8$lambda$WkCmb5H5vgXi7vygW1yCiGdFdxE(java.lang.Runnable):0:0 -> b
-      # {"id":"com.android.tools.r8.synthesized"}
-    7:32:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> bad
-    7:32:void bad(java.lang.String):0 -> bad
-    33:41:void bad(java.lang.String):0:0 -> bad
-    1:1:void $r8$lambda$Ym4xp7CX-z_6Knqu0cPddq1Awbk(android.content.Context):0:0 -> c
+    1:1:void $r8$lambda$Ym4xp7CX-z_6Knqu0cPddq1Awbk(android.content.Context):0:0 -> b
       # {"id":"com.android.tools.r8.synthesized"}
     3:13:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$0
     3:13:java.lang.Thread lambda$start$0(java.lang.Runnable):0 -> lambda$start$0
     14:21:java.lang.Thread lambda$start$0(java.lang.Runnable):0:0 -> lambda$start$0
-    17:20:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    17:20:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    21:37:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    38:41:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    38:41:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    42:97:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    98:101:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    98:101:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    102:120:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    121:124:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    121:124:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    125:133:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
-    134:144:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
-    134:144:void lambda$start$1(android.content.Context):0 -> lambda$start$1
-    145:148:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
+    43:60:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> lambda$start$1
+    43:60:void lambda$start$1(android.content.Context):0 -> lambda$start$1
+    61:64:void lambda$start$1(android.content.Context):0:0 -> lambda$start$1
     1:12:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> loadDev
     1:12:java.lang.String loadDev(android.content.Context):0 -> loadDev
     13:21:java.lang.String loadDev(android.content.Context):0:0 -> loadDev
@@ -44388,46 +44371,46 @@ com.bgmi.logger.ArkCrashLogger$$ExternalSyntheticLambda0 -> a.W1:
       # {"id":"com.android.tools.r8.synthesized"}
     1:1:void a.ArkCrashLogger$$ExternalSyntheticLambda0.<init>(int):0:0 -> <init>
       # {"id":"com.android.tools.r8.synthesized"}
-    29:53:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    54:73:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    54:73:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    74:83:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    84:87:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    84:87:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    88:99:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    100:103:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    100:103:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    104:165:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    166:169:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    166:169:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    170:184:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    185:188:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    185:188:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    189:201:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    202:205:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    202:205:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    206:218:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    219:222:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    219:222:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    223:238:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    239:243:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    239:243:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    244:253:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    254:257:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    254:257:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    258:283:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    284:296:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    284:296:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    297:306:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    307:310:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    307:310:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    311:333:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    334:346:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    334:346:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    347:356:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
-    357:360:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
-    357:360:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
-    361:376:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    25:49:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    50:69:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    50:69:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    70:79:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    80:83:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    80:83:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    84:95:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    96:99:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    96:99:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    100:161:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    162:165:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    162:165:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    166:180:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    181:184:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    181:184:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    185:197:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    198:201:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    198:201:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    202:214:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    215:218:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    215:218:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    219:234:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    235:239:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    235:239:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    240:249:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    250:253:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    250:253:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    254:279:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    280:292:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    280:292:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    293:302:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    303:306:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    303:306:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    307:329:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    330:342:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    330:342:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    343:352:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
+    353:356:java.lang.String org.lsposed.lsparanoid.Deobfuscator$A15ZBox$app.getString(long):0:0 -> run
+    353:356:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0 -> run
+    357:372:void com.bgmi.logger.ArkCrashLogger.flushPendingReports():0:0 -> run
 com.bgmi.logger.ArkCrashLogger$$ExternalSyntheticLambda1 -> a.X1:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
