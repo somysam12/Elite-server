@@ -12,20 +12,16 @@ LOCAL_MODULE := shaitaan
 #    AntiClassDump, FunctionCallObfuscate
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Hikari obfuscation passes
+# Hikari obfuscation passes (intensity tuned to avoid OOM in cloud container)
 HIKARI_FLAGS := \
     -mllvm -enable-bcfobf    \
     -mllvm -enable-cffobf    \
     -mllvm -enable-subobf    \
     -mllvm -enable-indibran  \
-    -mllvm -enable-funcwra   \
     -mllvm -enable-strcry    \
-    -mllvm -enable-fco       \
-    -mllvm -enable-splitobf  \
-    -mllvm -enable-acdobf    \
-    -mllvm -bcf_loop=2       \
-    -mllvm -bcf_prob=60      \
-    -mllvm -sub_loop=2
+    -mllvm -bcf_loop=1       \
+    -mllvm -bcf_prob=30      \
+    -mllvm -sub_loop=1
 
 LOCAL_CFLAGS := -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions -fpermissive
