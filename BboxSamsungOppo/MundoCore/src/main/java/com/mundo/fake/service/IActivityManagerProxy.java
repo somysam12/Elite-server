@@ -59,6 +59,7 @@ import com.mundo.utils.ArrayUtils;
 import com.mundo.utils.ComponentUtils;
 import com.mundo.utils.FileUtils;
 import com.mundo.core.GmsCore;
+import com.mundo.fake.service.IGmsServiceBrokerProxy;
 import com.mundo.utils.MethodParameterUtils;
 import com.mundo.utils.Reflector;
 import com.mundo.utils.Slog;
@@ -298,6 +299,11 @@ public class IActivityManagerProxy extends ClassInvocationStub {
             // returns null). Returning 0 here broke GMS/Firebase service binds entirely.
             // Reference: editech-dev/vortex-one (cc4093a) and JDKaintscared/BlackBox (f7bc7e9)
             // both use method.invoke(who, args) as the final fallthrough, never return 0.
+            ComponentName comp = intent.getComponent();
+            if (connection != null && comp != null
+                    && GmsCore.GMS_PKG.equals(comp.getPackageName())) {
+                args[4] = IGmsServiceBrokerProxy.wrapConnection(connection);
+            }
             return method.invoke(who, args);
         }
 
