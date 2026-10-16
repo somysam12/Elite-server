@@ -7,8 +7,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.RemoteException;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -74,8 +76,54 @@ public class BJobManagerService extends IBJobManagerService.Stub implements ISys
         jobRecord.mServiceInfo = serviceInfo;
 
         mJobRecords.put(formatKey(processRecord.processName, info.getId()), jobRecord);
-        BRJobInfo.get(info)._set_service(new ComponentName(MundoCore.getHostPkg(), ProxyManifest.getProxyJobService(processRecord.bpid)));
+        ComponentName proxyComponent = new ComponentName(
+                MundoCore.getHostPkg(),
+                ProxyManifest.getProxyJobService(processRecord.bpid));
+        try {
+            BRJobInfo.get(info)._set_service(proxyComponent);
+        } catch (Throwable ignored) { }
+        // On API 36, hidden-API enforcement silently prevents the reflective write from
+        // landing. Verify the mutation; if it failed, rebuild via the public Builder API.
+        if (!proxyComponent.equals(info.getService())) {
+            JobInfo rebuilt = rebuildJobInfo(info, proxyComponent);
+            if (rebuilt != null) {
+                mJobRecords.get(formatKey(processRecord.processName, info.getId())).mJobInfo = rebuilt;
+                return rebuilt;
+            }
+        }
         return info;
+    }
+
+    private static JobInfo rebuildJobInfo(JobInfo src, ComponentName proxyComponent) {
+        try {
+            JobInfo.Builder b = new JobInfo.Builder(src.getId(), proxyComponent);
+            b.setRequiresCharging(src.isRequireCharging());
+            b.setRequiresDeviceIdle(src.isRequireDeviceIdle());
+            b.setPersisted(src.isPersisted());
+            b.setBackoffCriteria(src.getInitialBackoffMillis(), src.getBackoffPolicy());
+            if (src.getExtras() != null) b.setExtras(src.getExtras());
+            if (src.getTransientExtras() != null) b.setTransientExtras(src.getTransientExtras());
+            if (src.isPeriodic()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    b.setPeriodic(src.getIntervalMillis(), src.getFlexMillis());
+                } else {
+                    b.setPeriodic(src.getIntervalMillis());
+                }
+            } else {
+                if (src.getMinLatencyMillis() > 0) b.setMinimumLatency(src.getMinLatencyMillis());
+                if (src.getMaxExecutionDelayMillis() > 0) b.setOverrideDeadline(src.getMaxExecutionDelayMillis());
+            }
+            int netType = src.getNetworkType();
+            if (netType != JobInfo.NETWORK_TYPE_NONE) b.setRequiredNetworkType(netType);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                b.setRequiresBatteryNotLow(src.isRequireBatteryNotLow());
+                b.setRequiresStorageNotLow(src.isRequireStorageNotLow());
+            }
+            return b.build();
+        } catch (Throwable t) {
+            Log.w("BJobManagerService", "rebuildJobInfo failed: " + t.getMessage());
+            return null;
+        }
     }
 
     @Override

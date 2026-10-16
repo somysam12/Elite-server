@@ -17,6 +17,7 @@ import com.mundo.fake.hook.MethodHook;
 import com.mundo.fake.hook.ProxyMethod;
 import com.mundo.fake.service.base.PkgMethodProxy;
 import com.mundo.fake.service.base.ValueMethodProxy;
+import com.mundo.utils.MethodParameterUtils;
 import com.mundo.utils.Reflector;
 import com.mundo.utils.compat.BuildCompat;
 
@@ -84,6 +85,9 @@ public class IPermissionManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             String permission = (args != null && args.length > 0) ? (String) args[0] : null;
             if (isGoogleInternalPermission(permission)) return PackageManager.PERMISSION_GRANTED;
+            // args[1] is pkgName; virtual packages are unknown to real PM → DENIED for all
+            // permissions including INTERNET/ACCESS_NETWORK_STATE. Replace with host pkg.
+            MethodParameterUtils.replaceFirstAppPkg(args);
             return method.invoke(who, args);
         }
     }
@@ -94,6 +98,8 @@ public class IPermissionManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             String permission = (args != null && args.length > 0) ? (String) args[0] : null;
             if (isGoogleInternalPermission(permission)) return PackageManager.PERMISSION_GRANTED;
+            MethodParameterUtils.replaceFirstAppPkg(args);
+            MethodParameterUtils.replaceLastUid(args);
             return method.invoke(who, args);
         }
     }

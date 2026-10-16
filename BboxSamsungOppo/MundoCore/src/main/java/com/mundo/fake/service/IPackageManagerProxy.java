@@ -382,8 +382,11 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             int uid = MethodParameterUtils.toInt(args[0]);
             if (uid == MundoCore.getHostUid()) {
-                args[0] = BActivityThread.getBUid();
-                uid = MethodParameterUtils.toInt(args[0]);
+                // Do NOT remap hostUid → bUid. GMS dynamite calls getPackagesForUid(myUid())
+                // to determine its caller identity for broker IPC. Returning the virtual
+                // package name here causes GMS broker (in its own process, using the real PM)
+                // to see a mismatch → SecurityException on the main looper → fatal crash.
+                return method.invoke(who, args);
             }
             String[] packagesForUid = MundoCore.getBPackageManager().getPackagesForUid(uid);
             return packagesForUid;
