@@ -280,11 +280,6 @@
         <!-- Facebook apps -->
         <package android:name="com.facebook.katana" />
         <package android:name="com.facebook.lite" />
-        <!-- Google Play / GMS -->
-        <package android:name="com.google.android.gms" />
-        <package android:name="com.google.android.gsf" />
-        <package android:name="com.android.vending" />
-        <package android:name="com.google.android.play.games" />
         <!-- Custom Tabs service discovery -->
         <intent>
             <action android:name="android.support.customtabs.action.CustomTabsService" />
@@ -292,17 +287,7 @@
     </queries>
 
     <application>
-
-        <!-- GMS login trampoline: launched in the host process to run real GMS
-             sign-in activities and relay the result back into the virtual space -->
-        <activity
-            android:name="com.mundo.proxy.GmsExternalActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
+        
         <activity
             android:theme="@style/BTheme"
             android:name="com.mundo.proxy.ProxyWebActivity"

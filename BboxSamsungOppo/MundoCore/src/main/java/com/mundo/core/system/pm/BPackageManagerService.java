@@ -404,10 +404,7 @@ public class BPackageManagerService extends IBPackageManagerService.Stub impleme
             list = new ArrayList<>(mPackages.size());
             Collection<BPackageSettings> packageSettings = mPackages.values();
             for (BPackageSettings ps : packageSettings) {
-                // Allow GMS packages to appear in their own virtual listings;
-                // only hide them when they were never installed in the virtual space.
-                if (GmsCore.isGoogleAppOrService(ps.pkg.packageName)
-                        && !ps.getInstalled(userId))
+                if (GmsCore.isGoogleAppOrService(ps.pkg.packageName))
                     continue;
                 ApplicationInfo ai = PackageManagerCompat.generateApplicationInfo(ps.pkg, flags,ps.readUserState(userId), userId);
                 if (ai != null) {
