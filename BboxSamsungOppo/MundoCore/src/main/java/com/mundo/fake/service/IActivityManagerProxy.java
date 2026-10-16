@@ -265,13 +265,6 @@ public class IActivityManagerProxy extends ClassInvocationStub {
             String resolvedType = (String) args[3];
             IServiceConnection connection = (IServiceConnection) args[4];
 
-            // GMS services must reach the real system AM without any proxy wrapping
-            ComponentName gmsComp = intent.getComponent();
-            if ((gmsComp != null && GmsCore.isGoogleAppOrService(gmsComp.getPackageName())) ||
-                (intent.getPackage() != null && GmsCore.isGoogleAppOrService(intent.getPackage()))) {
-                return method.invoke(who, args);
-            }
-
             int userId = intent.getIntExtra("_G_|_UserId", -1);
             userId = userId == -1 ? BActivityThread.getUserId() : userId;
             ResolveInfo resolveInfo = MundoCore.getBPackageManager().resolveService(intent, 0, resolvedType, userId);
