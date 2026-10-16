@@ -2,6 +2,7 @@ package com.mundo.fake.service;
 
 import android.app.job.JobInfo;
 import android.content.Context;
+import android.os.Build;
 import android.os.IBinder;
 
 import java.lang.reflect.Method;
@@ -41,18 +42,32 @@ public class IJobServiceProxy extends BinderInvocationStub {
     }
     
     private static abstract class BaseJobHandler extends MethodHook {
+
+        /**
+         * Android 14 (API 34) added a {@code String namespace} as the FIRST argument to
+         * IJobScheduler.schedule(), enqueue(), and cancel(). From API 34 onwards:
+         *   schedule(String namespace, in JobInfo job)   → args[0]=namespace, args[1]=JobInfo
+         *   enqueue(String namespace, in JobInfo job, …) → args[0]=namespace, args[1]=JobInfo
+         * Before API 34:
+         *   schedule(in JobInfo job)                     → args[0]=JobInfo
+         */
+        protected static int getJobInfoIndex() {
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ? 1 : 0;
+        }
+
         protected Object processJobOperation(String operation, Object who, Method method, Object[] args) throws Throwable {
             if (!validateJobArgs(args)) {
                 Slog.w(TAG, operation + ": Invalid arguments, returning failure");
                 return RESULT_FAILURE;
             }
-            JobInfo jobInfo = (JobInfo) args[0];
+            int jobInfoIndex = getJobInfoIndex();
+            JobInfo jobInfo = (JobInfo) args[jobInfoIndex];
             String packageName = jobInfo.getService().getPackageName();
             Slog.d(TAG, operation + ": Processing JobInfo for package: " + packageName);
             try {
                 JobInfo proxyJobInfo = MundoCore.getBJobManager().schedule(jobInfo);
                 if (proxyJobInfo != null) {
-                    args[0] = proxyJobInfo;
+                    args[jobInfoIndex] = proxyJobInfo;
                     Slog.d(TAG, operation + ": Successfully created proxy JobInfo");
                     return method.invoke(who, args);
                 }
@@ -63,16 +78,18 @@ public class IJobServiceProxy extends BinderInvocationStub {
         }
 
         protected boolean validateJobArgs(Object[] args) {
-            if (args == null || args.length == 0 || args[0] == null) {
+            int jobInfoIndex = getJobInfoIndex();
+            if (args == null || args.length <= jobInfoIndex || args[jobInfoIndex] == null) {
                 return false;
             }
-            
-            if (!(args[0] instanceof JobInfo)) {
-                Slog.w(TAG, "Argument is not JobInfo: " + args[0].getClass().getSimpleName());
+
+            if (!(args[jobInfoIndex] instanceof JobInfo)) {
+                Slog.w(TAG, "Argument at index " + jobInfoIndex + " is not JobInfo: "
+                        + args[jobInfoIndex].getClass().getSimpleName());
                 return false;
             }
-            
-            JobInfo jobInfo = (JobInfo) args[0];
+
+            JobInfo jobInfo = (JobInfo) args[jobInfoIndex];
             return jobInfo.getService() != null;
         }
 
@@ -133,14 +150,17 @@ public class IJobServiceProxy extends BinderInvocationStub {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             try {
-                if (args == null || args.length == 0 || !(args[0] instanceof Integer)) {
+                // API 34+: cancel(String namespace, int jobId) → args[0]=namespace, args[1]=jobId
+                // Pre-API 34: cancel(int jobId) → args[0]=jobId
+                int jobIdIndex = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ? 1 : 0;
+                if (args == null || args.length <= jobIdIndex || !(args[jobIdIndex] instanceof Integer)) {
                     Slog.w(TAG, "Cancel: Invalid arguments");
                     return method.invoke(who, args);
                 }
-                int jobId = (Integer) args[0];
+                int jobId = (Integer) args[jobIdIndex];
                 String processName = BActivityThread.getAppConfig().processName;
                 int cancelledJobId = MundoCore.getBJobManager().cancel(processName, jobId);
-                args[0] = cancelledJobId;
+                args[jobIdIndex] = cancelledJobId;
                 return method.invoke(who, args);
             } catch (Exception e) {
                 Slog.e(TAG, "Cancel: Error canceling job", e);
