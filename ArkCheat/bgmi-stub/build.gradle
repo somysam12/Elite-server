@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.pubg.imobile'
+    compileSdk 36
+
+    signingConfigs {
+        release {
+            storeFile file("../app/zen.jks")
+            storePassword "TWINZZZGODD@6"
+            keyPassword "TWINZZZGODD@6"
+            keyAlias "SLAYTWINZ@66"
+        }
+        debug {
+            storeFile file("../app/zen.jks")
+            storePassword "TWINZZZGODD@6"
+            keyPassword "TWINZZZGODD@6"
+            keyAlias "SLAYTWINZ@66"
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.pubg.imobile"
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
