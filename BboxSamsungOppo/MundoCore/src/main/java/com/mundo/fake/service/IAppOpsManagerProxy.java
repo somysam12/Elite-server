@@ -14,6 +14,7 @@ import com.mundo.fake.hook.BinderInvocationStub;
 import com.mundo.fake.hook.MethodHook;
 import com.mundo.fake.hook.ProxyMethod;
 import com.mundo.utils.MethodParameterUtils;
+import com.mundo.core.GmsCore;
 
 /**
  * Created by @jagdish_vip on 4/2/21.
@@ -49,9 +50,20 @@ public class IAppOpsManagerProxy extends BinderInvocationStub {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        MethodParameterUtils.replaceFirstAppPkg(args);
+        // Do not replace GMS package names — they must reach real AppOps under their own identity
+        if (!isGmsCall(args)) {
+            MethodParameterUtils.replaceFirstAppPkg(args);
+        }
         MethodParameterUtils.replaceLastUid(args);
         return super.invoke(proxy, method, args);
+    }
+
+    private static boolean isGmsCall(Object[] args) {
+        if (args == null) return false;
+        for (Object a : args) {
+            if (a instanceof String && GmsCore.isGoogleAppOrService((String) a)) return true;
+        }
+        return false;
     }
 
     @Override

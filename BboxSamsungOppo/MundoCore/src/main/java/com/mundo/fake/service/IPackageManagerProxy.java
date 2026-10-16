@@ -287,6 +287,21 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             int flags = MethodParameterUtils.toInt(args[2]);
             List<ProviderInfo> providers = MundoCore.getBPackageManager().queryContentProviders(BActivityThread.getAppProcessName(), BActivityThread.getBUid(), flags, BActivityThread.getUserId());
+            // Merge real GMS content providers so they get initialised in the process
+            try {
+                Object realResult = method.invoke(who, args);
+                if (ParceledListSliceCompat.isParceledListSlice(realResult)) {
+                    @SuppressWarnings("unchecked")
+                    List<ProviderInfo> realProviders = (List<ProviderInfo>) black.android.content.pm.BRParceledListSlice.get(realResult).getList();
+                    if (realProviders != null) {
+                        for (ProviderInfo rp : realProviders) {
+                            if (GmsCore.isGoogleAppOrService(rp.packageName)) {
+                                providers.add(rp);
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
             return ParceledListSliceCompat.create(providers);
         }
     }
@@ -387,8 +402,7 @@ public class IPackageManagerProxy extends BinderInvocationStub {
     public static class GetSharedLibraries extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            // todo
-            return ParceledListSliceCompat.create(new ArrayList<>());
+            return method.invoke(who, args);
         }
     }
 

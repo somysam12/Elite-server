@@ -699,7 +699,7 @@ public class BAccountManagerService extends IBAccountManagerService.Stub impleme
 
     @Override
     public void addAccountAsUser(IAccountManagerResponse response, String accountType, String authTokenType, String[] requiredFeatures, boolean expectActivityLaunch, Bundle options, int userId) throws RemoteException {
-        // ignore
+        addAccount(response, accountType, authTokenType, requiredFeatures, expectActivityLaunch, options, userId);
     }
 
     @Override

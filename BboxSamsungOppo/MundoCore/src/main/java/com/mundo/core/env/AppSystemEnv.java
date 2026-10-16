@@ -72,6 +72,12 @@ public class AppSystemEnv {
         sSystemPackages.add("com.facebook.lite");
         sSystemPackages.add("com.facebook.mlite");
         sSystemPackages.add("com.facebook.services");
+        // Google Play Services — all GMS components must bypass virtualisation
+        sSystemPackages.add("com.google.android.gms");
+        sSystemPackages.add("com.google.android.gsf");
+        sSystemPackages.add("com.android.vending");
+        sSystemPackages.add("com.google.android.play.games");
+        sSystemPackages.add("com.google.android.gms.persistent");
     }
 
     public static boolean isOpenPackage(String packageName) {

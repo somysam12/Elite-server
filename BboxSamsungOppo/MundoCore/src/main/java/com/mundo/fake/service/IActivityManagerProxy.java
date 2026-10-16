@@ -58,6 +58,7 @@ import com.mundo.proxy.record.ProxyPendingRecord;
 import com.mundo.utils.ArrayUtils;
 import com.mundo.utils.ComponentUtils;
 import com.mundo.utils.FileUtils;
+import com.mundo.core.GmsCore;
 import com.mundo.utils.MethodParameterUtils;
 import com.mundo.utils.Reflector;
 import com.mundo.utils.Slog;
@@ -141,6 +142,12 @@ public class IActivityManagerProxy extends ClassInvocationStub {
 
             if (auth instanceof String) {
                 if (ProxyManifest.isProxy((String) auth)) {
+                    return method.invoke(who, args);
+                }
+
+                // GMS content providers must be acquired from the real system
+                String authStr = (String) auth;
+                if (authStr.contains("com.google") || authStr.equals("com.android.vending")) {
                     return method.invoke(who, args);
                 }
 
@@ -285,6 +292,14 @@ public class IActivityManagerProxy extends ClassInvocationStub {
                     args[2] = bindService;
                     return method.invoke(who, args);
                 }
+            }
+            // GMS services must bind through the real ActivityManager — virtual PM has no GMS services
+            ComponentName comp = intent.getComponent();
+            if (comp != null && GmsCore.isGoogleAppOrService(comp.getPackageName())) {
+                return method.invoke(who, args);
+            }
+            if (intent.getPackage() != null && GmsCore.isGoogleAppOrService(intent.getPackage())) {
+                return method.invoke(who, args);
             }
             return 0;
         }
