@@ -1,6 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
+        maven { url 'file:///tmp/local-maven-repo' }
         google()
         maven { url 'https://repo1.maven.org/maven2/' }
         mavenCentral()
@@ -22,6 +23,7 @@ buildscript {
 
 allprojects {
     repositories {
+        maven { url 'file:///tmp/local-maven-repo' }
         google()
         mavenCentral()
         mavenLocal()

@@ -131,7 +131,7 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             String packageName = (String) args[0];
             int flags = MethodParameterUtils.toInt(args[1]);
-			if (GmsCore.setGoogleAppOrService(packageName)) {
+			if (GmsCore.isGoogleAppOrService(packageName) || GmsCore.setGoogleAppOrService(packageName)) {
 				return method.invoke(who, args);
 			}
             PackageInfo packageInfo = MundoCore.getBPackageManager().getPackageInfo(packageName, flags, BActivityThread.getUserId());

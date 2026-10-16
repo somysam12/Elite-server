@@ -95,13 +95,6 @@ tasks.withType(Javadoc) {
     options.addStringOption('charSet', 'UTF-8')
 }
 
-// Annotation extraction requires lint toolchain deps not available offline;
-// skip it since MundoCore is consumed as a project module, not a published AAR.
-tasks.configureEach {
-    if (name.startsWith('extract') && name.contains('Annotations')) {
-        enabled = false
-    }
-}
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
