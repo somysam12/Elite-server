@@ -83,6 +83,7 @@ public final class ArkCrashLogger {
     private static String           sLicenseKey = "";   // full key stored internally
     private static final Object     sLock      = new Object();
     private static final ExecutorService sExec = Executors.newSingleThreadExecutor();
+    private static Thread           sLogcatThread = null;
 
     // 12-hour format with AM/PM
     private static final SimpleDateFormat FMT_TS =
@@ -114,6 +115,7 @@ public final class ArkCrashLogger {
                 writeSessionHeader();
                 sInit = true;
                 installUncaughtHandler();
+                startLogcatCapture();
                 log("I", "ark", "ArkCrashLogger init"
                     + " session=" + sSession
                     + " device=" + sDeviceId
@@ -235,6 +237,36 @@ public final class ArkCrashLogger {
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────
+
+    /** Spawn a daemon thread that pipes logcat W+ output into Ark.log */
+    private static void startLogcatCapture() {
+        if (sLogcatThread != null && sLogcatThread.isAlive()) return;
+        sLogcatThread = new Thread(() -> {
+            Process proc = null;
+            try {
+                // Clear stale logcat buffer so only post-init lines are captured
+                try { Runtime.getRuntime().exec(new String[]{"logcat", "-c"}); }
+                catch (Throwable ignored) {}
+                proc = Runtime.getRuntime().exec(new String[]{
+                    "logcat", "-v", "time", "*:W"
+                });
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        appendToLog("[sys] " + line + "\n");
+                    }
+                }
+            } catch (Throwable t) {
+                log("W", "sys", "logcat capture stopped: " + t.getMessage());
+            } finally {
+                if (proc != null) try { proc.destroy(); } catch (Throwable ignored) {}
+            }
+        }, "ArkLogcat");
+        sLogcatThread.setDaemon(true);
+        sLogcatThread.start();
+        log("I", "sys", "logcat capture started");
+    }
 
     private static void installUncaughtHandler() {
         Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
