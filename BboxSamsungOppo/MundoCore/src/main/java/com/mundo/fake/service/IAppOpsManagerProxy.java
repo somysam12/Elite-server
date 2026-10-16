@@ -63,7 +63,13 @@ public class IAppOpsManagerProxy extends BinderInvocationStub {
     public static class NoteProxyOperation extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            return AppOpsManager.MODE_ALLOWED;
+            MethodParameterUtils.replaceLastAppPkg(args);
+            MethodParameterUtils.replaceLastUid(args);
+            try {
+                return method.invoke(who, args);
+            } catch (Throwable e) {
+                return AppOpsManager.MODE_ALLOWED;
+            }
         }
     }
 
@@ -71,8 +77,13 @@ public class IAppOpsManagerProxy extends BinderInvocationStub {
     public static class CheckPackage extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            // todo
-            return AppOpsManager.MODE_ALLOWED;
+            MethodParameterUtils.replaceLastAppPkg(args);
+            MethodParameterUtils.replaceLastUid(args);
+            try {
+                return method.invoke(who, args);
+            } catch (Throwable e) {
+                return AppOpsManager.MODE_ALLOWED;
+            }
         }
     }
 

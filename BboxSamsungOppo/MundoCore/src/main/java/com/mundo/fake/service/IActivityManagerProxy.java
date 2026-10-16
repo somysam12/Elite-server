@@ -94,7 +94,7 @@ public class IActivityManagerProxy extends ClassInvocationStub {
      * Set BEFORE MundoCore.doAttachBaseContext().
      * ProGuard renames this field on release builds — host app must search by TYPE, not name.
      */
-    public static volatile SettingsProviderWrapper sSettingsProviderWrapper = null;
+    static volatile SettingsProviderWrapper sSettingsProviderWrapper = null;
 
     @Override
     protected Object getWho() {
@@ -439,11 +439,7 @@ public class IActivityManagerProxy extends ClassInvocationStub {
 
     @ProxyMethod("getIntentSenderWithFeature")
     public static class GetIntentSenderWithFeature extends GetIntentSender {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            MethodParameterUtils.replaceFirstAppPkg(args);
-            return method.invoke(who, args);
-        }
+        // Inherits GetIntentSender.hook() for full proxy-activity remapping
     }
 
     @ProxyMethod("broadcastIntent")
@@ -591,12 +587,12 @@ public class IActivityManagerProxy extends ClassInvocationStub {
         }
     }
 
-    //这里需要修复
     @ProxyMethod("grantUriPermission")
     public static class GrantUriPermission extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            MethodParameterUtils.replaceLastUid(args);
+            // grantUriPermission(String fromPkg, String toPackage, Uri uri, int modeFlags) — no UID arg
+            MethodParameterUtils.replaceFirstAppPkg(args);
             return method.invoke(who, args);
         }
     }
@@ -642,7 +638,12 @@ public class IActivityManagerProxy extends ClassInvocationStub {
     public static class checkUriPermission extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            return PackageManager.PERMISSION_GRANTED;
+            MethodParameterUtils.replaceLastUid(args);
+            try {
+                return method.invoke(who, args);
+            } catch (Throwable e) {
+                return PackageManager.PERMISSION_GRANTED;
+            }
         }
     }
 

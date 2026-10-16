@@ -43,8 +43,13 @@ public class IMediaSessionManagerProxy extends BinderInvocationStub {
     public static class CreateSession extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            if (args != null && args.length > 0 && args[0] instanceof String) {
-                args[0] = MundoCore.getHostPkg();
+            if (args != null) {
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] instanceof String) {
+                        args[i] = MundoCore.getHostPkg();
+                        break;
+                    }
+                }
             }
             return method.invoke(who, args);
         }

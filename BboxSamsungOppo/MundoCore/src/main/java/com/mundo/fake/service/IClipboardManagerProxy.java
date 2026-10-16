@@ -33,11 +33,10 @@ public class IClipboardManagerProxy extends BinderInvocationStub {
     }
 
     private int getPackNameIndex(Object[] args) {
-        if (args == null) {
-            return -1;
-        }
+        if (args == null) return -1;
+        String appPkg = com.mundo.app.BActivityThread.getAppPackageName();
         for (int i = 0; i < args.length; i++) {
-            if (args[i] instanceof String) {
+            if (args[i] instanceof String && args[i].equals(appPkg)) {
                 Log.d(TAG, "args[" + i + "] " + args[i]);
                 return i;
             }

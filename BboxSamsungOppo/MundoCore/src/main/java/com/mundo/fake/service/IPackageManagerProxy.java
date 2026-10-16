@@ -262,10 +262,10 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             String packageName = (String) args[0];
             int flags = MethodParameterUtils.toInt(args[1]);
-            ApplicationInfo applicationInfo = MundoCore.getBPackageManager().getApplicationInfo(packageName, flags, BActivityThread.getUserId());
             if (GmsCore.isGoogleAppOrService(packageName)) {
-				return method.invoke(who, args);
-			}
+                return method.invoke(who, args);
+            }
+            ApplicationInfo applicationInfo = MundoCore.getBPackageManager().getApplicationInfo(packageName, flags, BActivityThread.getUserId());
             if (applicationInfo != null) {
                 return applicationInfo;
             }
@@ -440,37 +440,51 @@ public class IPackageManagerProxy extends BinderInvocationStub {
     public static class checkSignatures extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            if (args.length == 2) {
-                if (args[0] instanceof String && args[1] instanceof String) {
-                    String pkg1 = (String) args[0];
-                    String pkg2 = (String) args[1];
-                    PackageManager pm = MundoCore.getPackageManager();
-                    try {
-                        PackageInfo pkgInfo1 = pm.getPackageInfo(pkg1, PackageManager.GET_SIGNATURES);
-                        PackageInfo pkgInfo2 = pm.getPackageInfo(pkg2, PackageManager.GET_SIGNATURES);
-                        Signature[] sigs1 = pkgInfo1.signatures;
-                        Signature[] sigs2 = pkgInfo2.signatures;
-                        if (sigs1 == null || sigs1.length == 0) {
-                            return (sigs2 == null || sigs2.length == 0) ? 1 : -1;
-                        }
-                        if (sigs2 == null || sigs2.length == 0) {
-                            return -2;
-                        }
-                        return Arrays.equals(sigs1, sigs2) ? 0 : -3;
-                    } catch (Exception e) {
-                        // Fall through
+            if (args.length == 2 && args[0] instanceof String && args[1] instanceof String) {
+                String pkg1 = (String) args[0];
+                String pkg2 = (String) args[1];
+                PackageManager pm = MundoCore.getPackageManager();
+                try {
+                    Signature[] sigs1, sigs2;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        PackageInfo pi1 = pm.getPackageInfo(pkg1, PackageManager.GET_SIGNING_CERTIFICATES);
+                        PackageInfo pi2 = pm.getPackageInfo(pkg2, PackageManager.GET_SIGNING_CERTIFICATES);
+                        sigs1 = pi1.signingInfo != null ? pi1.signingInfo.getApkContentsSigners() : null;
+                        sigs2 = pi2.signingInfo != null ? pi2.signingInfo.getApkContentsSigners() : null;
+                    } else {
+                        PackageInfo pi1 = pm.getPackageInfo(pkg1, PackageManager.GET_SIGNATURES);
+                        PackageInfo pi2 = pm.getPackageInfo(pkg2, PackageManager.GET_SIGNATURES);
+                        sigs1 = pi1.signatures;
+                        sigs2 = pi2.signatures;
                     }
+                    if (sigs1 == null || sigs1.length == 0) return (sigs2 == null || sigs2.length == 0) ? 1 : -1;
+                    if (sigs2 == null || sigs2.length == 0) return -2;
+                    return Arrays.equals(sigs1, sigs2) ? 0 : -3;
+                } catch (Exception e) {
+                    // fall through
                 }
             }
             return method.invoke(who, args);
         }
     }
-    
+
     @ProxyMethod("checkUidSignatures")
     public static class checkUidSignatures extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            return 0;
+            int uid1 = MethodParameterUtils.toInt(args[0]);
+            int uid2 = MethodParameterUtils.toInt(args[1]);
+            // Only spoof SIGNATURE_MATCH when both UIDs belong to virtual packages
+            String[] pkgs1 = MundoCore.getBPackageManager().getPackagesForUid(uid1);
+            String[] pkgs2 = MundoCore.getBPackageManager().getPackagesForUid(uid2);
+            if (pkgs1 != null && pkgs1.length > 0 && pkgs2 != null && pkgs2.length > 0) {
+                return 0;
+            }
+            try {
+                return method.invoke(who, args);
+            } catch (Throwable e) {
+                return -1;
+            }
         }
     }
     

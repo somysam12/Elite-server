@@ -37,6 +37,6 @@ public class IPowerManagerProxy extends BinderInvocationStub {
         addMethodHook(new ValueMethodProxy("acquireWakeLockWithUid", 0));
         addMethodHook(new ValueMethodProxy("releaseWakeLock", 0));
         addMethodHook(new ValueMethodProxy("updateWakeLockWorkSource", 0));
-        addMethodHook(new ValueMethodProxy("isWakeLockLevelSupported", true));
+        addMethodHook(new ValueMethodProxy("isWakeLockLevelSupported", false));
     }
 }

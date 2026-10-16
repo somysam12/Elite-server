@@ -135,7 +135,7 @@ public class ILocationManagerProxy extends BinderInvocationStub {
 					BRProviderProperties.get(providerProperties)._set_mHasCellRequirement(false);
 				}
 			}
-			return method.invoke(who, args);
+			return providerProperties;
 		}
 	}
 
@@ -166,7 +166,10 @@ public class ILocationManagerProxy extends BinderInvocationStub {
 
 		@Override
 		protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-			return Arrays.asList(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER);
+			if (BLocationManager.isFakeLocationEnable()) {
+				return Arrays.asList(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER);
+			}
+			return method.invoke(who, args);
 		}
 	}
 
@@ -175,8 +178,12 @@ public class ILocationManagerProxy extends BinderInvocationStub {
 
 		@Override
 		protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+			if (!BLocationManager.isFakeLocationEnable()) {
+				return method.invoke(who, args);
+			}
 			String provider = (String) args[0];
-			return Objects.equals(provider, LocationManager.GPS_PROVIDER);
+			return Objects.equals(provider, LocationManager.GPS_PROVIDER)
+					|| Objects.equals(provider, LocationManager.NETWORK_PROVIDER);
 		}
 	}
 

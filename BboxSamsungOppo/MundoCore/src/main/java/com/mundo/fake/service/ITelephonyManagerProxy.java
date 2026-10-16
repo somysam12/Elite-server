@@ -55,7 +55,12 @@ public class ITelephonyManagerProxy extends BinderInvocationStub {
 	public static class getImeiForSlot extends MethodHook {
 		@Override
 		protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-			return Md5Utils.md5(MundoCore.getHostPkg());
+			// IMEI must be exactly 15 decimal digits; derive deterministically from host pkg hash
+			String hex = Md5Utils.md5(MundoCore.getHostPkg());
+			long seed = Long.parseLong(hex.substring(0, 15), 16) % 100000000000000L;
+			if (seed < 0) seed = -seed;
+			seed = 100000000000000L + (seed % 900000000000000L);
+			return String.valueOf(seed);
 		}
 	}
 
@@ -63,7 +68,9 @@ public class ITelephonyManagerProxy extends BinderInvocationStub {
 	public static class GetMeidForSlot extends MethodHook {
 		@Override
 		protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-			return Md5Utils.md5(MundoCore.getHostPkg());
+			// MEID must be exactly 14 hex digits (uppercase)
+			String hex = Md5Utils.md5(MundoCore.getHostPkg() + "meid");
+			return hex.substring(0, 14).toUpperCase();
 		}
 	}
 
@@ -120,9 +127,8 @@ public class ITelephonyManagerProxy extends BinderInvocationStub {
 		@Override
 		protected Object hook(Object who, Method method, Object[] args) throws Throwable {
 			if (BLocationManager.isFakeLocationEnable()) {
-				List<BCell> cell = BLocationManager.get().getAllCell(BActivityThread.getUserId(), BActivityThread.getAppPackageName());
-				// TODO Transfer BCell to CdmaCellLocation/GsmCellLocation
-				return cell;
+				// BCell cannot be cast to android.telephony.CellInfo; return empty list to avoid ClassCastException
+				return new java.util.ArrayList<>();
 			}
 			try {
 				return method.invoke(who, args);
@@ -159,9 +165,7 @@ public class ITelephonyManagerProxy extends BinderInvocationStub {
 		protected Object hook(Object who, Method method, Object[] args) throws Throwable {
 			Log.d(TAG, "getNeighboringCellInfo");
 			if (BLocationManager.isFakeLocationEnable()) {
-				List<BCell> cell = BLocationManager.get().getNeighboringCell(BActivityThread.getUserId(), BActivityThread.getAppPackageName());
-				// TODO Transfer BCell to CdmaCellLocation/GsmCellLocation
-				return null;
+				return new java.util.ArrayList<>();
 			}
 			return method.invoke(who, args);
 		}

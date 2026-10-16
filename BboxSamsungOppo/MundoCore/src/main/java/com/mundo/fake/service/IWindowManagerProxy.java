@@ -36,7 +36,8 @@ public class IWindowManagerProxy extends BinderInvocationStub {
     @Override
     protected void inject(Object baseInvocation, Object proxyInvocation) {
         replaceSystemService("window");
-        BRWindowManagerGlobal.get()._set_sWindowManagerService(null);
+        // Write proxy directly so no concurrent reader ever sees a null/stale binder
+        BRWindowManagerGlobal.get()._set_sWindowManagerService(proxyInvocation);
     }
 
     @Override
