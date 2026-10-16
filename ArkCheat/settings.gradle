@@ -1,5 +1,6 @@
 
 rootProject.name = "A15ZBox"
 include ':app'
-//include ':MundoCore'
+include ':MundoCore'
+project(':MundoCore').projectDir = new File(rootDir, '../BboxSamsungOppo/MundoCore')
 

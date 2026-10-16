@@ -28,6 +28,14 @@ allprojects {
         maven { url 'https://jitpack.io' }
         maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
     }
+    configurations.all {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.jetbrains.kotlin'
+                    && details.requested.name.startsWith('kotlin-stdlib')) {
+                details.useVersion '1.9.20'
+            }
+        }
+    }
 }
 
 tasks.register("clean", Delete) {

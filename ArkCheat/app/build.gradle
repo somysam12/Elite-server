@@ -111,8 +111,8 @@ buildToolsVersion '34.0.0'
 }
 
 dependencies {
-    // Hcore — single AAR replaces mundo-release-lv10 + recommendpermission
-    implementation fileTree(dir: "libs", includes: ["*.aar"])
+    // Hcore — built from source so GMS login fixes are included
+    implementation project(':MundoCore')
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
     implementation 'com.github.tiann:FreeReflection:3.2.2'
     implementation 'com.github.CodingGay.BlackReflection:core:1.1.4'
