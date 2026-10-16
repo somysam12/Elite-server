@@ -526,18 +526,17 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         }
     }
 
-    @ProxyMethod("getNameForUid")
-    public static class GetNameForUid extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            int uid = MethodParameterUtils.toInt(args[0]);
-            if (uid == MundoCore.getHostUid()) uid = BActivityThread.getBUid();
-            String[] packages = MundoCore.getBPackageManager().getPackagesForUid(uid);
-            if (packages != null && packages.length > 0) return packages[0];
-            return method.invoke(who, args);
-        }
-    }
-    
+    // getNameForUid hook REMOVED.
+    // Background: the hook previously mapped hostUid → bUid → "com.pubg.imobile".
+    // GMS (measurementdynamite) would then call AppOps.noteOperation(op, hostUid, "com.pubg.imobile").
+    // The system rejects this because hostUid does NOT own "com.pubg.imobile" — hostUid owns the
+    // host package, not the virtual one — producing:
+    //   SecurityException: Unknown calling package name 'com.pubg.imobile'
+    // Fix confirmed by reference: ALEX5402/NewBlackbox (89b5983), editech-dev/vortex-one (cc4093a),
+    // and JDKaintscared/BlackBox (f7bc7e9) contain NO getNameForUid hook in IPackageManagerProxy.
+    // Without this hook the real PM answers getNameForUid(hostUid) = hostPkg, which is valid for
+    // subsequent AppOps calls.
+
     @ProxyMethod("clearPackagePersistentPreferredActivities")
     public static class clearPackagePersistentPreferredActivities extends MethodHook {
         @Override

@@ -293,7 +293,12 @@ public class IActivityManagerProxy extends ClassInvocationStub {
                     return method.invoke(who, args);
                 }
             }
-            return 0;
+            // Fall through to the real ActivityManager for any service the virtual sandbox
+            // cannot handle (e.g. GMS services — open packages — whose virtual AM bindService
+            // returns null). Returning 0 here broke GMS/Firebase service binds entirely.
+            // Reference: editech-dev/vortex-one (cc4093a) and JDKaintscared/BlackBox (f7bc7e9)
+            // both use method.invoke(who, args) as the final fallthrough, never return 0.
+            return method.invoke(who, args);
         }
 
         @Override

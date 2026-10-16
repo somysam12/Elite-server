@@ -112,7 +112,16 @@ public class IAppOpsManagerProxy extends BinderInvocationStub {
     public static class NoteOperation extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            return method.invoke(who, args);
+            // Do NOT pass through to the real system.
+            // If getNameForUid returns the virtual package name ("com.pubg.imobile"), GMS
+            // dynamite constructs noteOperation(op, hostUid, "com.pubg.imobile"). The system
+            // rejects this because hostUid != uid-of-com.pubg.imobile → SecurityException.
+            // Returning MODE_ALLOWED unconditionally is the pattern used by every upstream
+            // reference: editech-dev/vortex-one (cc4093a), JDKaintscared/BlackBox (f7bc7e9),
+            // and ALEX5402/NewBlackbox (89b5983). The getNameForUid hook removal is the root-
+            // cause fix; this is a defence-in-depth guard that prevents the same crash if
+            // any other code path passes a virtual package name into noteOperation.
+            return AppOpsManager.MODE_ALLOWED;
         }
     }
 }
