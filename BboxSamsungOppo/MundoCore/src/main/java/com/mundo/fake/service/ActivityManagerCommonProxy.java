@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.ResultReceiver;
 
 import com.mundo.core.env.BEnvironment;
 import java.io.File;
@@ -13,9 +16,11 @@ import java.lang.reflect.Method;
 
 import com.mundo.MundoCore;
 import com.mundo.app.BActivityThread;
+import com.mundo.core.GmsCore;
 import com.mundo.fake.hook.MethodHook;
 import com.mundo.fake.hook.ProxyMethod;
 import com.mundo.fake.provider.FileProviderHandler;
+import com.mundo.proxy.GmsExternalActivity;
 import com.mundo.proxy.ProxyWebActivity;
 import com.mundo.proxy.FacebookLoginHelper;
 import com.mundo.utils.ComponentUtils;
@@ -116,6 +121,14 @@ public class ActivityManagerCommonProxy {
                 resolveInfo = MundoCore.getBPackageManager().resolveActivity(intent, FileUtils.FileMode.MODE_IWUSR, StartActivityCompat.getResolvedType(args), BActivityThread.getUserId());
                 if (resolveInfo == null) {
                     intent.setPackage(origPackage);
+                    // Route GMS intents through GmsExternalActivity so the result
+                    // can be relayed back into the virtual guest's onActivityResult.
+                    IBinder resultTo = StartActivityCompat.getResultTo(args);
+                    int requestCode = StartActivityCompat.getRequestCode(args);
+                    if (resultTo != null && requestCode >= 0 && isGmsIntent(intent)) {
+                        return launchViaGmsExternal(intent, resultTo,
+                                StartActivityCompat.getResultWho(args), requestCode);
+                    }
                     return method.invoke(who, args);
                 }
             }
@@ -144,6 +157,37 @@ public class ActivityManagerCommonProxy {
                 }
             }
             return null;
+        }
+
+        private static boolean isGmsIntent(Intent intent) {
+            if (intent == null) return false;
+            ComponentName comp = intent.getComponent();
+            String pkg = comp != null ? comp.getPackageName() : intent.getPackage();
+            if (pkg == null) return false;
+            return GmsCore.isGoogleAppOrService(pkg) || pkg.startsWith("com.google.");
+        }
+
+        private static int launchViaGmsExternal(Intent gmsIntent, final IBinder resultTo,
+                final String resultWho, final int requestCode) {
+            ResultReceiver receiver = new ResultReceiver(
+                    new Handler(Looper.getMainLooper())) {
+                @Override
+                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                    Intent data = resultData != null
+                            ? (Intent) resultData.getParcelable("data") : null;
+                    MundoCore.getBActivityManager().sendActivityResult(
+                            resultTo, resultWho, requestCode, data, resultCode);
+                }
+            };
+            Intent wrapper = new Intent(MundoCore.getContext(), GmsExternalActivity.class);
+            wrapper.putExtra(GmsExternalActivity.KEY_TARGET, gmsIntent);
+            wrapper.putExtra(GmsExternalActivity.KEY_RECEIVER, receiver);
+            // Bypass marker so the re-intercepted call falls straight through.
+            wrapper.putExtra("_G_|_target_", Boolean.TRUE);
+            wrapper.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            MundoCore.getContext().startActivity(wrapper);
+            return 0;
         }
     }
 

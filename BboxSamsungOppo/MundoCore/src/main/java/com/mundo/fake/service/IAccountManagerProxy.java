@@ -254,8 +254,18 @@ public class IAccountManagerProxy extends BinderInvocationStub {
 
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            String accountType = (String) args[1];
+            if ("com.google".equals(accountType)) {
+                // Let the real AccountManager handle the Google OAuth flow.
+                com.mundo.utils.MethodParameterUtils.replaceFirstAppPkg(args);
+                try {
+                    return method.invoke(who, args);
+                } catch (Throwable e) {
+                    Slog.e(TAG, "addAccount com.google failed: " + e.getMessage());
+                }
+            }
             BAccountManager.get().addAccount((IAccountManagerResponse) args[0],
-                    (String) args[1],
+                    accountType,
                     (String) args[2],
                     (String[]) args[3],
                     (boolean) args[4],
@@ -269,8 +279,17 @@ public class IAccountManagerProxy extends BinderInvocationStub {
 
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            String accountType = (String) args[1];
+            if ("com.google".equals(accountType)) {
+                com.mundo.utils.MethodParameterUtils.replaceFirstAppPkg(args);
+                try {
+                    return method.invoke(who, args);
+                } catch (Throwable e) {
+                    Slog.e(TAG, "addAccountAsUser com.google failed: " + e.getMessage());
+                }
+            }
             BAccountManager.get().addAccountAsUser((IAccountManagerResponse) args[0],
-                    (String) args[1],
+                    accountType,
                     (String) args[2],
                     (String[]) args[3],
                     (boolean) args[4],
