@@ -1,0 +1,9 @@
+# Gradle build outputs and caches
+**/.gradle/
+**/build/
+
+# Local properties (machine-specific)
+local.properties
+
+# macOS
+.DS_Store

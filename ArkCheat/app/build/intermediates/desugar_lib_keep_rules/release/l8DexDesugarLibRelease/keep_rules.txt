@@ -1,3 +1,0 @@
--keep class j$.util.DesugarTimeZone {
-  public static java.util.TimeZone getTimeZone(java.lang.String);
-}
