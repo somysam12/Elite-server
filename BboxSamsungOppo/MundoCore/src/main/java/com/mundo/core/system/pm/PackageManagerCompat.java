@@ -26,6 +26,7 @@ import black.android.content.pm.BRPackageParserSigningDetails;
 import black.android.content.pm.BRSigningInfo;
 import black.android.content.res.BRAssetManager;
 import com.mundo.MundoCore;
+import com.mundo.core.GmsCore;
 import com.mundo.core.env.AppSystemEnv;
 import com.mundo.core.env.BEnvironment;
 import com.mundo.entity.pm.InstallOption;
@@ -321,6 +322,15 @@ public class PackageManagerCompat {
             }
             if (BRApplicationInfoN.get(ai)._check_credentialProtectedDataDir() != null) {
                 BRApplicationInfoN.get(ai)._set_credentialProtectedDataDir(ai.dataDir);
+            }
+        }
+        if (GmsCore.isGoogleAppOrService(ai.packageName)) {
+            ai.flags |= ApplicationInfo.FLAG_SYSTEM;
+            if (BuildCompat.isL()) {
+                Integer pf = BRApplicationInfoL.get(ai).privateFlags();
+                int pfVal = pf != null ? pf : 0;
+                pfVal |= 0x8; // PRIVATE_FLAG_PRIVILEGED
+                BRApplicationInfoL.get(ai)._set_privateFlags(pfVal);
             }
         }
         fixJar(ai);

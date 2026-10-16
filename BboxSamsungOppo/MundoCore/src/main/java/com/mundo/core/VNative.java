@@ -41,9 +41,6 @@ public class VNative {
         if (origCallingUid > 0 && origCallingUid < Process.FIRST_APPLICATION_UID) return origCallingUid;
         if (origCallingUid > Process.LAST_APPLICATION_UID) return origCallingUid;
         if (origCallingUid == MundoCore.getHostUid()) {
-            if(BActivityThread.getAppPackageName().equals("com.google.android.gms")){
-                return Process.ROOT_UID;
-            }
             if(BActivityThread.getAppPackageName().equals("com.google.android.webview")){
                 return Process.myUid();
             }

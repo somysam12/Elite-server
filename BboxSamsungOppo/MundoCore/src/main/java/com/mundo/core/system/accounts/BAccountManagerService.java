@@ -672,11 +672,9 @@ public class BAccountManagerService extends IBAccountManagerService.Stub impleme
         if (response == null) throw new IllegalArgumentException("response is null");
         if (accountType == null) throw new IllegalArgumentException("accountType is null");
 
-//        final int pid = Binder.getCallingPid();
-//        final int uid = Binder.getCallingUid();
         final Bundle options = (optionsIn == null) ? new Bundle() : optionsIn;
-//        options.putInt(AccountManager.KEY_CALLER_UID, uid);
-//        options.putInt(AccountManager.KEY_CALLER_PID, pid);
+        options.putInt(AccountManager.KEY_CALLER_UID, Binder.getCallingUid());
+        options.putInt(AccountManager.KEY_CALLER_PID, Binder.getCallingPid());
 
         BUserAccounts accounts = getUserAccounts(userId);
         new Session(accounts, response, accountType, expectActivityLaunch,
@@ -1798,10 +1796,15 @@ public class BAccountManagerService extends IBAccountManagerService.Stub impleme
 //            if (mAuthenticatorCache.getBindInstantServiceAllowed(mAccounts.userId)) {
 //                flags |= Context.BIND_ALLOW_INSTANT;
 //            }
-            if (!mContext.bindService(intent, this, flags)) {
-                if (Log.isLoggable(TAG, Log.VERBOSE)) {
-                    Log.v(TAG, "bindService to " + componentName + " failed");
+            try {
+                if (!mContext.bindService(intent, this, flags)) {
+                    if (Log.isLoggable(TAG, Log.VERBOSE)) {
+                        Log.v(TAG, "bindService to " + componentName + " failed");
+                    }
+                    return false;
                 }
+            } catch (SecurityException e) {
+                Slog.w(TAG, "bindService denied for " + componentName + ": " + e.getMessage());
                 return false;
             }
 

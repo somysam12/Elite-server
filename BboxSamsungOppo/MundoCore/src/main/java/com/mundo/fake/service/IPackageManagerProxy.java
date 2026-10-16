@@ -488,17 +488,53 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             int uid1 = MethodParameterUtils.toInt(args[0]);
             int uid2 = MethodParameterUtils.toInt(args[1]);
-            // Only spoof SIGNATURE_MATCH when both UIDs belong to virtual packages
+            if (uid1 == MundoCore.getHostUid()) uid1 = BActivityThread.getBUid();
+            if (uid2 == MundoCore.getHostUid()) uid2 = BActivityThread.getBUid();
             String[] pkgs1 = MundoCore.getBPackageManager().getPackagesForUid(uid1);
             String[] pkgs2 = MundoCore.getBPackageManager().getPackagesForUid(uid2);
             if (pkgs1 != null && pkgs1.length > 0 && pkgs2 != null && pkgs2.length > 0) {
-                return 0;
+                if (GmsCore.isGoogleAppOrService(pkgs1[0]) && GmsCore.isGoogleAppOrService(pkgs2[0]))
+                    return PackageManager.SIGNATURE_MATCH;
+                return PackageManager.SIGNATURE_MATCH;
             }
             try {
                 return method.invoke(who, args);
             } catch (Throwable e) {
-                return -1;
+                return PackageManager.SIGNATURE_NO_MATCH;
             }
+        }
+    }
+
+    @ProxyMethod("hasSigningCertificate")
+    public static class HasSigningCertificate extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            if (args != null && args.length > 0) {
+                if (args[0] instanceof String && GmsCore.isGoogleAppOrService((String) args[0])) {
+                    return true;
+                }
+                if (args[0] instanceof Integer) {
+                    int uid = (Integer) args[0];
+                    if (uid == MundoCore.getHostUid()) uid = BActivityThread.getBUid();
+                    String[] packages = MundoCore.getBPackageManager().getPackagesForUid(uid);
+                    if (packages != null) for (String pkg : packages)
+                        if (GmsCore.isGoogleAppOrService(pkg)) return true;
+                }
+            }
+            try { return method.invoke(who, args); }
+            catch (Throwable e) { return false; }
+        }
+    }
+
+    @ProxyMethod("getNameForUid")
+    public static class GetNameForUid extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            int uid = MethodParameterUtils.toInt(args[0]);
+            if (uid == MundoCore.getHostUid()) uid = BActivityThread.getBUid();
+            String[] packages = MundoCore.getBPackageManager().getPackagesForUid(uid);
+            if (packages != null && packages.length > 0) return packages[0];
+            return method.invoke(who, args);
         }
     }
     

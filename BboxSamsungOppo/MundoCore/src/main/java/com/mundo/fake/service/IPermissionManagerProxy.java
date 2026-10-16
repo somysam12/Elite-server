@@ -3,13 +3,18 @@ package com.mundo.fake.service;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import java.lang.reflect.Method;
+
 import black.android.app.BRActivityThread;
 import black.android.app.BRContextImpl;
 import black.android.os.BRServiceManager;
 import black.android.permission.BRIPermissionManagerStub;
 
 import com.mundo.MundoCore;
+import com.mundo.core.GmsCore;
 import com.mundo.fake.hook.BinderInvocationStub;
+import com.mundo.fake.hook.MethodHook;
+import com.mundo.fake.hook.ProxyMethod;
 import com.mundo.fake.service.base.PkgMethodProxy;
 import com.mundo.fake.service.base.ValueMethodProxy;
 import com.mundo.utils.Reflector;
@@ -71,6 +76,40 @@ public class IPermissionManagerProxy extends BinderInvocationStub {
     @Override
     public boolean isBadEnv() {
         return false;
+    }
+
+    @ProxyMethod("checkPermission")
+    public static class CheckPermission extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            String permission = (args != null && args.length > 0) ? (String) args[0] : null;
+            if (isGoogleInternalPermission(permission)) return PackageManager.PERMISSION_GRANTED;
+            return method.invoke(who, args);
+        }
+    }
+
+    @ProxyMethod("checkUidPermission")
+    public static class CheckUidPermission extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            String permission = (args != null && args.length > 0) ? (String) args[0] : null;
+            if (isGoogleInternalPermission(permission)) return PackageManager.PERMISSION_GRANTED;
+            return method.invoke(who, args);
+        }
+    }
+
+    private static boolean isGoogleInternalPermission(String permission) {
+        if (permission == null) return false;
+        return permission.startsWith("com.google.android.gms.permission.")
+            || permission.startsWith("com.google.android.providers.gsf.permission.")
+            || permission.equals("com.android.vending.INTENT_VENDING_ONLY")
+            || permission.equals("com.android.vending.TOS_ACKED")
+            || permission.equals("com.android.vending.BILLING")
+            || permission.equals("android.permission.GET_ACCOUNTS")
+            || permission.equals("android.permission.MANAGE_ACCOUNTS")
+            || permission.equals("android.permission.USE_CREDENTIALS")
+            || permission.equals("android.permission.AUTHENTICATE_ACCOUNTS")
+            || permission.equals("android.permission.ACCOUNT_MANAGER");
     }
 
 }

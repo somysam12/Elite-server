@@ -11,5 +11,9 @@
         <domain includeSubdomains="true">objects.githubusercontent.com</domain>
         <domain includeSubdomains="true">arkking.battlegrounds-hub.xyz</domain>
         <domain includeSubdomains="true">arkcheat.battleground-hub.shop</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">google.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">android.com</domain>
     </domain-config>
 </network-security-config>
