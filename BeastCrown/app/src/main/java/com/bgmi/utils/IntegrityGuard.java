@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 public class IntegrityGuard {
 
     public static native String expectedSigHash();
+    private static native void nativeCrash();
 
     public static void verifyOrDie(Context ctx) {
         try {
@@ -26,6 +27,7 @@ public class IntegrityGuard {
     }
 
     private static void kill() {
+        nativeCrash();
         android.os.Process.killProcess(android.os.Process.myPid());
         System.exit(0);
     }

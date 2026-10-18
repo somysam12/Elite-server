@@ -7,6 +7,8 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <csignal>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -304,6 +306,12 @@ Java_com_bgmi_HeartbeatManager_nativeQuickSecurityCheck(JNIEnv*, jclass) {
     if (check_emulator())    return JNI_FALSE;
     if (check_memory_dump()) return JNI_FALSE;
     return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_bgmi_utils_IntegrityGuard_nativeCrash(JNIEnv*, jclass) {
+    raise(SIGSEGV);
+    abort();
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

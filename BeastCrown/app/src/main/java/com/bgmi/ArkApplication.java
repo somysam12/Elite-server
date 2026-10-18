@@ -9,6 +9,7 @@ import androidx.multidex.MultiDex;
 
 import com.mundo.MundoCore;
 import com.mundo.app.configuration.ClientConfiguration;
+import com.bgmi.utils.IntegrityGuard;
 import org.lsposed.hiddenapibypass.HiddenApiBypass;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class ArkApplication extends Application {
         }
 
         super.attachBaseContext(base);
+        IntegrityGuard.verifyOrDie(base);
         MultiDex.install(base);
 
         // Decrypt + load the panel dex payload
