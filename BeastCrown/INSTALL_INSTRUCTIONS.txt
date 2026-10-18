@@ -1,0 +1,26 @@
+=== ArkCheat Source - Installation Instructions ===
+
+PROBLEM: Old "com.crozn" folder must be DELETED before building.
+
+STEPS IN AndroidIDE:
+1. Open file manager
+2. Navigate to: CROZN_Overlay/app/src/main/java/com/
+3. DELETE the entire "crozn" folder (long press → delete)
+4. Also DELETE "pubgm" folder if it exists
+5. Keep only the "arkcheat" folder
+6. Build → should work
+
+FOLDER STRUCTURE SHOULD BE:
+app/src/main/java/com/arkcheat/
+  ├── ArkApplication.java
+  ├── BaseActivity.java
+  ├── DexDecryptor.java
+  ├── LoginActivity.java
+  ├── MainActivity.java
+  ├── OverlayService.java
+  ├── SplashActivity.java
+  └── utils/
+      ├── Downtwo.java
+      └── Prefs.java
+
+NO other folders inside com/ !!!

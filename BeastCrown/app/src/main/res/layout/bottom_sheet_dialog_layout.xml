@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:background="@drawable/bc_card" android:orientation="vertical"
+    android:padding="26dp" android:layout_margin="10dp">
+    <View android:layout_width="36dp" android:layout_height="3dp"
+        android:background="#3A2A10" android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="18dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+        <ImageView android:id="@+id/dialog_icon"
+            android:layout_width="38dp" android:layout_height="38dp"
+            android:layout_marginEnd="12dp" android:src="@drawable/bc_logo"
+            android:background="@null" android:scaleType="fitCenter"/>
+        <TextView android:id="@+id/title"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Notice"
+            android:textColor="#FFC021" android:textSize="17sp" android:textStyle="bold"
+            android:fontFamily="@font/poppins_medium"/>
+    </LinearLayout>
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@drawable/bc_divider" android:layout_marginBottom="12dp" android:alpha="0.6"/>
+    <TextView android:id="@+id/msg"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="" android:textColor="#D4A840"
+        android:textSize="14sp" android:lineSpacingExtra="5dp"
+        android:fontFamily="@font/poppins_medium" android:layout_marginBottom="20dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="end">
+        <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_cancle"
+            android:layout_width="wrap_content" android:layout_height="44dp"
+            android:background="@android:color/transparent"
+            android:text="CANCEL" android:textColor="#5A4020"
+            android:textSize="12sp" android:textStyle="bold"
+            android:fontFamily="@font/poppins_medium"
+            android:layout_marginEnd="8dp" android:paddingHorizontal="16dp"/>
+        <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn"
+            android:layout_width="wrap_content" android:layout_height="44dp"
+            android:background="@drawable/bc_btn_primary_ripple"
+            android:text="ALLOW" android:textColor="#000000"
+            android:textSize="12sp" android:textStyle="bold"
+            android:fontFamily="@font/poppins_medium" android:paddingHorizontal="28dp"/>
+    </LinearLayout>
+</LinearLayout>
