@@ -240,8 +240,10 @@ public class LoginActivity extends BaseActivity {
         new Thread(() -> {
             try {
                 String panelUrl = nativeApkKillUrl();
+                String cv = "";
+                try { cv = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) {}
                 HttpURLConnection c = (HttpURLConnection)
-                    new URL(panelUrl + "?t=" + System.currentTimeMillis()).openConnection();
+                    new URL(panelUrl + "?cv=" + cv + "&t=" + System.currentTimeMillis()).openConnection();
                 c.setConnectTimeout(8000); c.setReadTimeout(8000);
                 c.setRequestProperty("Cache-Control", "no-cache");
                 c.connect();
