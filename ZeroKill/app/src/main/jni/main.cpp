@@ -34,7 +34,7 @@ static std::string getPanelBase() {
     return p1 + p2 + p3 + p4;
 }
 
-#define EP_VALIDBOOL  oxorany("/validbool.php")
+#define EP_VALIDBOOL  oxorany("/server/validbool.php")
 #define EP_APK_KILL   oxorany("/server/apk_kill.php")
 #define EP_LIB_VER    oxorany("/server/lib_version.php")
 #define EP_LIB_UNLOCK oxorany("/secure/unlock")

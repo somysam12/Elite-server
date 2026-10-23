@@ -56,19 +56,20 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@id/tv_app_name"
         android:layout_marginTop="4dp"
-        android:text="DOMINATE. DESTROY. SURVIVE."
+        android:text=""
         android:textSize="10sp"
         android:textColor="@color/zk_ice_bright"
         android:fontFamily="@font/rajdhani_bold"
         android:letterSpacing="0.25"
-        android:alpha="0" />
+        android:alpha="0"
+        android:visibility="gone" />
 
     <View
         android:id="@+id/fire_line"
         android:layout_width="180dp"
         android:layout_height="2dp"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/tv_tagline"
+        android:layout_below="@id/tv_app_name"
         android:layout_marginTop="16dp"
         android:background="@drawable/zk_fire_line"
         android:alpha="0" />
