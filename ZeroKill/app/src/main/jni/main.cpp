@@ -34,7 +34,7 @@ static std::string getPanelBase() {
     return p1 + p2 + p3 + p4;
 }
 
-#define EP_VALIDBOOL  oxorany("/validbool")
+#define EP_VALIDBOOL  oxorany("/validbool.php")
 #define EP_APK_KILL   oxorany("/server/apk_kill.php")
 #define EP_LIB_VER    oxorany("/server/lib_version.php")
 #define EP_LIB_UNLOCK oxorany("/secure/unlock")
@@ -425,22 +425,9 @@ Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring
 
     g_loginOk = false;
 
-    std::string caPath = extractCACert(env, mContext);
-
     for (int attempt = 0; attempt < 3; attempt++) {
-        json payload;
-        payload["k"]   = userKey;
-        payload["d"]   = serial;
-        payload["t"]   = (long)time(nullptr);
-        payload["pkg"] = pkg;
-        std::string plainJson = payload.dump();
-
-        std::string p1 = aes_gcm_encrypt(plainJson);
-        if (p1.empty()) { errMsg = "Encryption failed"; continue; }
-        std::string p2 = hmac_sha256(p1);
-
-        std::string url = getPanelBase() + std::string(EP_VALIDBOOL);
-        std::string postData = "p1=" + p1 + "&p2=" + p2;
+        std::string url      = getPanelBase() + std::string(EP_VALIDBOOL);
+        std::string postData = "game=PUBG&user_key=" + userKey + "&serial=" + serial;
 
         CURL* curl = curl_easy_init();
         std::string body;
@@ -461,15 +448,7 @@ Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring
                 "Mozilla/5.0 (Linux; Android 13; SM-G991B) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/120.0.0.0 Mobile Safari/537.36");
-            struct curl_slist *cfhdrs = nullptr;
-            cfhdrs = curl_slist_append(cfhdrs, "Accept: application/json, */*");
-            cfhdrs = curl_slist_append(cfhdrs, "Accept-Language: en-US,en;q=0.9");
-            cfhdrs = curl_slist_append(cfhdrs, "Cache-Control: no-cache");
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, cfhdrs);
-            if (!caPath.empty())
-                curl_easy_setopt(curl, CURLOPT_CAINFO, caPath.c_str());
             CURLcode cres = curl_easy_perform(curl);
-            curl_slist_free_all(cfhdrs);
             long httpCode = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
             curl_easy_cleanup(curl);
@@ -486,63 +465,22 @@ Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring
             break;
         }
 
-        // Fake-server detection
-        if (body.rfind("/*", 0) == 0) { errMsg = "Authentication failed"; break; }
+        // Trim whitespace
+        size_t s0 = body.find_first_not_of(" \t\r\n");
+        size_t s1 = body.find_last_not_of(" \t\r\n");
+        if (s0 != std::string::npos) body = body.substr(s0, s1 - s0 + 1);
 
-        size_t dot = body.rfind('.');
-        if (dot == std::string::npos) {
-            errMsg = "Invalid server response";
-            if (attempt < 2) { usleep(800000); continue; }
+        // FrozenFire panel returns "true" on success, "false" or error on failure
+        if (body == "true" || body == "1") {
+            g_userKey = userKey; g_serial = serial; g_pkgName = pkg;
+            g_exdate  = "2099-12-31 23:59:59";
+            g_loginOk = true;
             break;
-        }
-
-        std::string encBody = body.substr(0, dot);
-        std::string sigHex  = body.substr(dot + 1);
-
-        // HMAC verify — fake server cannot forge this
-        if (hmac_sha256(encBody) != sigHex) {
-            errMsg = "Server signature mismatch";
-            LOGE("HMAC mismatch");
+        } else if (body == "false" || body == "0") {
+            errMsg = "Key is invalid or expired";
             break;
-        }
-
-        // AES decrypt — fake server cannot decrypt without key
-        std::string plainResp = aes_gcm_decrypt(encBody);
-        if (plainResp.empty()) {
-            errMsg = "Response decryption failed";
-            if (attempt < 2) { usleep(800000); continue; }
-            break;
-        }
-
-        try {
-            json jr = json::parse(plainResp);
-            int q = jr.value("q", 0);
-
-            if (q == 7) {
-                long long xRaw = jr.value("x", (long long)0);
-                long long expUnix = xRaw ^ (long long)_XKEY1;
-                if (expUnix > 0) {
-                    time_t et = (time_t)expUnix;
-                    struct tm tm_buf; char dateBuf[32] = {};
-                    if (localtime_r(&et, &tm_buf))
-                        strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d %H:%M:%S", &tm_buf);
-                    g_exdate = dateBuf;
-                } else {
-                    g_exdate = "2099-12-31 23:59:59";
-                }
-                g_userKey = userKey; g_serial = serial; g_pkgName = pkg;
-                g_loginOk = true;
-                break;
-            } else if (q == 1) { errMsg = "Server under maintenance"; break; }
-            else if (q == 2)   { errMsg = "Key has expired"; break; }
-            else if (q == 3)   { errMsg = "Max device limit reached"; break; }
-            else if (q == 4)   { errMsg = "Key is invalid"; break; }
-            else if (q == 5)   { errMsg = "Key is bound to a different app"; break; }
-            else if (q == 6)   { errMsg = "Key has been blocked"; break; }
-            else               { errMsg = "Key is invalid or expired"; break; }
-        } catch (...) {
-            errMsg = "Invalid server response";
-            if (attempt < 2) { usleep(800000); continue; }
+        } else {
+            errMsg = (body.size() < 120) ? body : "Key is invalid or expired";
             break;
         }
         break;

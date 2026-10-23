@@ -24,12 +24,13 @@
 
     <ImageView
         android:id="@+id/img1"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginBottom="20dp"
-        android:src="@drawable/zk_logo"
+        android:layout_marginBottom="40dp"
+        android:src="@drawable/zk_dragon"
+        android:background="@null"
         android:scaleType="fitCenter"
         android:alpha="0"
         android:elevation="8dp" />

@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,9 +30,6 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.FileProvider;
 
-import net_62v.external.MetaActivationManager;
-import com.mundo.MundoCore;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -50,14 +46,7 @@ public class LoginActivity extends BaseActivity {
         catch (UnsatisfiedLinkError ignored) {}
     }
 
-    private static final String USER   = "USER";
-    private static final String PKG_FB = "com.facebook.katana";
-    private static final String TAG_FB = "ARK_FB";
-
-    private CardView fbBtn;
-    private TextView fbBtnText;
-    private volatile boolean fbBusy = false;
-    private volatile long lastFbLaunchMs = 0L;
+    private static final String USER = "USER";
 
     private Prefs prefs;
     private EditText etKey;
@@ -102,7 +91,6 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        restoreFbBtnState();
     }
 
     @Override
@@ -240,12 +228,6 @@ public class LoginActivity extends BaseActivity {
         if (processingCard != null) processingCard.setVisibility(View.GONE);
         if (etKey != null)    etKey.setEnabled(true);
         if (btnLogin != null) btnLogin.setEnabled(true);
-        if (fbBtn != null) {
-            fbBtn.setVisibility(View.VISIBLE);
-            fbBtn.setAlpha(0f);
-            fbBtn.animate().alpha(1f).setDuration(280).start();
-            restoreFbBtnState();
-        }
         getWindow().getDecorView().post(this::runEntryAnim);
         setTitle();
     }
@@ -300,8 +282,6 @@ public class LoginActivity extends BaseActivity {
         speedText           = findViewById(R.id.speedText);
         speedRow            = findViewById(R.id.speedRow);
         okButton            = findViewById(R.id.okButton);
-        fbBtn               = findViewById(R.id.btnFbClone);
-        fbBtnText           = findViewById(R.id.btnFbCloneText);
     }
 
     private void setupListeners() {
@@ -340,148 +320,6 @@ public class LoginActivity extends BaseActivity {
                 prefs.write(USER, key);
                 doLogin(key);
             });
-        }
-        if (fbBtn != null) {
-            fbBtn.setOnClickListener(v -> {
-                if (fbBusy) return;
-                long now = System.currentTimeMillis();
-                if (isFbClonedSafe()) {
-                    if (now - lastFbLaunchMs < 4000L) {
-                        Toast.makeText(this, "Opening Facebook...", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    lastFbLaunchMs = now;
-                    setFbBtnText("OPENING...");
-                    new Thread(() -> { launchClonedFb(); runOnUiThread(this::restoreFbBtnState); }).start();
-                } else {
-                    fbBusy = true;
-                    setFbBtnText("CLONING...");
-                    new Thread(() -> { cloneFb(); fbBusy = false; runOnUiThread(this::restoreFbBtnState); }).start();
-                }
-            });
-            fbBtn.setOnLongClickListener(v -> {
-                if (fbBusy) return true;
-                fbBusy = true;
-                setFbBtnText("RE-CLONING...");
-                new Thread(() -> {
-                    try { MundoCore.get().uninstallPackageAsUser(PKG_FB, 0); } catch (Throwable ignored) {}
-                    cloneFb(); fbBusy = false; runOnUiThread(this::restoreFbBtnState);
-                }).start();
-                return true;
-            });
-        }
-    }
-
-    // ── Facebook clone/launch ────────────────────────────────────────────────
-    private boolean isFbClonedSafe() {
-        try { return MundoCore.get() != null && MundoCore.get().isInstalled(PKG_FB, 0); }
-        catch (Throwable t) { return false; }
-    }
-    private void setFbBtnText(String text) {
-        runOnUiThread(() -> { if (fbBtnText != null) fbBtnText.setText(text); });
-    }
-    private void restoreFbBtnState() {
-        if (fbBtnText == null) return;
-        fbBtnText.setText(isFbClonedSafe() ? "LAUNCH FACEBOOK" : "CLONE FACEBOOK");
-    }
-    private void ensureMundoActivated() {
-        try {
-            boolean active = false;
-            try { active = MetaActivationManager.getActivatedStatus(); } catch (Throwable ignored) {}
-            if (!active) {
-                try { MetaActivationManager.activateSdk(ArkApplication.getSdkKey()); } catch (Throwable ignored) {}
-            }
-        } catch (Throwable ignored) {}
-    }
-    private void cloneFb() {
-        try {
-            android.util.Log.i(TAG_FB, "cloneFb start");
-
-            // FIX 1: Engine PEHLE activate karo — bina is ke install silently 0 return karta hai
-            ensureMundoActivated();
-
-            try { MundoCore.get().uninstallPackageAsUser(PKG_FB, 0); } catch (Throwable ignored) {}
-            android.util.Log.i(TAG_FB, "after uninstall isFbCloned=" + isFbClonedSafe());
-
-            ApplicationInfo ai = getPackageManager().getApplicationInfo(PKG_FB, 0);
-            int nSplits = (ai.splitSourceDirs == null) ? 0 : ai.splitSourceDirs.length;
-            android.util.Log.i(TAG_FB, "host base=" + ai.sourceDir + " splits=" + nSplits);
-
-            // FIX 2: Scratch dir clean karo pehle — old broken APKs confuse engine
-            File scratch = new File(getExternalFilesDir(null), "fbclone");
-            if (scratch.exists()) {
-                File[] old = scratch.listFiles();
-                if (old != null) for (File f : old) f.delete();
-            } else {
-                scratch.mkdirs();
-            }
-
-            File baseDst = new File(scratch, "base.apk");
-            copyFileFast(new File(ai.sourceDir), baseDst);
-            int copied = 1;
-            if (ai.splitSourceDirs != null) {
-                for (String split : ai.splitSourceDirs) {
-                    if (split == null) continue;
-                    File src = new File(split);
-                    String nm = src.getName();
-                    if (!nm.toLowerCase().endsWith(".apk")) nm = nm + ".apk";
-                    copyFileFast(src, new File(scratch, nm));
-                    copied++;
-                }
-            }
-            String basePath = baseDst.getAbsolutePath();
-            String dirPath  = scratch.getAbsolutePath();
-            android.util.Log.i(TAG_FB, "copied " + copied + " apks → " + dirPath);
-
-            com.mundo.entity.pm.InstallResult installResult = null;
-            try { installResult = MundoCore.get().installPackageAsUser(PKG_FB, 0); }
-            catch (Throwable t) { android.util.Log.e(TAG_FB, "installPackageAsUser threw " + t); }
-            android.util.Log.i(TAG_FB, "installPackageAsUser result=" + installResult + " isFbCloned=" + isFbClonedSafe());
-
-            boolean ok = isFbClonedSafe();
-            android.util.Log.i(TAG_FB, "clone result=" + ok);
-            runOnUiThread(() -> {
-                restoreFbBtnState();
-                Toast.makeText(this,
-                    ok ? "Facebook cloned! Tap to launch."
-                       : "Could not clone Facebook. Make sure it is installed and try again.",
-                    Toast.LENGTH_LONG).show();
-            });
-        } catch (Exception e) {
-            android.util.Log.e(TAG_FB, "cloneFb FAIL: " + e, e);
-            runOnUiThread(() -> {
-                restoreFbBtnState();
-                Toast.makeText(this, "Facebook not installed on device", Toast.LENGTH_LONG).show();
-            });
-        }
-    }
-
-    private void launchClonedFb() {
-        // FIX 5: Debounce sirf click listener mein hai — yahan se hatao
-        // Pehle yahan bhi tha (lastFbLaunchMs check) jo click listener ke set karne ke
-        // turant baad trigger hota tha → now - lastFbLaunchMs = 0 < 4000 → NEVER launched!
-        ensureMundoActivated();
-        try { MundoCore.get().launchApk(PKG_FB, 0); }
-        catch (Throwable t1) {
-            try { MundoCore.get().launchApk(PKG_FB, 0); } catch (Throwable t2) {
-                android.util.Log.e(TAG_FB, "launchClonedFb failed: " + t2.getMessage());
-            }
-        }
-    }
-    private static void copyFileFast(File src, File dst) throws Exception {
-        dst.getParentFile().mkdirs();
-        try (FileInputStream fin = new FileInputStream(src);
-             FileOutputStream fout = new FileOutputStream(dst);
-             FileChannel inCh = fin.getChannel();
-             FileChannel outCh = fout.getChannel()) {
-            long size = inCh.size(), pos = 0L;
-            final long CHUNK = 16L * 1024 * 1024;
-            while (pos < size) {
-                long t = inCh.transferTo(pos, Math.min(CHUNK, size - pos), outCh);
-                if (t <= 0) break;
-                pos += t;
-            }
-            outCh.force(true);
         }
     }
 
@@ -584,7 +422,6 @@ public class LoginActivity extends BaseActivity {
     private void showProcessing(String msg) {
         runOnUiThread(() -> {
             if (processingCard != null) processingCard.setVisibility(View.VISIBLE);
-            if (fbBtn != null)          fbBtn.setVisibility(View.GONE);
             if (loadingText != null)    loadingText.setText(msg.toUpperCase());
             if (progressText != null)   progressText.setText("Please wait...");
             if (progressBar != null)    progressBar.setVisibility(View.VISIBLE);
@@ -604,7 +441,6 @@ public class LoginActivity extends BaseActivity {
     private void showError(String title, String msg) {
         runOnUiThread(() -> {
             if (processingCard != null) processingCard.setVisibility(View.VISIBLE);
-            if (fbBtn != null)          fbBtn.setVisibility(View.GONE);
             if (loadingText != null)    { loadingText.setText(title); loadingText.setTextColor(0xFFFF4060); }
             if (progressText != null)   progressText.setText(msg);
             if (progressBar != null)    progressBar.setVisibility(View.GONE);
@@ -618,12 +454,6 @@ public class LoginActivity extends BaseActivity {
                 okButton.setOnClickListener(v -> {
                     if (loadingText != null) loadingText.setTextColor(0xFFFFFFFF);
                     hideProcessing();
-                    if (fbBtn != null) {
-                        fbBtn.setVisibility(View.VISIBLE);
-                        fbBtn.setAlpha(0f);
-                        fbBtn.animate().alpha(1f).setDuration(280).start();
-                        restoreFbBtnState();
-                    }
                 });
             }
         });

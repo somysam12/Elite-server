@@ -4,30 +4,19 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.res.ResourcesCompat;
-
 
 @SuppressWarnings({"unused","deprecation"})
 public class SplashActivity extends AppCompatActivity {
@@ -44,229 +33,102 @@ public class SplashActivity extends AppCompatActivity {
         getWindow().setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            | WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        getWindow().addFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+            WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         getWindow().setNavigationBarColor(Color.TRANSPARENT);
 
-        // Build splash UI programmatically — Zero Kill cyber dragon theme
-        RelativeLayout root = buildSplashLayout();
-        setContentView(root);
-
-        // Start animation after first frame
-        root.post(() -> runSplashSequence(root));
+        setContentView(R.layout.tron_first);
+        getWindow().getDecorView().post(this::runSplashAnimations);
     }
 
-    // ── Build layout programmatically ─────────────────────────────────────
-    private RelativeLayout buildSplashLayout() {
-        RelativeLayout root = new RelativeLayout(this);
-        // Dark gradient background
-        GradientDrawable bg = new GradientDrawable(
-            GradientDrawable.Orientation.TOP_BOTTOM,
-            new int[]{ 0xFF060A10, 0xFF0C1220, 0xFF060A10 });
-        root.setBackground(bg);
+    private void runSplashAnimations() {
+        View glow    = findViewById(R.id.center_glow);
+        View logo    = findViewById(R.id.img1);
+        View title   = findViewById(R.id.tv_app_name);
+        View tagline = findViewById(R.id.tv_tagline);
+        View line    = findViewById(R.id.fire_line);
+        View ver     = findViewById(R.id.tv_version);
 
-        // Soft electric-blue radial glow behind the centre (esports badge vibe)
-        View glow = new View(this);
-        glow.setTag("glow");
-        GradientDrawable glowBg = new GradientDrawable(
-            GradientDrawable.Orientation.TOP_BOTTOM,
-            new int[]{ 0x55C0003A, 0x22C0003A, 0x00C0003A });
-        glowBg.setGradientType(GradientDrawable.RADIAL_GRADIENT);
-        glowBg.setGradientRadius(dp(240));
-        glow.setBackground(glowBg);
-        RelativeLayout.LayoutParams glp = new RelativeLayout.LayoutParams(dp(460), dp(460));
-        glp.addRule(RelativeLayout.CENTER_IN_PARENT);
-        glow.setLayoutParams(glp);
-        glow.setAlpha(0f);
-        root.addView(glow);
-
-        // ── Center column: logo on top, title below — vertical LinearLayout ──
-        android.widget.LinearLayout center = new android.widget.LinearLayout(this);
-        center.setOrientation(android.widget.LinearLayout.VERTICAL);
-        center.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
-        RelativeLayout.LayoutParams clp = new RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        clp.addRule(RelativeLayout.CENTER_IN_PARENT);
-        center.setLayoutParams(clp);
-
-        // Zero Kill logo frame
-        android.widget.FrameLayout logoFrame = new android.widget.FrameLayout(this);
-        logoFrame.setTag("logo");
-        android.widget.LinearLayout.LayoutParams framelp =
-            new android.widget.LinearLayout.LayoutParams(dp(180), dp(180));
-        framelp.gravity = android.view.Gravity.CENTER_HORIZONTAL;
-        logoFrame.setLayoutParams(framelp);
-
-        ImageView logo = new ImageView(this);
-        logo.setImageResource(R.drawable.zk_logo);
-        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        logo.setPadding(0, 0, 0, 0);
-        logoFrame.addView(logo, new android.widget.FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        logoFrame.setAlpha(0f);
-        logoFrame.setScaleX(0.7f);
-        logoFrame.setScaleY(0.7f);
-        center.addView(logoFrame);
-
-        // Title BELOW logo — LinearLayout guarantees no overlap
-        TextView title = new TextView(this);
-        title.setTag("title");
-        try { title.setTypeface(ResourcesCompat.getFont(this, R.font.rajdhani_bold)); }
-        catch (Exception ignored) {}
-        title.setTextSize(40);
-        title.setGravity(android.view.Gravity.CENTER);
-        title.setShadowLayer(30f, 0f, 0f, 0xFFC0003A);
-        SpannableString ss = new SpannableString("ZERO KILL");
-        ss.setSpan(new ForegroundColorSpan(0xFFC0003A), 0, 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss.setSpan(new ForegroundColorSpan(0xFFFFFFFF), 4, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        title.setText(ss);
-        title.setLetterSpacing(0.06f);
-        title.setAlpha(0f);
-        title.setTranslationY(dp(20));
-        android.widget.LinearLayout.LayoutParams titlelp =
-            new android.widget.LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        titlelp.topMargin = dp(30);   // gap between logo bottom and title
-        title.setLayoutParams(titlelp);
-        center.addView(title);
-
-        root.addView(center);
-
-        // ── Modern loading dots near bottom ──
-        android.widget.LinearLayout dots = new android.widget.LinearLayout(this);
-        dots.setTag("dots");
-        dots.setOrientation(android.widget.LinearLayout.HORIZONTAL);
-        dots.setGravity(android.view.Gravity.CENTER);
-        dots.setAlpha(0f);
-        RelativeLayout.LayoutParams dotslp = new RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dotslp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        dotslp.bottomMargin = dp(64);
-        dots.setLayoutParams(dotslp);
-        for (int i = 0; i < 3; i++) {
-            View dot = new View(this);
-            dot.setTag("dot" + i);
-            GradientDrawable dd = new GradientDrawable();
-            dd.setShape(GradientDrawable.OVAL);
-            dd.setColor(0xFFC0003A);
-            dot.setBackground(dd);
-            android.widget.LinearLayout.LayoutParams dlp =
-                new android.widget.LinearLayout.LayoutParams(dp(8), dp(8));
-            dlp.leftMargin = dp(5); dlp.rightMargin = dp(5);
-            dot.setLayoutParams(dlp);
-            dots.addView(dot);
-        }
-        root.addView(dots);
-
-        return root;
-    }
-
-    // ── Animation Sequence ───────────────────────────────────────────────
-    private void runSplashSequence(RelativeLayout root) {
-        View glow  = root.findViewWithTag("glow");
-        View logo  = root.findViewWithTag("logo");
-        View title = root.findViewWithTag("title");
-        View dots  = root.findViewWithTag("dots");
-
-        // Glow: gentle fade-in + slow breathing pulse
-        ObjectAnimator glowIn = ObjectAnimator.ofFloat(glow, "alpha", 0f, 1f);
-        glowIn.setDuration(900);
-        glowIn.setInterpolator(new DecelerateInterpolator());
-        ObjectAnimator glowPulse = ObjectAnimator.ofFloat(glow, "scaleX", 0.92f, 1.08f);
-        ObjectAnimator glowPulseY = ObjectAnimator.ofFloat(glow, "scaleY", 0.92f, 1.08f);
-        for (ObjectAnimator a : new ObjectAnimator[]{glowPulse, glowPulseY}) {
-            a.setDuration(2200);
-            a.setRepeatCount(ValueAnimator.INFINITE);
-            a.setRepeatMode(ValueAnimator.REVERSE);
-            a.setInterpolator(new AccelerateDecelerateInterpolator());
-            a.start();
+        // Glow pulse — starts invisible, fades in slowly
+        if (glow != null) {
+            ObjectAnimator ga = ObjectAnimator.ofFloat(glow, "alpha", 0f, 0.65f);
+            ga.setDuration(1200);
+            ga.setInterpolator(new DecelerateInterpolator());
+            ga.start();
         }
 
-        // Logo: smooth fade + scale up (decelerate, no cartoonish overshoot)
-        ObjectAnimator logoAlpha = ObjectAnimator.ofFloat(logo, "alpha", 0f, 1f);
-        ObjectAnimator logoSx    = ObjectAnimator.ofFloat(logo, "scaleX", 0.7f, 1f);
-        ObjectAnimator logoSy    = ObjectAnimator.ofFloat(logo, "scaleY", 0.7f, 1f);
-        logoAlpha.setDuration(700);
-        logoSx.setDuration(820); logoSy.setDuration(820);
-        logoSx.setInterpolator(new DecelerateInterpolator(2.2f));
-        logoSy.setInterpolator(new DecelerateInterpolator(2.2f));
-        logoAlpha.setStartDelay(200);
-        logoSx.setStartDelay(200); logoSy.setStartDelay(200);
+        // Dragon logo — fade + smooth scale-up with slight overshoot
+        if (logo != null) {
+            logo.setScaleX(0.78f); logo.setScaleY(0.78f);
+            ObjectAnimator la = ObjectAnimator.ofFloat(logo, "alpha", 0f, 1f);
+            ObjectAnimator sx = ObjectAnimator.ofFloat(logo, "scaleX", 0.78f, 1f);
+            ObjectAnimator sy = ObjectAnimator.ofFloat(logo, "scaleY", 0.78f, 1f);
+            la.setDuration(800); sx.setDuration(950); sy.setDuration(950);
+            la.setStartDelay(100); sx.setStartDelay(100); sy.setStartDelay(100);
+            sx.setInterpolator(new OvershootInterpolator(1.05f));
+            sy.setInterpolator(new OvershootInterpolator(1.05f));
+            AnimatorSet s = new AnimatorSet();
+            s.playTogether(la, sx, sy);
+            s.start();
+        }
 
-        // Logo: gentle floating bob once settled (subtle, premium)
-        ObjectAnimator logoFloat = ObjectAnimator.ofFloat(logo, "translationY", -dp(6), dp(6));
-        logoFloat.setDuration(2600);
-        logoFloat.setRepeatCount(ValueAnimator.INFINITE);
-        logoFloat.setRepeatMode(ValueAnimator.REVERSE);
-        logoFloat.setInterpolator(new AccelerateDecelerateInterpolator());
-        logoFloat.setStartDelay(1000);
+        // Title — fade + slide up from 32px below
+        if (title != null) {
+            title.setTranslationY(32f);
+            ObjectAnimator ta = ObjectAnimator.ofFloat(title, "alpha", 0f, 1f);
+            ObjectAnimator tt = ObjectAnimator.ofFloat(title, "translationY", 32f, 0f);
+            ta.setDuration(550); tt.setDuration(550);
+            ta.setStartDelay(650); tt.setStartDelay(650);
+            ta.setInterpolator(new DecelerateInterpolator(1.5f));
+            tt.setInterpolator(new DecelerateInterpolator(1.5f));
+            AnimatorSet s = new AnimatorSet();
+            s.playTogether(ta, tt);
+            s.start();
+        }
 
-        // Title: fade + slide up
-        ObjectAnimator titleA = ObjectAnimator.ofFloat(title, "alpha", 0f, 1f);
-        ObjectAnimator titleT = ObjectAnimator.ofFloat(title, "translationY", dp(20), 0f);
-        titleA.setDuration(560); titleT.setDuration(560);
-        titleA.setStartDelay(760); titleT.setStartDelay(760);
-        titleA.setInterpolator(new DecelerateInterpolator(1.6f));
-        titleT.setInterpolator(new DecelerateInterpolator(1.6f));
+        // Tagline — fade in after title
+        if (tagline != null) {
+            ObjectAnimator tga = ObjectAnimator.ofFloat(tagline, "alpha", 0f, 1f);
+            tga.setDuration(500); tga.setStartDelay(950);
+            tga.setInterpolator(new DecelerateInterpolator());
+            tga.start();
+        }
 
-        // Dots: fade in then loop a travelling pulse
-        ObjectAnimator dotsA = ObjectAnimator.ofFloat(dots, "alpha", 0f, 1f);
-        dotsA.setDuration(400);
-        dotsA.setStartDelay(1100);
+        // Fire line — fade in
+        if (line != null) {
+            ObjectAnimator la = ObjectAnimator.ofFloat(line, "alpha", 0f, 0.85f);
+            la.setDuration(500); la.setStartDelay(1150);
+            la.start();
+        }
 
-        AnimatorSet master = new AnimatorSet();
-        master.playTogether(glowIn, logoAlpha, logoSx, logoSy, titleA, titleT, dotsA);
-        master.start();
-        logoFloat.start();
+        // Version — fade in last, subtle
+        if (ver != null) {
+            ObjectAnimator va = ObjectAnimator.ofFloat(ver, "alpha", 0f, 0.55f);
+            va.setDuration(500); va.setStartDelay(1350);
+            va.start();
+        }
 
-        // Travelling dot pulse loop
-        final android.widget.LinearLayout dotsRow = (android.widget.LinearLayout) dots;
-        handler.postDelayed(new Runnable() {
-            int i = 0;
-            @Override public void run() {
-                if (isFinishing() || isDestroyed()) return;
-                for (int k = 0; k < dotsRow.getChildCount(); k++) {
-                    View d = dotsRow.getChildAt(k);
-                    boolean on = (k == i);
-                    d.animate().alpha(on ? 1f : 0.35f)
-                        .scaleX(on ? 1.4f : 1f).scaleY(on ? 1.4f : 1f)
-                        .setDuration(240).start();
-                }
-                i = (i + 1) % dotsRow.getChildCount();
-                handler.postDelayed(this, 260);
-            }
-        }, 1300);
-
-        handler.postDelayed(() -> fadeOutAndGo(root), 2700);
+        handler.postDelayed(this::exitSplash, 2900);
     }
 
-    private void fadeOutAndGo(View root) {
+    private void exitSplash() {
         if (isFinishing() || isDestroyed()) return;
+        View root = getWindow().getDecorView().getRootView();
         ObjectAnimator fadeOut = ObjectAnimator.ofFloat(root, "alpha", 1f, 0f);
-        fadeOut.setDuration(350);
+        fadeOut.setDuration(280);
         fadeOut.setInterpolator(new AccelerateDecelerateInterpolator());
         fadeOut.addListener(new AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(Animator a) {
-                goLogin();
+            @Override
+            public void onAnimationEnd(Animator a) {
+                if (isFinishing() || isDestroyed()) return;
+                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                overridePendingTransition(R.anim.slide_up_enter, R.anim.splash_exit);
+                finish();
             }
         });
         fadeOut.start();
-    }
-
-    private void goLogin() {
-        if (isFinishing() || isDestroyed()) return;
-        startActivity(new Intent(this, LoginActivity.class));
-        overridePendingTransition(R.anim.slide_up_enter, R.anim.splash_exit);
-        finish();
-    }
-
-    // ── Drawable helpers ─────────────────────────────────────────────────
-    private int dp(float v) {
-        return (int) android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_DIP, v,
-            getResources().getDisplayMetrics());
     }
 
     @Override
