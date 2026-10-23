@@ -1,4 +1,4 @@
-package com.zerokill.utils;
+package com.bgmi.utils;
 
 import android.util.Base64;
 import java.nio.charset.StandardCharsets;

@@ -1,5 +1,5 @@
-package com.zerokill;
-import com.zerokill.R;
+package com.bgmi;
+import com.bgmi.R;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -19,7 +19,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
-import com.zerokill.utils.Prefs;
+import com.bgmi.utils.Prefs;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import net_62v.external.MetaActivationManager;

@@ -1,4 +1,4 @@
-package com.zerokill;
+package com.bgmi;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -42,10 +42,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 
-import com.zerokill.utils.Downtwo;
-import com.zerokill.utils.IntegrityGuard;
-import com.zerokill.utils.PanelCrypto;
-import com.zerokill.utils.Prefs;
+import com.bgmi.utils.Downtwo;
+import com.bgmi.utils.IntegrityGuard;
+import com.bgmi.utils.PanelCrypto;
+import com.bgmi.utils.Prefs;
 
 @SuppressWarnings({"unused", "deprecation"})
 public class LoginActivity extends BaseActivity {
@@ -493,7 +493,6 @@ public class LoginActivity extends BaseActivity {
         }
         if (btnLogin != null) {
             btnLogin.setOnClickListener(v -> {
-                SplashActivity.playTap(this);
                 String key = etKey.getText().toString().trim();
                 if (key.isEmpty()) {
                     etKey.setError("Enter your license key");
@@ -665,7 +664,6 @@ public class LoginActivity extends BaseActivity {
                     try {
                         // Pass the native serial (the SAME device id the panel registered
                         // at login) so the heartbeat always matches — not raw ANDROID_ID.
-                        HeartbeatManager.onLoginSuccess(LoginActivity.this, key, serial);
                     } catch (Throwable ignored) {}
                     startDownloadLib(key, serial);
                 } else {
@@ -729,7 +727,6 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void startDownloadLib(String key, String serial) {
-        SplashActivity.playLaunch(this);
         showProcessing("Downloading Components");
         dlStartMs = System.currentTimeMillis();
         Downtwo dl = new Downtwo(this, success -> {

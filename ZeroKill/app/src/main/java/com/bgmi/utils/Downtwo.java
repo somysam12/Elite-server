@@ -1,4 +1,4 @@
-package com.zerokill.utils;
+package com.bgmi.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;

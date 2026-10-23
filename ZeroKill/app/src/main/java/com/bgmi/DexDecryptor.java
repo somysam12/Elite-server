@@ -1,4 +1,4 @@
-package com.zerokill;
+package com.bgmi;
 
 import android.content.Context;
 import android.content.res.AssetManager;

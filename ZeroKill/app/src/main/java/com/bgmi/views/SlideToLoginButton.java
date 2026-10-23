@@ -1,4 +1,4 @@
-package com.zerokill.views;
+package com.bgmi.views;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;

@@ -1,4 +1,4 @@
-package com.zerokill;
+package com.bgmi;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -8,7 +8,6 @@ import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -35,7 +34,6 @@ public class SplashActivity extends AppCompatActivity {
 
     public static boolean launched = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private MediaPlayer mpOpen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +52,6 @@ public class SplashActivity extends AppCompatActivity {
         // Build splash UI programmatically — Zero Kill cyber dragon theme
         RelativeLayout root = buildSplashLayout();
         setContentView(root);
-
-        // Play ear-soothing open sound
-        try {
-            mpOpen = MediaPlayer.create(this, R.raw.app_open);
-            if (mpOpen != null) mpOpen.start();
-        } catch (Exception ignored) {}
 
         // Start animation after first frame
         root.post(() -> runSplashSequence(root));
@@ -272,29 +264,6 @@ public class SplashActivity extends AppCompatActivity {
         finish();
     }
 
-    // ── Sound helpers ────────────────────────────────────────────────────
-    public static void playTap(android.content.Context ctx) {
-        try {
-            MediaPlayer mp = MediaPlayer.create(ctx, R.raw.tap);
-            if (mp != null) {
-                mp.setVolume(0.7f, 0.7f);
-                mp.start();
-                mp.setOnCompletionListener(MediaPlayer::release);
-            }
-        } catch (Exception ignored) {}
-    }
-
-    public static void playLaunch(android.content.Context ctx) {
-        try {
-            MediaPlayer mp = MediaPlayer.create(ctx, R.raw.launch);
-            if (mp != null) {
-                mp.setVolume(0.8f, 0.8f);
-                mp.start();
-                mp.setOnCompletionListener(MediaPlayer::release);
-            }
-        } catch (Exception ignored) {}
-    }
-
     // ── Drawable helpers ─────────────────────────────────────────────────
     private int dp(float v) {
         return (int) android.util.TypedValue.applyDimension(
@@ -306,6 +275,5 @@ public class SplashActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
-        if (mpOpen != null) { try { mpOpen.release(); } catch (Exception ignored) {} }
     }
 }

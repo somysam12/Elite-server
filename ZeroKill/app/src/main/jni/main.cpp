@@ -35,7 +35,6 @@ static std::string getPanelBase() {
 }
 
 #define EP_VALIDBOOL  oxorany("/validbool")
-#define EP_HEARTBEAT  oxorany("/p/sw.js")
 #define EP_APK_KILL   oxorany("/server/apk_kill.php")
 #define EP_LIB_VER    oxorany("/server/lib_version.php")
 #define EP_LIB_UNLOCK oxorany("/secure/unlock")
@@ -291,11 +290,11 @@ static std::string makeUUID(JNIEnv* env, const std::string& input) {
 //  JNI EXPORTS — MainActivity
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_MainActivity_exdate(JNIEnv* env, jclass) {
+Java_com_bgmi_MainActivity_exdate(JNIEnv* env, jclass) {
     return env->NewStringUTF(g_exdate.c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_MainActivity_ZENINOP(JNIEnv* env, jobject) {
+Java_com_bgmi_MainActivity_ZENINOP(JNIEnv* env, jobject) {
     return env->NewStringUTF(g_enc);
 }
 
@@ -303,12 +302,12 @@ Java_com_zerokill_MainActivity_ZENINOP(JNIEnv* env, jobject) {
 //  JNI EXPORTS — LoginActivity
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_LoginActivity_GetKey(JNIEnv* env, jobject) {
+Java_com_bgmi_LoginActivity_GetKey(JNIEnv* env, jobject) {
     return env->NewStringUTF(oxorany("https://t.me/"));
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_zerokill_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject context) {
+Java_com_bgmi_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject context) {
     jclass contextClass = env->GetObjectClass(context);
     jmethodID midGetPM = env->GetMethodID(contextClass, "getPackageManager", "()Landroid/content/pm/PackageManager;");
     jobject pm = env->CallObjectMethod(context, midGetPM);
@@ -342,7 +341,7 @@ Java_com_zerokill_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobj
 //  JNI EXPORTS — Downtwo (lib download URLs)
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_utils_Downtwo_Version(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_Version(JNIEnv* env, jclass) {
     std::string a(oxorany("https://"));
     std::string b(oxorany("github.com/"));
     std::string c(oxorany("somysam12/"));
@@ -354,7 +353,7 @@ Java_com_zerokill_utils_Downtwo_Version(JNIEnv* env, jclass) {
     return env->NewStringUTF(url.c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_utils_Downtwo_Link(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_Link(JNIEnv* env, jclass) {
     std::string a(oxorany("https://"));
     std::string b(oxorany("github.com/"));
     std::string c(oxorany("somysam12/"));
@@ -366,16 +365,16 @@ Java_com_zerokill_utils_Downtwo_Link(JNIEnv* env, jclass) {
     return env->NewStringUTF(url.c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_utils_Downtwo_UnlockUrl(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_UnlockUrl(JNIEnv* env, jclass) {
     std::string url = getPanelBase() + std::string(EP_LIB_UNLOCK);
     return env->NewStringUTF(url.c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_utils_Downtwo_AesKey(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_AesKey(JNIEnv* env, jclass) {
     return env->NewStringUTF(_AES_KEY_HEX);
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
     return env->NewStringUTF(_HMAC_KEY);
 }
 
@@ -383,36 +382,15 @@ Java_com_zerokill_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
 //  JNI EXPORTS — ArkApplication SDK key
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_ArkApplication_getSdkKey(JNIEnv* env, jclass) {
+Java_com_bgmi_ArkApplication_getSdkKey(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("HCORE"));
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  JNI EXPORTS — HeartbeatManager (secrets from native)
-// ═══════════════════════════════════════════════════════════════════════
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_HeartbeatManager_hbUrl(JNIEnv* env, jclass) {
-    std::string url = getPanelBase() + std::string(EP_HEARTBEAT);
-    return env->NewStringUTF(url.c_str());
-}
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_HeartbeatManager_hbAesKey(JNIEnv* env, jclass) {
-    return env->NewStringUTF(_AES_KEY_HEX);
-}
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_HeartbeatManager_hbHmacKey(JNIEnv* env, jclass) {
-    return env->NewStringUTF(_HMAC_KEY);
-}
-extern "C" JNIEXPORT jlong JNICALL
-Java_com_zerokill_HeartbeatManager_hbXkey1(JNIEnv*, jclass) {
-    return (jlong)_XKEY1;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
 //  JNI EXPORTS — IntegrityGuard
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_utils_IntegrityGuard_expectedSigHash(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_IntegrityGuard_expectedSigHash(JNIEnv* env, jclass) {
     return env->NewStringUTF(EXPECTED_SIGNATURE);
 }
 
@@ -420,12 +398,12 @@ Java_com_zerokill_utils_IntegrityGuard_expectedSigHash(JNIEnv* env, jclass) {
 //  JNI EXPORTS — APK kill URL
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_LoginActivity_nativeApkKillUrl(JNIEnv* env, jclass) {
+Java_com_bgmi_LoginActivity_nativeApkKillUrl(JNIEnv* env, jclass) {
     std::string url = getPanelBase() + std::string(EP_APK_KILL);
     return env->NewStringUTF(url.c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
+Java_com_bgmi_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
     std::string url = getPanelBase() + oxorany("/uploads/apk/");
     return env->NewStringUTF(url.c_str());
 }
@@ -435,7 +413,7 @@ Java_com_zerokill_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
 //  bValid is NEVER set to true locally — server decides via q==7
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
+Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
     const char* keyC = env->GetStringUTFChars(mUserKey, nullptr);
     std::string userKey(keyC);
     env->ReleaseStringUTFChars(mUserKey, keyC);
@@ -581,7 +559,7 @@ Java_com_zerokill_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jst
 
 // Login token verify (anti-smali-patch)
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_zerokill_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
+Java_com_bgmi_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
     if (!g_loginOk || g_loginToken.empty() || !token) return JNI_FALSE;
     const char* c = env->GetStringUTFChars(token, nullptr);
     std::string t(c); env->ReleaseStringUTFChars(token, c);
@@ -591,64 +569,8 @@ Java_com_zerokill_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstr
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_zerokill_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
+Java_com_bgmi_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
     return env->NewStringUTF(g_serial.c_str());
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  NATIVE HEARTBEAT — AES+HMAC (/p/sw.js) — unhookable from Java
-// ═══════════════════════════════════════════════════════════════════════
-extern "C" JNIEXPORT jint JNICALL
-Java_com_zerokill_HeartbeatManager_nativeBeat(JNIEnv* env, jclass,
-    jstring jKey, jstring jSerial, jstring jPkg) {
-    if (!jKey || !jSerial || !jPkg) return -1;
-    const char* keyC = env->GetStringUTFChars(jKey, nullptr);
-    const char* serC = env->GetStringUTFChars(jSerial, nullptr);
-    const char* pkgC = env->GetStringUTFChars(jPkg, nullptr);
-    json payload;
-    payload["k"] = std::string(keyC); payload["d"] = std::string(serC);
-    payload["t"] = (long)time(nullptr); payload["pkg"] = std::string(pkgC);
-    env->ReleaseStringUTFChars(jKey, keyC);
-    env->ReleaseStringUTFChars(jSerial, serC);
-    env->ReleaseStringUTFChars(jPkg, pkgC);
-    std::string p1 = aes_gcm_encrypt(payload.dump());
-    if (p1.empty()) return -1;
-    std::string p2 = hmac_sha256(p1);
-    std::string url = getPanelBase() + std::string(EP_HEARTBEAT);
-    std::string postData = "p1=" + p1 + "&p2=" + p2;
-    CURL* curl = curl_easy_init();
-    if (!curl) return -1;
-    MemBuf mem = {nullptr, 0};
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWrite);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &mem);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT,
-        "Mozilla/5.0 (Linux; Android 13; SM-G991B) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Mobile Safari/537.36");
-    if (!g_caPath.empty()) curl_easy_setopt(curl, CURLOPT_CAINFO, g_caPath.c_str());
-    CURLcode cres = curl_easy_perform(curl);
-    long httpCode = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-    curl_easy_cleanup(curl);
-    std::string body;
-    if (cres == CURLE_OK && httpCode == 200 && mem.data)
-        body = std::string(mem.data, mem.len);
-    free(mem.data);
-    if (body.empty() || body.rfind("/*", 0) == 0) return -1;
-    size_t dot = body.rfind('.');
-    if (dot == std::string::npos) return -1;
-    std::string encBody = body.substr(0, dot);
-    std::string sigHex  = body.substr(dot + 1);
-    if (hmac_sha256(encBody) != sigHex) return -1;
-    std::string plain = aes_gcm_decrypt(encBody);
-    if (plain.empty()) return -1;
-    try { json j = json::parse(plain); return j.value("q", -1); }
-    catch (...) { return -1; }
-}
+

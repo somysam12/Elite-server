@@ -16,8 +16,6 @@
 
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "FF_CRYPT", __VA_ARGS__)
 
-// Forward declaration from security_checks.cpp
-extern bool ff_security_ok(JNIEnv* env, jobject ctx);
 
 // ── AES-256 key split across 4 arrays (XOR'd at runtime) ─────────────────────
 // Changing key: edit all 4 arrays here AND the same arrays in build.gradle task
@@ -60,16 +58,8 @@ static void derive_key(uint8_t out[32]) {
 // ── AES-256-CBC decrypt ───────────────────────────────────────────────────────
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_zerokill_DexDecryptor_nativeDecrypt(
+Java_com_bgmi_DexDecryptor_nativeDecrypt(
         JNIEnv* env, jclass, jbyteArray encrypted_data) {
-
-    // Security gate — all checks must pass
-    if (!ff_security_ok(env, nullptr)) {
-        LOGE("Security gate failed");
-        // Corrupt return to prevent partial extraction
-        jbyteArray junk = env->NewByteArray(4);
-        return junk;
-    }
 
     jsize data_len = env->GetArrayLength(encrypted_data);
     if (data_len <= 16) return nullptr;
