@@ -29,7 +29,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_marginBottom="20dp"
-        android:src="@mipmap/ic_launcher"
+        android:src="@drawable/zk_logo"
         android:scaleType="fitCenter"
         android:alpha="0"
         android:elevation="8dp" />

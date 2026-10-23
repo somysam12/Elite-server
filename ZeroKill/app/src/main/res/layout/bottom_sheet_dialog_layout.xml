@@ -28,7 +28,7 @@
             android:id="@+id/dialog_icon"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/gz_logo"
+            android:src="@drawable/zk_logo"
             android:scaleType="fitCenter"
             android:background="@null" />
 

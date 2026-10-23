@@ -66,7 +66,7 @@ public class BaseActivity extends AppCompatActivity {
         // Set GameZone badge as icon
         android.widget.ImageView icon = sheet.findViewById(R.id.dialog_icon);
         if (icon != null) {
-            icon.setImageResource(R.drawable.gz_logo);
+            icon.setImageResource(R.drawable.zk_logo);
             icon.setBackgroundResource(0);
         }
 

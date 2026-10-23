@@ -21,7 +21,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_gravity="center_horizontal"
-        android:src="@drawable/gz_logo"
+        android:src="@drawable/zk_logo"
         android:scaleType="fitCenter"
         android:background="@null"
         android:layout_marginBottom="14dp" />

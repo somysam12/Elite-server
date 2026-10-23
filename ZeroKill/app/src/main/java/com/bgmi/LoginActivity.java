@@ -40,7 +40,6 @@ import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 
 import com.bgmi.utils.Downtwo;
-import com.bgmi.utils.IntegrityGuard;
 import com.bgmi.utils.Prefs;
 
 @SuppressWarnings({"unused", "deprecation"})
@@ -91,8 +90,6 @@ public class LoginActivity extends BaseActivity {
         getWindow().setStatusBarColor(0xFF04070F);
         getWindow().setNavigationBarColor(0xFF04070F);
         setContentView(R.layout.tron_two);
-
-        IntegrityGuard.verifyOrDie(this);
 
         prefs = Prefs.with(this);
         bindViews();

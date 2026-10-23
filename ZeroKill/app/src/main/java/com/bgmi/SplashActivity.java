@@ -90,7 +90,7 @@ public class SplashActivity extends AppCompatActivity {
         clp.addRule(RelativeLayout.CENTER_IN_PARENT);
         center.setLayoutParams(clp);
 
-        // Logo — raw gz_logo (no square background, transparent)
+        // Zero Kill logo frame
         android.widget.FrameLayout logoFrame = new android.widget.FrameLayout(this);
         logoFrame.setTag("logo");
         android.widget.LinearLayout.LayoutParams framelp =
@@ -99,7 +99,7 @@ public class SplashActivity extends AppCompatActivity {
         logoFrame.setLayoutParams(framelp);
 
         ImageView logo = new ImageView(this);
-        logo.setImageResource(R.drawable.gz_logo);
+        logo.setImageResource(R.drawable.zk_logo);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         logo.setPadding(0, 0, 0, 0);
         logoFrame.addView(logo, new android.widget.FrameLayout.LayoutParams(

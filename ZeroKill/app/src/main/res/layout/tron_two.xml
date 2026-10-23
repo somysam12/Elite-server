@@ -28,7 +28,7 @@
             android:layout_width="96dp"
             android:layout_height="96dp"
             android:layout_marginTop="52dp"
-            android:src="@drawable/gz_logo"
+            android:src="@drawable/zk_logo"
             android:scaleType="fitCenter"
             android:background="@null" />
 
@@ -44,17 +44,7 @@
             android:fontFamily="@font/rajdhani_bold"
             android:letterSpacing="0.15" />
 
-        <!-- Sub-label -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:layout_marginBottom="28dp"
-            android:text="ELITE GAMING TOOL"
-            android:textSize="9sp"
-            android:textColor="@color/zk_ice_bright"
-            android:fontFamily="@font/rajdhani_bold"
-            android:letterSpacing="0.25" />
+        <!-- Sub-label removed -->
 
         <!-- ── Key input card ─────────────────────────────────────── -->
         <androidx.cardview.widget.CardView
