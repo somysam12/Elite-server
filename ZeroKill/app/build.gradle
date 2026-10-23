@@ -1,0 +1,421 @@
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
+import javax.crypto.spec.IvParameterSpec
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.security.SecureRandom
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
+
+plugins {
+    id 'com.android.application'
+    id 'org.lsposed.lsparanoid'
+}
+
+android {
+    namespace 'com.zerokill'
+    compileSdk 34
+buildToolsVersion '34.0.4'
+    signingConfigs {
+        debug {
+            storeFile file("zen.jks")
+            storePassword "TWINZZZGODD@6"
+            keyPassword "TWINZZZGODD@6"
+            keyAlias "SLAYTWINZ@66"
+        }
+        release {
+            storeFile file("zen.jks")
+            storePassword "TWINZZZGODD@6"
+            keyPassword "TWINZZZGODD@6"
+            keyAlias "SLAYTWINZ@66"
+        }
+    }
+
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    defaultConfig {
+        applicationId "com.zerokill"
+        minSdk 24
+        targetSdk 34
+        versionCode 48
+        versionName "4.6"
+        vectorDrawables { useSupportLibrary true }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk { abiFilters "arm64-v8a" }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk { debugSymbolLevel 'none' }
+        }
+        debug {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+
+    lsparanoid {
+        seed = 0x0DEA7C0D   // OgCheat seed
+        global = true        // encrypt ALL string literals
+        includeDependencies = false
+        variantFilter = { true }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+    }
+
+    buildFeatures { viewBinding true }
+
+    packagingOptions {
+        jniLibs { useLegacyPackaging true }
+        resources {
+            excludes += [
+                'META-INF/DEPENDENCIES',
+                'META-INF/LICENSE',
+                'META-INF/LICENSE.txt',
+                'META-INF/license.txt',
+                'META-INF/NOTICE',
+                'META-INF/NOTICE.txt',
+                'META-INF/notice.txt',
+                'META-INF/AL2.0',
+                'META-INF/LGPL2.1',
+                'META-INF/proguard/**',
+                'META-INF/versions/**',
+                'okhttp3/**',
+                '**.properties',
+                '**.proto',
+            ]
+            pickFirsts += [
+                'META-INF/services/**',
+            ]
+        }
+    }
+    externalNativeBuild {
+        ndkBuild { path file('src/main/jni/Android.mk') }
+    }
+    ndkVersion "24.0.8215888"
+}
+
+dependencies {
+    // Hcore AAR via flatDir — works in AndroidIDE + Android Studio
+    implementation(name: 'Hcore-release', ext: 'aar')
+    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
+    implementation 'com.github.tiann:FreeReflection:3.2.2'
+    implementation 'com.github.CodingGay.BlackReflection:core:1.1.4'
+    annotationProcessor 'com.github.CodingGay.BlackReflection:compiler:1.1.4'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+    implementation "com.airbnb.android:lottie:6.0.0"
+    implementation 'com.google.android.material:material:1.11.0'
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  FrozenFire DEX Encryption Task  (ported from working Mundo build)
+//  ► Pure Groovy/JVM — no Python, no external tools
+//  ► Runs automatically after assembleRelease
+//  ► Preserves original entry compression + zipaligns before signing
+//    (an unaligned protected APK is what caused "app not installed")
+// ═══════════════════════════════════════════════════════════════════════════════
+
+def FF_K1 = [0xF7,0x3A,0xC2,0x8B, 0x4E,0x1D,0x99,0x60,
+             0xA5,0x72,0xEB,0x3F, 0x58,0xD4,0x06,0xBC,
+             0x21,0x8E,0x47,0xC9, 0x6B,0xF0,0x35,0xA8,
+             0xD3,0x14,0x7C,0xE5, 0x92,0x40,0xBB,0x2D] as int[]
+
+def FF_K2 = [0x81,0x5C,0xA4,0xE3, 0x2F,0x70,0xF1,0x0C,
+             0xC3,0x1E,0x8D,0x56, 0x30,0xB7,0x62,0xDA,
+             0x43,0xEC,0x25,0xAF, 0x0D,0x94,0x57,0xCE,
+             0xB5,0x72,0x1A,0x83, 0xF4,0x26,0xDD,0x49] as int[]
+
+def FF_K3 = [0x29,0x6E,0x76,0x5A, 0x13,0x4B,0x8C,0xE4,
+             0x67,0xA0,0x39,0xC8, 0x7C,0x5B,0xD1,0xF2,
+             0x8F,0x72,0xBE,0x34, 0x61,0x2C,0x0A,0x55,
+             0x4E,0x38,0xC6,0x91, 0x7D,0xF9,0x50,0x1B] as int[]
+
+def FF_K4 = [0x5E,0x08,0xB0,0x36, 0x62,0xC6,0x46,0x88,
+             0x31,0xCC,0x67,0xA7, 0x04,0x1E,0xA5,0x60,
+             0x2D,0xF4,0x9A,0x16, 0x37,0x48,0x88,0x67,
+             0x80,0x0E,0xA9,0x77, 0xC1,0x9F,0x66,0x61] as int[]
+
+def deriveKey = { k1, k2, k3, k4 ->
+    byte[] key = new byte[32]
+    for (int i = 0; i < 32; i++)
+        key[i] = (byte)(k1[i] ^ k2[i] ^ k3[i] ^ k4[i])
+    return key
+}
+
+def aesEncrypt = { byte[] plain, byte[] key ->
+    byte[] iv = new byte[16]
+    new SecureRandom().nextBytes(iv)
+    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+    cipher.init(Cipher.ENCRYPT_MODE,
+                new SecretKeySpec(key, "AES"),
+                new IvParameterSpec(iv))
+    byte[] enc = cipher.doFinal(plain)
+    byte[] out = new byte[16 + enc.length]
+    System.arraycopy(iv,  0, out, 0,  16)
+    System.arraycopy(enc, 0, out, 16, enc.length)
+    return out
+}
+
+def bundleDex = { List<byte[]> dexList ->
+    ByteBuffer buf = ByteBuffer.allocate(
+        4 + dexList.sum { 4 + it.length } as int
+    ).order(ByteOrder.BIG_ENDIAN)
+    buf.putInt(dexList.size())
+    dexList.each { dex -> buf.putInt(dex.length); buf.put(dex) }
+    return buf.array()
+}
+
+def readZipEntry = { ZipFile zf, ZipEntry ze ->
+    ByteArrayOutputStream bos = new ByteArrayOutputStream()
+    InputStream is = zf.getInputStream(ze)
+    byte[] tmp = new byte[32768]; int n
+    while ((n = is.read(tmp)) > 0) bos.write(tmp, 0, n)
+    is.close()
+    return bos.toByteArray()
+}
+
+// ── Main encrypt task ─────────────────────────────────────────────────────────
+tasks.register('encryptReleaseDex') {
+    group       = 'FrozenFire'
+    description = 'AES-256 encrypt classes2.dex+ → assets/ff_core.bin (pure JVM, no Python)'
+
+    doLast {
+        // Direct File API (not Gradle fileTree) — reliable under Android Studio,
+        // which otherwise evaluates fileTree against a stale/empty snapshot and
+        // reports "No release APK" even though assembleRelease just produced it.
+        def apkDir = new File("${buildDir}/outputs/apk/release")
+        def srcApk = new File(apkDir, "app-release.apk")
+        if (!srcApk.exists()) {
+            def cand = apkDir.listFiles()?.findAll {
+                it.name.endsWith('.apk') && !it.name.contains('protected')
+            }
+            if (cand) srcApk = cand.sort { it.name }.first()
+        }
+
+        if (srcApk == null || !srcApk.exists()) {
+            println "[FF] No release APK — build first with assembleRelease"
+            return
+        }
+        def outApk = new File(srcApk.parent, srcApk.name.replace('.apk', '_protected.apk'))
+
+        println "[FF] ══ FrozenFire DEX Encryption ══"
+        println "[FF] Input : ${srcApk.name}"
+
+        byte[] key = deriveKey(FF_K1, FF_K2, FF_K3, FF_K4)
+
+        ZipFile zipIn = new ZipFile(srcApk)
+
+        List<byte[]> dexList = []
+        Set<String> skipEntries = new HashSet<>()
+        skipEntries.add("assets/ff_core.bin")
+
+        zipIn.entries().each { ZipEntry ze ->
+            if (ze.name.matches("classes[2-9]\\.dex") || ze.name.matches("classes[0-9]{2,}\\.dex")) {
+                byte[] dexBytes = readZipEntry(zipIn, ze)
+                dexList.add(dexBytes)
+                skipEntries.add(ze.name)
+                println "[FF] Bundling ${ze.name} (${dexBytes.length / 1024} KB)"
+            }
+        }
+
+        if (dexList.isEmpty()) {
+            println "[FF] No classes2+.dex found — single DEX build, skipping encryption"
+            zipIn.close()
+            println "[FF] Copying original APK as protected (no DEX encryption needed)"
+            java.nio.file.Files.copy(srcApk.toPath(), outApk.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            println "[FF] Protected APK ready: ${outApk.name}"
+            return
+        }
+
+        byte[] bundle    = bundleDex(dexList)
+        byte[] encrypted = aesEncrypt(bundle, key)
+        println "[FF] Encrypted ${dexList.size()} DEX file(s) → ${encrypted.length / 1024} KB"
+
+        ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outApk))
+
+        zipIn.entries().each { ZipEntry ze ->
+            if (skipEntries.contains(ze.name)) return
+            if (ze.name.startsWith("META-INF/")) return
+
+            byte[] data = readZipEntry(zipIn, ze)
+            ZipEntry newEnt = new ZipEntry(ze.name)
+
+            // Preserve original compression method — critical so zipalign/apksigner
+            // see a valid, alignable archive. Also keep .so/.arsc stored.
+            boolean store = ze.method == ZipEntry.STORED ||
+                            ze.name.endsWith('.so') ||
+                            ze.name.endsWith('.arsc')
+            newEnt.setMethod(store ? ZipEntry.STORED : ZipEntry.DEFLATED)
+            if (store) {
+                newEnt.setSize(data.length)
+                newEnt.setCrc(computeCrc32(data))
+            }
+            zipOut.putNextEntry(newEnt)
+            zipOut.write(data)
+            zipOut.closeEntry()
+        }
+
+        ZipEntry asset = new ZipEntry("assets/ff_core.bin")
+        asset.setMethod(ZipEntry.STORED)
+        asset.setSize(encrypted.length)
+        asset.setCrc(computeCrc32(encrypted))
+        zipOut.putNextEntry(asset)
+        zipOut.write(encrypted)
+        zipOut.closeEntry()
+
+        zipOut.close()
+        zipIn.close()
+
+        // ── Zipalign + Re-sign ──────────────────────────────────────────────
+        def ks       = file("zen.jks")
+        def ksPwd    = "TWINZZZGODD@6"
+        def keyAlias = "SLAYTWINZ@66"
+        def keyPwd   = "TWINZZZGODD@6"
+
+        def sdkDir = android.sdkDirectory.absolutePath
+        def btVer  = android.buildToolsVersion
+
+        def btDir = new File("${sdkDir}/build-tools/${btVer}")
+        if (!btDir.exists()) {
+            def btRoot = new File("${sdkDir}/build-tools")
+            if (btRoot.exists()) {
+                def vers = btRoot.listFiles()?.sort()?.reverse()
+                if (vers) btDir = vers[0]
+            }
+        }
+        if (!btDir.exists()) {
+            btDir = new File("/data/data/com.itsaky.androidide/files/home/android-sdk/build-tools/${btVer}")
+        }
+
+        // ── Zipalign (required for proper APK alignment → fixes "app not installed") ──
+        def zipalignBin = new File(btDir, "zipalign${System.getProperty('os.name').toLowerCase().contains('win') ? '.exe' : ''}")
+        if (zipalignBin.exists()) {
+            def alignedApk = new File(outApk.parent, "aligned_temp.apk")
+            println "[FF] Running zipalign..."
+            try {
+                exec {
+                    commandLine zipalignBin.absolutePath, '-f', '-p', '4',
+                                outApk.absolutePath, alignedApk.absolutePath
+                }
+                outApk.delete()
+                alignedApk.renameTo(outApk)
+                println "[FF] Zipalign OK"
+            } catch (Exception e) {
+                println "[FF] Zipalign skipped: ${e.message}"
+                alignedApk.delete()
+            }
+        } else {
+            println "[FF] zipalign not found at ${zipalignBin} — skipping"
+        }
+
+        // ── Sign with apksigner ─────────────────────────────────────────────
+        def apksignerJar = new File(btDir, "lib/apksigner.jar")
+        if (!apksignerJar.exists()) {
+            apksignerJar = new File("/data/user/0/com.itsaky.androidide/files/home/android-sdk/build-tools/${btVer}/lib/apksigner.jar")
+        }
+
+        def apksignerShell = new File(btDir, "apksigner")
+        if (!apksignerShell.exists()) {
+            apksignerShell = new File("/data/data/com.itsaky.androidide/files/home/android-sdk/build-tools/${btVer}/apksigner")
+        }
+
+        boolean signed = false
+
+        if (apksignerShell.exists()) {
+            println "[FF] Signing via apksigner shell binary..."
+            try {
+                exec {
+                    commandLine apksignerShell.absolutePath, "sign",
+                        "--ks",           ks.absolutePath,
+                        "--ks-pass",      "pass:${ksPwd}",
+                        "--key-pass",     "pass:${keyPwd}",
+                        "--ks-key-alias", keyAlias,
+                        "--v1-signing-enabled", "true",
+                        "--v2-signing-enabled", "true",
+                        "--v3-signing-enabled", "true",
+                        outApk.absolutePath
+                }
+                println "[FF] Signed OK (shell)!"
+                signed = true
+            } catch (Exception e) {
+                println "[FF] apksigner shell failed: ${e.message}"
+            }
+        }
+
+        if (!signed && apksignerJar.exists()) {
+            println "[FF] Signing via apksigner.jar..."
+            try {
+                javaexec {
+                    classpath files(apksignerJar)
+                    mainClass = "com.android.apksigner.ApkSignerTool"
+                    args = [
+                        "sign",
+                        "--ks",          ks.absolutePath,
+                        "--ks-pass",     "pass:${ksPwd}",
+                        "--key-pass",    "pass:${keyPwd}",
+                        "--ks-key-alias", keyAlias,
+                        "--v1-signing-enabled", "true",
+                        "--v2-signing-enabled", "true",
+                        "--v3-signing-enabled", "true",
+                        outApk.absolutePath
+                    ]
+                }
+                println "[FF] Signed OK (jar)!"
+                signed = true
+            } catch (Exception e) {
+                println "[FF] apksigner.jar failed: ${e.message}"
+            }
+        }
+
+        if (!signed) {
+            println "[FF] apksigner not found — trying jarsigner fallback..."
+            try {
+                exec {
+                    commandLine "jarsigner",
+                        "-keystore", ks.absolutePath,
+                        "-storepass", ksPwd,
+                        "-keypass", keyPwd,
+                        "-signedjar", outApk.absolutePath,
+                        outApk.absolutePath,
+                        keyAlias
+                }
+                println "[FF] Signed via jarsigner OK!"
+                signed = true
+            } catch (Exception e2) {
+                println "[FF] jarsigner also failed: ${e2.message}"
+                println "[FF] MANUAL SIGNING REQUIRED: Sign '${outApk.name}' with zen.jks (alias: SLAYTWINZ@66)"
+            }
+        }
+
+        println "[FF] Protected APK ready: ${outApk.name}"
+    }
+}
+
+static long computeCrc32(byte[] data) {
+    java.util.zip.CRC32 crc = new java.util.zip.CRC32()
+    crc.update(data)
+    return crc.getValue()
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease') {
+        task.finalizedBy 'encryptReleaseDex'
+    }
+}

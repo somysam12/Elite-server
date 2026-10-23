@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/zk_bg">
+
+    <!-- Top fire accent line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@drawable/zk_fire_line"
+        android:layout_alignParentTop="true" />
+
+    <!-- ── MAIN CONTENT (shown during input) ─────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/mainContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingHorizontal="24dp">
+
+        <!-- Logo at top -->
+        <ImageView
+            android:id="@+id/splashLogo"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginTop="52dp"
+            android:src="@mipmap/ic_launcher"
+            android:scaleType="fitCenter" />
+
+        <!-- App name -->
+        <TextView
+            android:id="@+id/splashTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="ZERO KILL"
+            android:textSize="28sp"
+            android:textColor="@color/zk_text_primary"
+            android:fontFamily="@font/rajdhani_bold"
+            android:letterSpacing="0.15" />
+
+        <!-- Sub-label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="28dp"
+            android:text="ELITE GAMING TOOL"
+            android:textSize="9sp"
+            android:textColor="@color/zk_ice_bright"
+            android:fontFamily="@font/rajdhani_bold"
+            android:letterSpacing="0.25" />
+
+        <!-- ── Key input card ─────────────────────────────────────── -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/zk_card"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="6dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <!-- Key label -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LICENSE KEY"
+                    android:textSize="10sp"
+                    android:textColor="@color/zk_ice_bright"
+                    android:fontFamily="@font/rajdhani_bold"
+                    android:letterSpacing="0.22"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Input + eye toggle row -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="8dp">
+
+                    <EditText
+                        android:id="@+id/et1"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:hint="Enter license key"
+                        android:inputType="textPassword"
+                        android:textColor="@color/zk_text_primary"
+                        android:textColorHint="@color/zk_text_dim"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/rajdhani_bold"
+                        android:background="@drawable/zk_input_bg"
+                        android:paddingHorizontal="14dp"
+                        android:paddingEnd="48dp"
+                        android:singleLine="true"
+                        android:imeOptions="actionDone" />
+
+                    <ImageButton
+                        android:id="@+id/eyeToggle"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_eye_off"
+                        android:tint="@color/zk_text_secondary"
+                        android:contentDescription="Toggle visibility"
+                        android:padding="10dp" />
+                </RelativeLayout>
+
+                <!-- Paste row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="end"
+                    android:layout_marginBottom="16dp">
+
+                    <ImageButton
+                        android:id="@+id/img1"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:src="@drawable/ic_paste_v2"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:tint="@color/zk_ice_bright"
+                        android:contentDescription="Paste"
+                        android:padding="6dp" />
+                </LinearLayout>
+
+                <!-- Login button (CardView so Java can cast it) -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btnSignIn"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="@color/zk_fire_mid"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:background="@drawable/zk_btn_fire_ripple">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AUTHENTICATE"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/rajdhani_bold"
+                            android:letterSpacing="0.12"
+                            android:textColor="@color/zk_text_primary" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- FB Clone button -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btnFbClone"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="#00000000"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:background="@drawable/zk_btn_ghost_ripple">
+
+                        <TextView
+                            android:id="@+id/btnFbCloneText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="CONNECT FACEBOOK"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/rajdhani_bold"
+                            android:letterSpacing="0.08"
+                            android:textColor="@color/zk_fire_mid" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+    <!-- ── PROCESSING OVERLAY (shown during verification/download) ──── -->
+    <LinearLayout
+        android:id="@+id/processingCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:background="@drawable/zk_card_border"
+        android:visibility="gone">
+
+        <!-- Fire accent divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@drawable/zk_fire_line"
+            android:alpha="0.7"
+            android:layout_marginBottom="14dp" />
+
+        <!-- Main status text -->
+        <TextView
+            android:id="@+id/loadingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="15sp"
+            android:textColor="@color/zk_fire_bright"
+            android:fontFamily="@font/rajdhani_bold"
+            android:letterSpacing="0.08"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Spinner + progress sub-text row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:indeterminateTint="@color/zk_fire_bright"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:id="@+id/progressText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="13sp"
+                android:textColor="@color/zk_ice_mid"
+                android:fontFamily="@font/rajdhani_bold" />
+        </LinearLayout>
+
+        <!-- Separator -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/zk_border"
+            android:layout_marginVertical="10dp" />
+
+        <!-- Download size label -->
+        <TextView
+            android:id="@+id/downloadSizeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="@color/zk_fire_bright"
+            android:fontFamily="@font/rajdhani_bold"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Download progress bar -->
+        <ProgressBar
+            android:id="@+id/downloadProgressBar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:progressTint="@color/zk_fire_mid"
+            android:progressBackgroundTint="@color/zk_border"
+            android:max="100"
+            android:progress="0"
+            android:visibility="gone" />
+
+        <!-- Percent text -->
+        <TextView
+            android:id="@+id/percentText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="@color/zk_ice_bright"
+            android:fontFamily="@font/rajdhani_bold"
+            android:gravity="center"
+            android:layout_marginTop="6dp"
+            android:visibility="gone" />
+
+        <!-- Speed row -->
+        <LinearLayout
+            android:id="@+id/speedRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="@color/zk_text_dim"
+                android:fontFamily="@font/rajdhani_bold" />
+
+            <TextView
+                android:id="@+id/speedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="@color/zk_fire_bright"
+                android:fontFamily="@font/rajdhani_bold" />
+        </LinearLayout>
+
+        <!-- Dismiss button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/okButton"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/zk_btn_fire"
+            android:text="DISMISS"
+            android:textColor="@color/zk_text_primary"
+            android:textSize="13sp"
+            android:fontFamily="@font/rajdhani_bold"
+            android:letterSpacing="0.1"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Bottom border line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/zk_border" />
+
+</RelativeLayout>
