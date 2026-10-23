@@ -4,20 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Process;
 import android.util.Log;
-
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.security.SecureRandom;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,9 +29,6 @@ public class Downtwo {
 
     public static native String Version();
     public static native String Link();
-    public static native String UnlockUrl();
-    public static native String AesKey();
-    public static native String HmacKey();
 
     public interface Callback             { void onComplete(boolean success); }
     public interface ProgressListener     { void onProgress(int pct); }
@@ -48,10 +39,6 @@ public class Downtwo {
     private ProgressListener     pl;
     private SizeProgressListener spl;
 
-    private String userKey;
-    private String serial;
-    private String pkgName;
-
     private final ExecutorService exec = Executors.newSingleThreadExecutor();
     private final Handler         main = new Handler(Looper.getMainLooper());
     private volatile boolean cancelled = false;
@@ -60,11 +47,7 @@ public class Downtwo {
     public void setProgressListener(ProgressListener l)         { this.pl = l; }
     public void setSizeProgressListener(SizeProgressListener l) { this.spl = l; }
 
-    public void setCredentials(String key, String serial, String pkg) {
-        this.userKey = key;
-        this.serial  = serial;
-        this.pkgName = pkg;
-    }
+    public void setCredentials(String key, String serial, String pkg) { /* no-op */ }
 
     public void cancel() { cancelled = true; }
 
@@ -91,7 +74,7 @@ public class Downtwo {
             try {
                 String versionUrl = Version();
                 if (versionUrl != null && !versionUrl.isEmpty()) {
-                    remoteVer = fetchPanelVersion(versionUrl + bust);
+                    remoteVer = fetchVersion(versionUrl + bust);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Version check: " + e.getMessage());
@@ -112,7 +95,7 @@ public class Downtwo {
             }
             loaderDir.mkdirs();
 
-            boolean ok = downloadViaUnlock(loaderDir, targetSo);
+            boolean ok = downloadFile(Link(), targetSo);
 
             if (ok) {
                 File[] soFiles = loaderDir.listFiles(f -> f.getName().endsWith(".so"));
@@ -140,7 +123,7 @@ public class Downtwo {
         }
     }
 
-    private String fetchPanelVersion(String urlStr) {
+    private String fetchVersion(String urlStr) {
         HttpURLConnection con = null;
         try {
             con = (HttpURLConnection) new URL(urlStr).openConnection();
@@ -152,126 +135,15 @@ public class Downtwo {
             if (con.getResponseCode() != 200) return null;
             Scanner sc = new Scanner(con.getInputStream(), "UTF-8");
             StringBuilder sb = new StringBuilder();
-            while (sc.hasNextLine()) sb.append(sc.nextLine());
+            while (sc.hasNextLine()) sb.append(sc.nextLine().trim());
             sc.close();
-
-            String encoded = sb.toString().trim();
-            if (encoded.isEmpty()) return null;
-
-            String decoded = PanelCrypto.xorDecode(encoded);
-            if (decoded == null) return null;
-
-            JSONObject resp = new JSONObject(decoded);
-
-            if (resp.optInt("kill", 0) == 1) {
-                Process.killProcess(Process.myPid());
-                System.exit(0);
-            }
-
-            return resp.optString("v", null);
+            String ver = sb.toString().trim();
+            return ver.isEmpty() ? null : ver;
         } catch (Exception e) {
-            Log.e(TAG, "fetchPanelVersion: " + e.getMessage());
+            Log.e(TAG, "fetchVersion: " + e.getMessage());
             return null;
         } finally {
             if (con != null) con.disconnect();
-        }
-    }
-
-    private boolean downloadViaUnlock(File dir, File target) {
-        try {
-            if (userKey == null || userKey.isEmpty() || serial == null || serial.isEmpty()) {
-                Log.e(TAG, "No credentials for unlock");
-                return false;
-            }
-
-            String aesKey  = AesKey();
-            String hmacKey = HmacKey();
-            String unlockUrl = UnlockUrl();
-            String libUrl    = Link();
-
-            if (aesKey == null || hmacKey == null || unlockUrl == null || libUrl == null) {
-                Log.e(TAG, "Missing native URLs");
-                return false;
-            }
-
-            byte[] nonceBytes = new byte[16];
-            new SecureRandom().nextBytes(nonceBytes);
-            StringBuilder nonceSb = new StringBuilder();
-            for (byte b : nonceBytes) nonceSb.append(String.format("%02x", b & 0xff));
-            String nonce = nonceSb.toString();
-
-            JSONObject payload = new JSONObject();
-            payload.put("k", userKey);
-            payload.put("d", serial);
-            payload.put("n", nonce);
-            payload.put("pkg", pkgName != null ? pkgName : ctx.getPackageName());
-
-            String p1 = PanelCrypto.aesEncrypt(payload.toString(), aesKey);
-            if (p1 == null) { Log.e(TAG, "AES encrypt failed"); return false; }
-            String p2 = PanelCrypto.hmacSha256(p1, hmacKey);
-
-            HttpURLConnection c = (HttpURLConnection) new URL(unlockUrl).openConnection();
-            c.setRequestMethod("POST");
-            c.setDoOutput(true);
-            c.setConnectTimeout(15000);
-            c.setReadTimeout(15000);
-            c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            String body = "p1=" + URLEncoder.encode(p1, "UTF-8")
-                        + "&p2=" + URLEncoder.encode(p2, "UTF-8");
-            OutputStream os = c.getOutputStream();
-            os.write(body.getBytes("UTF-8"));
-            os.flush(); os.close();
-
-            if (c.getResponseCode() != 200) {
-                Log.e(TAG, "Unlock HTTP " + c.getResponseCode());
-                c.disconnect();
-                return false;
-            }
-
-            Scanner sc = new Scanner(c.getInputStream(), "UTF-8");
-            StringBuilder sb = new StringBuilder();
-            while (sc.hasNextLine()) sb.append(sc.nextLine());
-            sc.close(); c.disconnect();
-
-            String encResp = sb.toString().trim();
-            if (encResp.startsWith("/*")) {
-                Log.e(TAG, "Unlock denied");
-                return false;
-            }
-
-            String plainResp = PanelCrypto.aesDecrypt(encResp, aesKey);
-            if (plainResp == null) {
-                Log.e(TAG, "Unlock decrypt failed");
-                return false;
-            }
-
-            JSONObject unlockResp = new JSONObject(plainResp);
-            if (unlockResp.optInt("ok", 0) != 1) {
-                Log.e(TAG, "Unlock rejected");
-                return false;
-            }
-
-            String grant    = unlockResp.optString("g", "");
-            String libFile  = unlockResp.optString("lib", "");
-
-            if (grant.isEmpty()) {
-                Log.e(TAG, "No grant in unlock response");
-                return false;
-            }
-
-            String dlUrl = libUrl
-                + "?k=" + URLEncoder.encode(userKey, "UTF-8")
-                + "&n=" + URLEncoder.encode(nonce, "UTF-8")
-                + "&g=" + URLEncoder.encode(grant, "UTF-8");
-            if (!libFile.isEmpty()) {
-                dlUrl += "&f=" + URLEncoder.encode(libFile, "UTF-8");
-            }
-
-            return downloadFile(dlUrl, target);
-
-        } catch (Exception e) {
-            Log.e(TAG, "downloadViaUnlock: " + e.getMessage());
-            return false;
         }
     }
 

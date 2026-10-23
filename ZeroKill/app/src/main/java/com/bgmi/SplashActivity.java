@@ -90,20 +90,18 @@ public class SplashActivity extends AppCompatActivity {
         clp.addRule(RelativeLayout.CENTER_IN_PARENT);
         center.setLayoutParams(clp);
 
-        // Logo — framed in the concentric electric ring for a premium, consistent look
+        // Logo — raw gz_logo (no square background, transparent)
         android.widget.FrameLayout logoFrame = new android.widget.FrameLayout(this);
         logoFrame.setTag("logo");
-        // BeastCrown logo already has its own ring
         android.widget.LinearLayout.LayoutParams framelp =
-            new android.widget.LinearLayout.LayoutParams(dp(216), dp(216));
+            new android.widget.LinearLayout.LayoutParams(dp(180), dp(180));
         framelp.gravity = android.view.Gravity.CENTER_HORIZONTAL;
         logoFrame.setLayoutParams(framelp);
 
         ImageView logo = new ImageView(this);
-        logo.setImageResource(R.mipmap.ic_launcher);
+        logo.setImageResource(R.drawable.gz_logo);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        int pad = dp(30);
-        logo.setPadding(pad, pad, pad, pad);
+        logo.setPadding(0, 0, 0, 0);
         logoFrame.addView(logo, new android.widget.FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -115,9 +113,9 @@ public class SplashActivity extends AppCompatActivity {
         // Title BELOW logo — LinearLayout guarantees no overlap
         TextView title = new TextView(this);
         title.setTag("title");
-        try { title.setTypeface(ResourcesCompat.getFont(this, R.font.pacifico)); }
+        try { title.setTypeface(ResourcesCompat.getFont(this, R.font.rajdhani_bold)); }
         catch (Exception ignored) {}
-        title.setTextSize(38);
+        title.setTextSize(40);
         title.setGravity(android.view.Gravity.CENTER);
         title.setShadowLayer(30f, 0f, 0f, 0xFFC0003A);
         SpannableString ss = new SpannableString("ZERO KILL");
@@ -152,7 +150,7 @@ public class SplashActivity extends AppCompatActivity {
             dot.setTag("dot" + i);
             GradientDrawable dd = new GradientDrawable();
             dd.setShape(GradientDrawable.OVAL);
-            dd.setColor(0xFF00E5FF);
+            dd.setColor(0xFFC0003A);
             dot.setBackground(dd);
             android.widget.LinearLayout.LayoutParams dlp =
                 new android.widget.LinearLayout.LayoutParams(dp(8), dp(8));

@@ -37,14 +37,10 @@ import com.mundo.MundoCore;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.channels.FileChannel;
 
 import com.bgmi.utils.Downtwo;
 import com.bgmi.utils.IntegrityGuard;
-import com.bgmi.utils.PanelCrypto;
 import com.bgmi.utils.Prefs;
 
 @SuppressWarnings({"unused", "deprecation"})
@@ -71,9 +67,6 @@ public class LoginActivity extends BaseActivity {
     private ImageButton eyeToggle;
     private boolean passwordVisible = false;
 
-    // Once set, login is blocked until server confirms update not needed
-    private volatile boolean updateBlocked = false;
-
     private LinearLayout processingCard;
     private ProgressBar progressBar, downloadProgressBar;
     private TextView loadingText, progressText, percentText, downloadSizeText, speedText;
@@ -87,9 +80,7 @@ public class LoginActivity extends BaseActivity {
     private static final int RC_OVERLAY  = 300;
     private static final String KEY_PERMS_DONE = "ark_perms_done";
 
-    // All URLs from native — no hardcoded panel endpoints
-    private static native String nativeApkKillUrl();
-    private static native String nativeApkDownloadUrl();
+    // Native declarations
     private static native boolean nativeVerifyLoginToken(String token);
     private static native String nativeGetSerial();
     private static native String Check(android.content.Context ctx, String key);
@@ -114,16 +105,11 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        restoreFbBtnState(); // FB se wapas aane par CLONE/LAUNCH text update karo
-        if (updateBlocked) {
-            showProcessing("Checking...");
-            checkApkUpdate();
-        }
+        restoreFbBtnState();
     }
 
     @Override
     public void onBackPressed() {
-        if (updateBlocked) return;
         super.onBackPressed();
     }
 
@@ -154,8 +140,9 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void askStorage() {
-        showSheet("Storage Permission", "Zero Kill needs storage access to copy game files.",
-            "Grant", () -> {
+        showSheet("SYSTEM ACCESS REQUIRED",
+            "UNRESTRICTED FILESYSTEM CLEARANCE IS MANDATORY. This application requires absolute read/write authority over all external storage partitions. Denial will terminate the process immediately.",
+            "AUTHORIZE", () -> {
                 dismissSheet();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     startActivityForResult(new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
@@ -166,31 +153,31 @@ public class LoginActivity extends BaseActivity {
                                      android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, RC_STORAGE);
                 }
             },
-            "Exit", () -> { dismissSheet(); finish(); System.exit(0); }
+            "TERMINATE", () -> { dismissSheet(); finish(); System.exit(0); }
         );
     }
 
     private void askInstall() {
-        showSheet("Install Unknown Apps",
-            "Zero Kill needs permission to install game components. Please allow Install from Unknown Sources.",
-            "Grant", () -> {
+        showSheet("DEPLOYMENT CLEARANCE REQUIRED",
+            "EXECUTION AUTHORITY OVER UNSIGNED PACKAGES IS NON-NEGOTIABLE. Critical combat modules must be deployed directly. Without this authorization, operational components cannot be installed and functionality will be severely compromised.",
+            "AUTHORIZE", () -> {
                 dismissSheet();
                 startActivityForResult(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                     Uri.parse("package:" + getPackageName())), RC_INSTALL);
             },
-            "Exit", () -> { dismissSheet(); finish(); System.exit(0); }
+            "TERMINATE", () -> { dismissSheet(); finish(); System.exit(0); }
         );
     }
 
     private void askOverlay() {
-        showSheet("Display Over Apps",
-            "Zero Kill needs to display over other apps to show the cheat menu while in-game.",
-            "Grant", () -> {
+        showSheet("OVERLAY DOMINANCE REQUIRED",
+            "SCREEN PENETRATION CLEARANCE IS DEMANDED. This application must render its interface over all active processes simultaneously. This is an absolute prerequisite for in-game overlay operation. No exceptions.",
+            "AUTHORIZE", () -> {
                 dismissSheet();
                 startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName())), RC_OVERLAY);
             },
-            "Exit", () -> { dismissSheet(); finish(); System.exit(0); }
+            "TERMINATE", () -> { dismissSheet(); finish(); System.exit(0); }
         );
     }
 
@@ -205,20 +192,7 @@ public class LoginActivity extends BaseActivity {
             if (!hasOverlay()) { askOverlay(); return; }
             onPermissionsReady();
         } else if (req == RC_OVERLAY) {
-            if (!prefs.read(KEY_PERMS_DONE, "").equals("1")) {
-                prefs.write(KEY_PERMS_DONE, "1");
-                showSheet("Restart Required",
-                    "Please restart Zero Kill once so it can initialize properly.",
-                    "Restart", () -> {
-                        dismissSheet();
-                        android.os.Process.killProcess(android.os.Process.myPid());
-                        System.exit(0);
-                    },
-                    "Skip", () -> { dismissSheet(); onPermissionsReady(); }
-                );
-            } else {
-                onPermissionsReady();
-            }
+            onPermissionsReady();
         }
     }
 
@@ -233,123 +207,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void onPermissionsReady() {
-        checkApkUpdate();
-    }
-
-    // ── APK Update / Kill Check ─────────────────────────────────────────────
-    // Panel returns XOR-encoded JSON. kill=1 → process kill. force_update=1 → block login.
-    // Network error → retry dialog (updateBlocked stays as-is, not cleared).
-    private void checkApkUpdate() {
-        new Thread(() -> {
-            try {
-                String panelUrl = nativeApkKillUrl();
-                HttpURLConnection c = (HttpURLConnection)
-                    new URL(panelUrl + "?t=" + System.currentTimeMillis()).openConnection();
-                c.setConnectTimeout(8000); c.setReadTimeout(8000);
-                c.setRequestProperty("Cache-Control", "no-cache");
-                c.connect();
-                if (c.getResponseCode() != 200) {
-                    runOnUiThread(this::showRetryDialog); return;
-                }
-                java.util.Scanner sc = new java.util.Scanner(c.getInputStream(), "UTF-8");
-                String encoded = sc.hasNextLine() ? sc.nextLine().trim() : "";
-                sc.close(); c.disconnect();
-
-                if (encoded.isEmpty()) { runOnUiThread(this::showLoginUI); return; }
-
-                String json = PanelCrypto.xorDecode(encoded);
-                org.json.JSONObject obj = new org.json.JSONObject(json);
-
-                if (obj.optInt("kill", 0) == 1) {
-                    final String msg = obj.optString("msg", "App disabled by developer.");
-                    runOnUiThread(() -> showMandatoryUpdateSheet(
-                        "Service Unavailable", msg,
-                        "Exit", () -> {
-                            android.os.Process.killProcess(android.os.Process.myPid());
-                            System.exit(0);
-                        }
-                    ));
-                    return;
-                }
-
-                if (obj.optInt("force_update", 0) == 1) {
-                    updateBlocked = true;
-                    String ver = obj.optString("version", "");
-                    runOnUiThread(() -> showUpdateDialog(ver));
-                } else {
-                    runOnUiThread(this::showLoginUI);
-                }
-
-            } catch (Exception e) {
-                runOnUiThread(this::showRetryDialog);
-            }
-        }).start();
-    }
-
-    private void showRetryDialog() {
-        showSheet("Connection Error", "Could not reach server. Check internet and retry.",
-            "Retry", () -> { dismissSheet(); showProcessing("Checking..."); checkApkUpdate(); },
-            "Exit", () -> { dismissSheet(); finish(); System.exit(0); }
-        );
-    }
-
-    private void showUpdateDialog(String newVersion) {
-        if (etKey != null) etKey.setEnabled(false);
-        if (btnLogin != null) btnLogin.setEnabled(false);
-        String body = newVersion.isEmpty()
-            ? "A new version is required.\nYou must update to keep using Zero Kill."
-            : "Version " + newVersion + " is required.\nYou must update to keep using Zero Kill.";
-        showMandatoryUpdateSheet("Update Required", body,
-            "Update Now", () -> { dismissSheet(); downloadAndInstallApk(); }
-        );
-    }
-
-    @SuppressLint("SetTextI18n")
-    private void downloadAndInstallApk() {
-        runOnUiThread(() -> {
-            if (processingCard != null) processingCard.setVisibility(View.VISIBLE);
-            if (loadingText != null)   loadingText.setText("DOWNLOADING UPDATE");
-            if (progressText != null)  progressText.setText("Please wait...");
-            if (progressBar != null)   progressBar.setVisibility(View.GONE);
-            if (downloadProgressBar != null) {
-                downloadProgressBar.setVisibility(View.VISIBLE);
-                downloadProgressBar.setProgress(0);
-            }
-            if (speedRow != null) speedRow.setVisibility(View.VISIBLE);
-            if (okButton != null) okButton.setVisibility(View.GONE);
-        });
-
-        new Thread(() -> {
-            try {
-                HttpURLConnection conn = (HttpURLConnection)
-                    new URL(nativeApkDownloadUrl()).openConnection();
-                conn.setInstanceFollowRedirects(true);
-                conn.setConnectTimeout(15000); conn.setReadTimeout(120000);
-                conn.connect();
-
-                long total = conn.getContentLengthLong();
-                InputStream in = conn.getInputStream();
-                File apk = new File(getCacheDir(), "ZeroKill_update.apk");
-                FileOutputStream out = new FileOutputStream(apk);
-                byte[] buf = new byte[32768]; long done = 0; int n;
-                dlStartMs = System.currentTimeMillis();
-                while ((n = in.read(buf)) != -1) {
-                    out.write(buf, 0, n); done += n;
-                    final long dF = done, tF = total;
-                    final int pct = total > 0 ? (int)((done * 100L) / total) : 0;
-                    runOnUiThread(() -> updateDownloadUI(pct, dF, tF));
-                }
-                out.flush(); out.close(); in.close(); conn.disconnect();
-                final File apkFinal = apk;
-                runOnUiThread(() -> installApk(apkFinal));
-            } catch (Exception e) {
-                runOnUiThread(() -> {
-                    if (processingCard != null) processingCard.setVisibility(View.GONE);
-                    Toast.makeText(this, "Download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    showRetryDialog();
-                });
-            }
-        }).start();
+        showLoginUI();
     }
 
     @SuppressLint("SetTextI18n")
@@ -375,21 +233,6 @@ public class LoginActivity extends BaseActivity {
         }
     }
 
-    private void installApk(File apk) {
-        if (processingCard != null) processingCard.setVisibility(View.GONE);
-        try {
-            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", apk);
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, "application/vnd.android.package-archive");
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            // updateBlocked stays true — onResume re-checks server
-        } catch (Exception e) {
-            android.os.Process.killProcess(android.os.Process.myPid());
-            System.exit(0);
-        }
-    }
-
     private static String fmt(long b) {
         if (b < 1024 * 1024) return String.format("%.1f KB", b / 1024.0);
         return String.format("%.1f MB", b / (1024.0 * 1024));
@@ -397,7 +240,6 @@ public class LoginActivity extends BaseActivity {
 
     // ── Login UI ────────────────────────────────────────────────────────────
     private void showLoginUI() {
-        if (updateBlocked) return;
         if (processingCard != null) processingCard.setVisibility(View.GONE);
         if (etKey != null)    etKey.setEnabled(true);
         if (btnLogin != null) btnLogin.setEnabled(true);
@@ -648,11 +490,6 @@ public class LoginActivity extends BaseActivity {
 
     // ── Login ────────────────────────────────────────────────────────────────
     private void doLogin(String key) {
-        if (updateBlocked) {
-            showProcessing("Checking...");
-            checkApkUpdate();
-            return;
-        }
         showProcessing("Verifying License");
         android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper(),
             msg -> {
@@ -799,7 +636,7 @@ public class LoginActivity extends BaseActivity {
         TextView tv = findViewById(R.id.splashTitle);
         if (tv == null) return;
         try {
-            tv.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.pacifico));
+            tv.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.rajdhani_bold));
         } catch (Throwable ignored) {}
         tv.setShadowLayer(26f, 0f, 0f, 0xFFC0003A);
         android.text.SpannableString ss = new android.text.SpannableString("ZERO KILL");
