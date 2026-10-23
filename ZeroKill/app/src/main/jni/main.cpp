@@ -24,44 +24,18 @@
 using json = nlohmann::ordered_json;
 
 // ═══════════════════════════════════════════════════════════════════════
-//  PANEL CONFIG — split-string so URL never appears in .so
-// ═══════════════════════════════════════════════════════════════════════
-static std::string getPanelBase() {
-    std::string p1(oxorany("https://"));
-    std::string p2(oxorany("zerokill."));
-    std::string p3(oxorany("authapi."));
-    std::string p4(oxorany("xyz"));
-    return p1 + p2 + p3 + p4;
-}
-
-#define EP_VALIDBOOL  oxorany("/server/validbool.php")
-#define EP_APK_KILL   oxorany("/server/apk_kill.php")
-#define EP_LIB_VER    oxorany("/server/lib_version.php")
-#define EP_LIB_UNLOCK oxorany("/secure/unlock")
-#define EP_LIB_DL     oxorany("/secure/lib")
-
-// ═══════════════════════════════════════════════════════════════════════
-//  SECRETS — must match secrets.php on panel
-// ═══════════════════════════════════════════════════════════════════════
-#define _AES_KEY_HEX  oxorany("5c3d9f2a8b1e4c6079d2f3a4b5c6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8")
-#define _HMAC_KEY     oxorany("X9kL2mQ7vR4nB1eY3pT8wS5uJ6dA0cF")
-static const uint64_t _XKEY1 = 0xB7E15163ULL;
-static const uint64_t _XKEY2 = 0x9E3779B9ULL;
-
-// ═══════════════════════════════════════════════════════════════════════
 //  GLOBALS
 // ═══════════════════════════════════════════════════════════════════════
-static std::string g_exdate   = "NULL";
+static std::string g_exdate  = "NULL";
 static std::string g_userKey;
 static std::string g_serial;
-static std::string g_pkgName;
-static char        g_enc[64]  = {};
-static bool        g_loginOk  = false;
-static std::string g_loginToken;
-static std::string g_caPath;
-static std::string g_licKey;   // key from ZeroKill.lic
+static char        g_enc[64] = {};
+static bool        bValid    = false;
+static std::string g_Token;
+static std::string g_Auth;
+static time_t      rng       = 0;
+static std::string g_licKey;
 
-// Read license key from /storage/emulated/0/Android/ZeroKill.lic
 static std::string readLicKey() {
     FILE* f = fopen("/storage/emulated/0/Android/ZeroKill.lic", "r");
     if (!f) return "";
@@ -78,167 +52,45 @@ static std::string readLicKey() {
     fclose(f); return key;
 }
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
+JNIEXPORT jint JNI_OnLoad(JavaVM*, void*) {
     curl_global_init(CURL_GLOBAL_ALL);
     g_licKey = readLicKey();
     return JNI_VERSION_1_6;
 }
 
-// APK signature (SHA-256 of signing cert) — replace with your keystore hash
 #define EXPECTED_SIGNATURE oxorany("77f05d53ce8bf1855caef38ce87f13a8bb2b1b2cdd2d48da9d3ba897eac4549e")
 
 // ═══════════════════════════════════════════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════════════════════════════════════════
-struct MemBuf { char* data; size_t len; };
+struct MemoryStruct { char* memory; size_t size; };
 
-static size_t curlWrite(void* p, size_t sz, size_t n, void* ud) {
-    size_t total = sz * n;
-    auto* m = (MemBuf*)ud;
-    m->data = (char*)realloc(m->data, m->len + total + 1);
-    if (!m->data) return 0;
-    memcpy(m->data + m->len, p, total);
-    m->len += total;
-    m->data[m->len] = 0;
-    return total;
+static size_t WriteMemoryCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    size_t realsize = size * nmemb;
+    auto* mem = (MemoryStruct*)userp;
+    mem->memory = (char*)realloc(mem->memory, mem->size + realsize + 1);
+    if (!mem->memory) return 0;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+    return realsize;
+}
+
+static std::string CalcMD5(const std::string& s) {
+    std::string result;
+    unsigned char hash[MD5_DIGEST_LENGTH];
+    char tmp[4];
+    MD5_CTX md5;
+    MD5_Init(&md5);
+    MD5_Update(&md5, s.c_str(), s.length());
+    MD5_Final(hash, &md5);
+    for (unsigned char i : hash) { sprintf(tmp, "%02x", i); result += tmp; }
+    return result;
 }
 
 static void hexEncode(const unsigned char* in, int len, char* out) {
     for (int i = 0; i < len; i++) sprintf(out + i*2, "%02x", in[i]);
     out[len*2] = 0;
-}
-static void hexDecode(const char* hex, unsigned char* out, int outLen) {
-    for (int i = 0; i < outLen; i++) {
-        unsigned int v = 0; sscanf(hex + i*2, "%02x", &v); out[i] = (unsigned char)v;
-    }
-}
-
-// ── CA cert from APK assets ──────────────────────────────────────────
-static std::string extractCACert(JNIEnv* env, jobject context) {
-    if (!g_caPath.empty()) {
-        FILE* f = fopen(g_caPath.c_str(), "r");
-        if (f) { fclose(f); return g_caPath; }
-    }
-    jclass ctxCls = env->GetObjectClass(context);
-    jmethodID gfd = env->GetMethodID(ctxCls, "getFilesDir", "()Ljava/io/File;");
-    jobject fd = env->CallObjectMethod(context, gfd);
-    jclass fc = env->GetObjectClass(fd);
-    jmethodID gp = env->GetMethodID(fc, "getAbsolutePath", "()Ljava/lang/String;");
-    jstring ps = (jstring)env->CallObjectMethod(fd, gp);
-    const char* pc = env->GetStringUTFChars(ps, nullptr);
-    std::string dest = std::string(pc) + oxorany("/.cacert.pem");
-    env->ReleaseStringUTFChars(ps, pc);
-    FILE* chk = fopen(dest.c_str(), "r");
-    if (chk) { fclose(chk); g_caPath = dest; return dest; }
-    jmethodID ga = env->GetMethodID(ctxCls, "getAssets", "()Landroid/content/res/AssetManager;");
-    jobject am = env->CallObjectMethod(context, ga);
-    AAssetManager* mgr = AAssetManager_fromJava(env, am);
-    AAsset* asset = AAssetManager_open(mgr, oxorany("cacert.pem"), AASSET_MODE_STREAMING);
-    if (!asset) { LOGE("CA cert not found in assets"); return ""; }
-    FILE* out = fopen(dest.c_str(), "wb");
-    if (!out) { AAsset_close(asset); return ""; }
-    char buf[4096]; int nb;
-    while ((nb = AAsset_read(asset, buf, sizeof(buf))) > 0) fwrite(buf, 1, nb, out);
-    fclose(out); AAsset_close(asset);
-    g_caPath = dest; return dest;
-}
-
-// ── Base64url ────────────────────────────────────────────────────────
-static const char B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-static std::string b64url_encode(const unsigned char* data, size_t len) {
-    std::string out; out.reserve((len*4/3)+4);
-    for (size_t i = 0; i < len; i += 3) {
-        uint32_t n = ((uint32_t)data[i]) << 16;
-        if (i+1 < len) n |= ((uint32_t)data[i+1]) << 8;
-        if (i+2 < len) n |= data[i+2];
-        out += B64[(n >> 18) & 0x3F]; out += B64[(n >> 12) & 0x3F];
-        if (i+1 < len) out += B64[(n >> 6) & 0x3F];
-        if (i+2 < len) out += B64[n & 0x3F];
-    }
-    return out;
-}
-static int b64url_decodeByte(char c) {
-    if (c >= 'A' && c <= 'Z') return c-'A';
-    if (c >= 'a' && c <= 'z') return c-'a'+26;
-    if (c >= '0' && c <= '9') return c-'0'+52;
-    if (c == '-') return 62; if (c == '_') return 63; return -1;
-}
-static std::string b64url_decode(const std::string& s) {
-    std::string out;
-    for (size_t i = 0; i < s.size(); i += 4) {
-        int a = b64url_decodeByte(s[i]);
-        int b = (i+1<s.size()) ? b64url_decodeByte(s[i+1]) : -1;
-        int c = (i+2<s.size()) ? b64url_decodeByte(s[i+2]) : -1;
-        int d = (i+3<s.size()) ? b64url_decodeByte(s[i+3]) : -1;
-        if (a<0||b<0) break;
-        out += (char)((a<<2)|(b>>4));
-        if (c>=0) out += (char)(((b&0xF)<<4)|(c>>2));
-        if (d>=0) out += (char)(((c&0x3)<<6)|d);
-    }
-    return out;
-}
-
-// ── AES-256-GCM encrypt ──────────────────────────────────────────────
-static std::string aes_gcm_encrypt(const std::string& plain) {
-    unsigned char key[32]; hexDecode(_AES_KEY_HEX, key, 32);
-    unsigned char nonce[12]; RAND_bytes(nonce, 12);
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr);
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, 12, nullptr);
-    EVP_EncryptInit_ex(ctx, nullptr, nullptr, key, nonce);
-    int outLen = 0;
-    std::vector<unsigned char> ct(plain.size()+16);
-    EVP_EncryptUpdate(ctx, ct.data(), &outLen, (unsigned char*)plain.c_str(), plain.size());
-    int totalLen = outLen;
-    EVP_EncryptFinal_ex(ctx, ct.data()+totalLen, &outLen); totalLen += outLen;
-    unsigned char tag[16];
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag);
-    EVP_CIPHER_CTX_free(ctx);
-    std::vector<unsigned char> out(12+16+totalLen);
-    memcpy(out.data(), nonce, 12); memcpy(out.data()+12, tag, 16);
-    memcpy(out.data()+28, ct.data(), totalLen);
-    memset(key, 0, 32);
-    return b64url_encode(out.data(), out.size());
-}
-
-// ── AES-256-GCM decrypt ──────────────────────────────────────────────
-static std::string aes_gcm_decrypt(const std::string& b64) {
-    std::string raw = b64url_decode(b64);
-    if (raw.size() < 29) return "";
-    unsigned char key[32]; hexDecode(_AES_KEY_HEX, key, 32);
-    const unsigned char* nonce = (unsigned char*)raw.data();
-    const unsigned char* tag   = (unsigned char*)raw.data()+12;
-    const unsigned char* ct    = (unsigned char*)raw.data()+28;
-    int ctLen = raw.size()-28;
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr);
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, 12, nullptr);
-    EVP_DecryptInit_ex(ctx, nullptr, nullptr, key, nonce);
-    int outLen = 0;
-    std::vector<unsigned char> plain(ctLen+16);
-    EVP_DecryptUpdate(ctx, plain.data(), &outLen, ct, ctLen);
-    int totalLen = outLen;
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, (void*)tag);
-    int ok = EVP_DecryptFinal_ex(ctx, plain.data()+totalLen, &outLen);
-    totalLen += outLen; EVP_CIPHER_CTX_free(ctx);
-    memset(key, 0, 32);
-    if (ok <= 0) return "";
-    return std::string((char*)plain.data(), totalLen);
-}
-
-// ── HMAC-SHA256 ──────────────────────────────────────────────────────
-static std::string hmac_sha256(const std::string& data) {
-    unsigned char hash[32]; unsigned int hashLen = 0;
-    HMAC(EVP_sha256(), _HMAC_KEY, strlen(_HMAC_KEY),
-         (unsigned char*)data.c_str(), data.size(), hash, &hashLen);
-    char hex[65]; hexEncode(hash, 32, hex);
-    return std::string(hex);
-}
-
-static std::string generateLoginToken() {
-    unsigned char bytes[32]; RAND_bytes(bytes, 32);
-    char hex[65]; hexEncode(bytes, 32, hex);
-    return std::string(hex);
 }
 
 // ── Device info ──────────────────────────────────────────────────────
@@ -309,25 +161,25 @@ Java_com_bgmi_LoginActivity_GetKey(JNIEnv* env, jobject) {
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_bgmi_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject context) {
     jclass contextClass = env->GetObjectClass(context);
-    jmethodID midGetPM = env->GetMethodID(contextClass, "getPackageManager", "()Landroid/content/pm/PackageManager;");
-    jobject pm = env->CallObjectMethod(context, midGetPM);
+    jmethodID midGetPM  = env->GetMethodID(contextClass, "getPackageManager", "()Landroid/content/pm/PackageManager;");
+    jobject pm          = env->CallObjectMethod(context, midGetPM);
     jmethodID midGetPkg = env->GetMethodID(contextClass, "getPackageName", "()Ljava/lang/String;");
-    jstring pkgName = (jstring)env->CallObjectMethod(context, midGetPkg);
-    jclass pmClass = env->GetObjectClass(pm);
+    jstring pkgName     = (jstring)env->CallObjectMethod(context, midGetPkg);
+    jclass pmClass      = env->GetObjectClass(pm);
     jmethodID midGetInfo = env->GetMethodID(pmClass, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;");
-    jobject pkgInfo = env->CallObjectMethod(pm, midGetInfo, pkgName, 64);
-    jclass piCls = env->GetObjectClass(pkgInfo);
-    jfieldID fidSig = env->GetFieldID(piCls, "signatures", "[Landroid/content/pm/Signature;");
-    jobjectArray sigs = (jobjectArray)env->GetObjectField(pkgInfo, fidSig);
+    jobject pkgInfo     = env->CallObjectMethod(pm, midGetInfo, pkgName, 64);
+    jclass piCls        = env->GetObjectClass(pkgInfo);
+    jfieldID fidSig     = env->GetFieldID(piCls, "signatures", "[Landroid/content/pm/Signature;");
+    jobjectArray sigs   = (jobjectArray)env->GetObjectField(pkgInfo, fidSig);
     if (!sigs) return JNI_FALSE;
     jsize cnt = env->GetArrayLength(sigs);
     for (jsize i = 0; i < cnt; i++) {
-        jobject sig = env->GetObjectArrayElement(sigs, i);
-        jclass sc = env->GetObjectClass(sig);
+        jobject sig  = env->GetObjectArrayElement(sigs, i);
+        jclass sc    = env->GetObjectClass(sig);
         jmethodID tb = env->GetMethodID(sc, "toByteArray", "()[B");
         jbyteArray bytes = (jbyteArray)env->CallObjectMethod(sig, tb);
-        jsize len = env->GetArrayLength(bytes);
-        jbyte* buf = env->GetByteArrayElements(bytes, nullptr);
+        jsize len    = env->GetArrayLength(bytes);
+        jbyte* buf   = env->GetByteArrayElements(bytes, nullptr);
         unsigned char hash[SHA256_DIGEST_LENGTH];
         SHA256((unsigned char*)buf, len, hash);
         env->ReleaseByteArrayElements(bytes, buf, 0);
@@ -337,45 +189,190 @@ Java_com_bgmi_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject 
     return JNI_FALSE;
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_bgmi_LoginActivity_nativeApkKillUrl(JNIEnv* env, jclass) {
+    return env->NewStringUTF(oxorany("https://zerokill.authapi.xyz/server/apk_kill.php"));
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_bgmi_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
+    return env->NewStringUTF(oxorany("https://zerokill.authapi.xyz/uploads/apk/"));
+}
+
 // ═══════════════════════════════════════════════════════════════════════
-//  JNI EXPORTS — Downtwo (lib download URLs)
+//  LOGIN — FrozenFire JSON protocol
+// ═══════════════════════════════════════════════════════════════════════
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
+    const char* keyC = env->GetStringUTFChars(mUserKey, nullptr);
+    std::string user_key(keyC);
+    env->ReleaseStringUTFChars(mUserKey, keyC);
+
+    std::string hwid = user_key;
+    hwid += getAndroidId(env, mContext);
+    hwid += getModel(env);
+    hwid += getBrand(env);
+    std::string UUID = makeUUID(env, hwid);
+    std::string errMsg;
+
+    bValid = false;
+
+    for (int attempt = 0; attempt < 3; attempt++) {
+
+        MemoryStruct chunk{};
+        chunk.memory = (char*)malloc(1);
+        chunk.size   = 0;
+
+        CURL* curl = curl_easy_init();
+        if (!curl) { errMsg = "curl init failed"; free(chunk.memory); continue; }
+
+        char lol[256];
+        sprintf(lol, "%s", oxorany("https://zerokill.authapi.xyz/server"));
+
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_easy_setopt(curl, CURLOPT_URL, lol);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+
+        struct curl_slist* headers = nullptr;
+        headers = curl_slist_append(headers, "Accept: application/json");
+        headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+        headers = curl_slist_append(headers, "Charset: UTF-8");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        char data[4096];
+        sprintf(data, "game=PUBG&user_key=%s&serial=%s", user_key.c_str(), UUID.c_str());
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&chunk);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYSTATUS, 0);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "");
+
+        CURLcode res = curl_easy_perform(curl);
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+
+        if (res != CURLE_OK) {
+            errMsg = curl_easy_strerror(res);
+            free(chunk.memory);
+            if (attempt < 2) { usleep(800000); continue; }
+            break;
+        }
+
+        if (!chunk.memory || chunk.size == 0) {
+            errMsg = "Server not responding";
+            free(chunk.memory);
+            if (attempt < 2) { usleep(800000); continue; }
+            break;
+        }
+
+        try {
+            json result = json::parse(chunk.memory);
+            free(chunk.memory);
+
+            auto STATUS = std::string{"status"};
+            if (result.contains(STATUS) && result[STATUS] == true) {
+
+                if (!result.contains("data") || result["data"].is_null()) {
+                    errMsg = "Server data is null";
+                    if (attempt < 2) { usleep(800000); continue; }
+                } else {
+                    auto dataObj = result["data"];
+
+                    g_Token = dataObj.contains("token") && !dataObj["token"].is_null()
+                              ? dataObj["token"].get<std::string>() : "";
+
+                    std::string enc = dataObj.contains("Enc") && !dataObj["Enc"].is_null()
+                                      ? dataObj["Enc"].get<std::string>() : "";
+
+                    g_exdate = dataObj.contains("EXP") && !dataObj["EXP"].is_null()
+                               ? dataObj["EXP"].get<std::string>() : "NULL";
+
+                    rng = dataObj.contains("rng") && !dataObj["rng"].is_null()
+                          ? dataObj["rng"].get<time_t>() : 0;
+
+                    if (rng + 30 > time(nullptr)) {
+                        std::string auth = "PUBG";
+                        auth += "-"; auth += user_key;
+                        auth += "-"; auth += UUID;
+                        auth += "-";
+                        std::string license = oxorany("Vm8Lk7Uj2JmsjCPVPVjrLa7zgfx3uz9E");
+                        auth += license;
+                        g_Auth = CalcMD5(auth);
+                        bValid = (g_Token == g_Auth);
+                        if (bValid) {
+                            g_userKey = user_key;
+                            g_serial  = UUID;
+                            g_licKey  = user_key;
+                            strncpy(g_enc, enc.c_str(), sizeof(g_enc) - 1);
+                        }
+                    } else {
+                        errMsg = "Server time mismatch, try again";
+                        if (attempt < 2) { usleep(800000); continue; }
+                    }
+                }
+            } else {
+                auto REASON = std::string{"reason"};
+                errMsg = result.contains(REASON) && !result[REASON].is_null()
+                         ? result[REASON].get<std::string>()
+                         : "Key is invalid or expired";
+            }
+        } catch (json::exception&) {
+            free(chunk.memory);
+            errMsg = "Invalid server response";
+            if (attempt < 2) { usleep(800000); continue; }
+        }
+
+        break;
+    }
+
+    if (bValid) return env->NewStringUTF(oxorany("OK"));
+    return env->NewStringUTF(errMsg.c_str());
+}
+
+// Login token verify — anti-smali-patch: checks bValid then clears it
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_bgmi_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
+    if (!bValid || !token) return JNI_FALSE;
+    const char* c = env->GetStringUTFChars(token, nullptr);
+    bool ok = (strcmp(c, oxorany("OK")) == 0);
+    env->ReleaseStringUTFChars(token, c);
+    if (ok) bValid = false;
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_bgmi_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
+    return env->NewStringUTF(g_serial.c_str());
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  JNI EXPORTS — Downtwo (lib download)
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_utils_Downtwo_Version(JNIEnv* env, jclass) {
-    std::string a(oxorany("https://"));
-    std::string b(oxorany("github.com/"));
-    std::string c(oxorany("somysam12/"));
-    std::string d(oxorany("KingCheatsAuto/"));
-    std::string e(oxorany("releases/download/"));
-    std::string f2(oxorany("KingCheats/"));
-    std::string g(oxorany("version.txt"));
-    std::string url = a + b + c + d + e + f2 + g;
-    return env->NewStringUTF(url.c_str());
+    return env->NewStringUTF(oxorany("https://github.com/somysam12/KingCheatsAuto/releases/download/KingCheats/version.txt"));
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_utils_Downtwo_Link(JNIEnv* env, jclass) {
-    std::string a(oxorany("https://"));
-    std::string b(oxorany("github.com/"));
-    std::string c(oxorany("somysam12/"));
-    std::string d(oxorany("KingCheatsAuto/"));
-    std::string e(oxorany("releases/download/"));
-    std::string f2(oxorany("KingCheats/"));
-    std::string g(oxorany("ZeroKill.zip"));
-    std::string url = a + b + c + d + e + f2 + g;
-    return env->NewStringUTF(url.c_str());
+    return env->NewStringUTF(oxorany("https://github.com/somysam12/KingCheatsAuto/releases/download/KingCheats/ZeroKill.zip"));
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_utils_Downtwo_UnlockUrl(JNIEnv* env, jclass) {
-    std::string url = getPanelBase() + std::string(EP_LIB_UNLOCK);
-    return env->NewStringUTF(url.c_str());
+    return env->NewStringUTF(oxorany("https://zerokill.authapi.xyz/secure/unlock"));
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_utils_Downtwo_AesKey(JNIEnv* env, jclass) {
-    return env->NewStringUTF(_AES_KEY_HEX);
+    return env->NewStringUTF(oxorany("5c3d9f2a8b1e4c6079d2f3a4b5c6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8"));
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
-    return env->NewStringUTF(_HMAC_KEY);
+    return env->NewStringUTF(oxorany("X9kL2mQ7vR4nB1eY3pT8wS5uJ6dA0cF"));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -387,128 +384,9 @@ Java_com_bgmi_ArkApplication_getSdkKey(JNIEnv* env, jclass) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-//  JNI EXPORTS — IntegrityGuard
+//  JNI EXPORTS — IntegrityGuard (signature hash)
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_utils_IntegrityGuard_expectedSigHash(JNIEnv* env, jclass) {
     return env->NewStringUTF(EXPECTED_SIGNATURE);
 }
-
-// ═══════════════════════════════════════════════════════════════════════
-//  JNI EXPORTS — APK kill URL
-// ═══════════════════════════════════════════════════════════════════════
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_bgmi_LoginActivity_nativeApkKillUrl(JNIEnv* env, jclass) {
-    std::string url = getPanelBase() + std::string(EP_APK_KILL);
-    return env->NewStringUTF(url.c_str());
-}
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_bgmi_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
-    std::string url = getPanelBase() + oxorany("/uploads/apk/");
-    return env->NewStringUTF(url.c_str());
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  LOGIN — AES-256-GCM + HMAC protocol (/validbool)
-//  bValid is NEVER set to true locally — server decides via q==7
-// ═══════════════════════════════════════════════════════════════════════
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
-    const char* keyC = env->GetStringUTFChars(mUserKey, nullptr);
-    std::string userKey(keyC);
-    env->ReleaseStringUTFChars(mUserKey, keyC);
-
-    std::string hwid = userKey + getAndroidId(env, mContext) + getModel(env) + getBrand(env);
-    std::string serial = makeUUID(env, hwid);
-    std::string pkg = getPkg(env, mContext);
-    std::string errMsg;
-
-    g_loginOk = false;
-
-    for (int attempt = 0; attempt < 3; attempt++) {
-        std::string url      = getPanelBase() + std::string(EP_VALIDBOOL);
-        std::string postData = "game=PUBG&user_key=" + userKey + "&serial=" + serial;
-
-        CURL* curl = curl_easy_init();
-        std::string body;
-        if (curl) {
-            MemBuf mem = {nullptr, 0};
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWrite);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &mem);
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT, 25L);
-            curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 20L);
-            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-            curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
-            curl_easy_setopt(curl, CURLOPT_USERAGENT,
-                "Mozilla/5.0 (Linux; Android 13; SM-G991B) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Mobile Safari/537.36");
-            CURLcode cres = curl_easy_perform(curl);
-            long httpCode = 0;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-            curl_easy_cleanup(curl);
-            if (cres == CURLE_OK && httpCode == 200 && mem.data)
-                body = std::string(mem.data, mem.len);
-            else if (cres != CURLE_OK)
-                LOGE("CHECK curl error: %s", curl_easy_strerror(cres));
-            free(mem.data);
-        }
-
-        if (body.empty()) {
-            errMsg = "Server not responding";
-            if (attempt < 2) { usleep(800000); continue; }
-            break;
-        }
-
-        // Trim whitespace
-        size_t s0 = body.find_first_not_of(" \t\r\n");
-        size_t s1 = body.find_last_not_of(" \t\r\n");
-        if (s0 != std::string::npos) body = body.substr(s0, s1 - s0 + 1);
-
-        // FrozenFire panel returns "true" on success, "false" or error on failure
-        if (body == "true" || body == "1") {
-            g_userKey = userKey; g_serial = serial; g_pkgName = pkg;
-            g_exdate  = "2099-12-31 23:59:59";
-            g_loginOk = true;
-            break;
-        } else if (body == "false" || body == "0") {
-            errMsg = "Key is invalid or expired";
-            break;
-        } else {
-            errMsg = (body.size() < 120) ? body : "Key is invalid or expired";
-            break;
-        }
-        break;
-    }
-
-    if (g_loginOk) {
-        g_loginToken = generateLoginToken();
-        g_licKey = g_userKey;   // key confirmed valid — also cached for native use
-        // Return the actual token (Mundo flow) — Java verifies it via nativeVerifyLoginToken.
-        return env->NewStringUTF(g_loginToken.c_str());
-    }
-    return env->NewStringUTF(errMsg.c_str());
-}
-
-// Login token verify (anti-smali-patch)
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_bgmi_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
-    if (!g_loginOk || g_loginToken.empty() || !token) return JNI_FALSE;
-    const char* c = env->GetStringUTFChars(token, nullptr);
-    std::string t(c); env->ReleaseStringUTFChars(token, c);
-    bool match = (t == g_loginToken);
-    if (match) g_loginToken.clear();
-    return match ? JNI_TRUE : JNI_FALSE;
-}
-
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_bgmi_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
-    return env->NewStringUTF(g_serial.c_str());
-}
-
-
