@@ -418,4 +418,17 @@ tasks.whenTaskAdded { task ->
     if (task.name == 'assembleRelease') {
         task.finalizedBy 'encryptReleaseDex'
     }
+    // Strip Hikari .comment section (contains compiler attribution) from libZeroKill.so
+    if (task.name == 'stripReleaseDebugSymbols' || task.name == 'mergeReleaseNativeLibs') {
+        task.doLast {
+            def objcopy = '/usr/lib/android-sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy'
+            def soFile  = file("${buildDir}/intermediates/merged_native_libs/release/out/lib/arm64-v8a/libZeroKill.so")
+            if (soFile.exists()) {
+                exec {
+                    commandLine objcopy, '--remove-section=.comment', soFile.absolutePath
+                }
+                println "[Hikari] Stripped .comment from libZeroKill.so"
+            }
+        }
+    }
 }

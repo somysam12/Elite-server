@@ -1,5 +1,16 @@
 LOCAL_PATH:= $(call my-dir)
 
+# ── StatusCheck — compiled alone with strcry so the URL gets AES encryption
+#    without risking OOM on larger TUs.
+include $(CLEAR_VARS)
+LOCAL_MODULE    := status_check
+LOCAL_SRC_FILES := StatusCheck.cpp
+LOCAL_CPPFLAGS  := -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections \
+                   -w -std=c++17 -fno-rtti -fno-exceptions -fpermissive \
+                   -mllvm -enable-strcry
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/includes/curl/curl-android-$(TARGET_ARCH_ABI)/include
+include $(BUILD_STATIC_LIBRARY)
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ZeroKill
@@ -8,7 +19,7 @@ LOCAL_CFLAGS := -Wno-error=format-security -fvisibility=hidden -ffunction-sectio
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions -fpermissive
 LOCAL_CPPFLAGS += -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w -Werror -s -std=c++17
 LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fms-extensions -fno-rtti -fno-exceptions -fpermissive
-LOCAL_CPPFLAGS +=
+LOCAL_CPPFLAGS += -mllvm -enable-bcfobf -mllvm -enable-cffobf -mllvm -enable-strcry
 LOCAL_LDFLAGS += -Wl,--gc-sections,--strip-all, -llog
 LOCAL_ARM_MODE := arm
 
@@ -16,15 +27,15 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/includes
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/includes/curl/curl-android-$(TARGET_ARCH_ABI)/include
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/includes/curl/openssl-android-$(TARGET_ARCH_ABI)/include
-	
-CLIENT_SRC_FILES := $(wildcard $(LOCAL_PATH)/*.cpp)
 
-LOCAL_SRC_FILES := $(CLIENT_SRC_FILES:$(LOCAL_PATH)/%=%)
+CLIENT_SRC_FILES := $(wildcard $(LOCAL_PATH)/*.cpp)
+# Exclude StatusCheck.cpp — it's a separate static lib
+LOCAL_SRC_FILES := $(filter-out StatusCheck.cpp,$(CLIENT_SRC_FILES:$(LOCAL_PATH)/%=%))
 
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_LDLIBS    := -llog -landroid -lz
 
-LOCAL_STATIC_LIBRARIES := libcurl libssl libcrypto
+LOCAL_STATIC_LIBRARIES := status_check libcurl libssl libcrypto
 
 include $(BUILD_SHARED_LIBRARY)
 

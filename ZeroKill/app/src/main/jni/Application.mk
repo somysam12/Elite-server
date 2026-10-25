@@ -5,4 +5,6 @@ APP_OPTIM := release
 APP_THIN_ARCHIVE := true
 APP_PIE         := true
 
+NDK_CCACHE := /opt/hikari-wrapper.sh
+
 

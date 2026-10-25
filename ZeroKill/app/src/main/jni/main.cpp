@@ -23,6 +23,11 @@
 
 using json = nlohmann::ordered_json;
 
+// StatusCheck.cpp (compiled with strcry — AES-encrypted URLs)
+extern std::string g_tgUrlApk;
+extern bool        g_tgRedirectApk;
+extern void        CheckAppStatusNative();
+
 // ═══════════════════════════════════════════════════════════════════════
 //  GLOBALS
 // ═══════════════════════════════════════════════════════════════════════
@@ -155,6 +160,8 @@ Java_com_bgmi_MainActivity_ZENINOP(JNIEnv* env, jobject) {
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_bgmi_LoginActivity_GetKey(JNIEnv* env, jobject) {
+    if (g_tgRedirectApk && !g_tgUrlApk.empty())
+        return env->NewStringUTF(g_tgUrlApk.c_str());
     return env->NewStringUTF(oxorany("https://t.me/"));
 }
 
@@ -215,6 +222,7 @@ Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring
     std::string errMsg;
 
     bValid = false;
+    CheckAppStatusNative();
 
     for (int attempt = 0; attempt < 3; attempt++) {
 
