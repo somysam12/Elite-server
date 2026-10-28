@@ -2,6 +2,7 @@ package com.bgmi;
 import com.bgmi.R;
 
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -63,7 +64,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         setContentView(R.layout.tron_three);
+
+        // Start animated gradient background
+        View mainRoot = findViewById(R.id.main_layout);
+        if (mainRoot != null && mainRoot.getBackground() instanceof AnimationDrawable) {
+            ((AnimationDrawable) mainRoot.getBackground()).start();
+        }
 
         licenseLayout    = findViewById(R.id.licenseLayout);
         processingLayout = findViewById(R.id.processingLayout);

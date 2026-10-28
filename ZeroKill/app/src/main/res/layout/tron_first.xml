@@ -1,91 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/splash_root"
+    android:id="@+id/splashRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zk_bg"
-    android:clipToPadding="false">
+    android:background="@drawable/animated_logo_bg">
 
     <View
-        android:id="@+id/bg_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:alpha="0.04"
-        android:background="@drawable/zk_scanlines" />
+        android:background="#99000000" />
 
-    <View
-        android:id="@+id/center_glow"
-        android:layout_width="320dp"
-        android:layout_height="320dp"
-        android:layout_centerInParent="true"
-        android:background="@drawable/zk_radial_glow"
-        android:alpha="0" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:fitsSystemWindows="true">
 
-    <ImageView
-        android:id="@+id/img1"
-        android:layout_width="260dp"
-        android:layout_height="260dp"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_marginBottom="40dp"
-        android:src="@drawable/zk_dragon"
-        android:background="@null"
-        android:scaleType="fitCenter"
-        android:alpha="0"
-        android:elevation="8dp" />
+        <ImageView
+            android:id="@+id/img1"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/logopng"
+            android:scaleType="fitCenter"
+            android:contentDescription="@string/app_name" />
 
-    <TextView
-        android:id="@+id/tv_app_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/img1"
-        android:layout_marginTop="12dp"
-        android:text="ZERO KILL"
-        android:textSize="34sp"
-        android:textColor="@color/zk_text_primary"
-        android:fontFamily="@font/rajdhani_bold"
-        android:letterSpacing="0.18"
-        android:alpha="0" />
+        <ProgressBar
+            android:id="@+id/splashProgress"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginTop="32dp"
+            android:indeterminateTint="#ffffffff" />
 
-    <TextView
-        android:id="@+id/tv_tagline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/tv_app_name"
-        android:layout_marginTop="4dp"
-        android:text=""
-        android:textSize="10sp"
-        android:textColor="@color/zk_ice_bright"
-        android:fontFamily="@font/rajdhani_bold"
-        android:letterSpacing="0.25"
-        android:alpha="0"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/tv_app_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Checking license..."
+            android:textSize="18sp"
+            android:textColor="#ffffffff"
+            android:gravity="center"
+            android:fontFamily="@font/vfont" />
 
-    <View
-        android:id="@+id/fire_line"
-        android:layout_width="180dp"
-        android:layout_height="2dp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/tv_app_name"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/zk_fire_line"
-        android:alpha="0" />
+        <Button
+            android:id="@+id/splashRetry"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:minHeight="48dp"
+            android:text="Retry"
+            android:textColor="#ffffffff"
+            android:textAllCaps="false"
+            android:fontFamily="@font/vfont"
+            android:backgroundTint="#ffd5630d"
+            android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tv_version"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="48dp"
-        android:text="v4.6"
-        android:textSize="11sp"
-        android:textColor="@color/zk_text_dim"
-        android:fontFamily="@font/rajdhani_bold"
-        android:letterSpacing="0.15"
-        android:alpha="0" />
+    </LinearLayout>
 
-</RelativeLayout>
+</FrameLayout>

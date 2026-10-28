@@ -267,10 +267,10 @@ public class OverlayService extends Service {
         lblp.topMargin = dp(6);
         sidebar.addView(logoBox, lblp);
 
-        // Nav items: VISUALS, COMBAT, MISC
-        tabVisual = buildNavItem("VISUALS", "VISUAL", res("ic_eye_open", "drawable"));
-        tabAim    = buildNavItem("COMBAT",  "AIM",    res("ic_flame",    "drawable"));
-        tabMisc   = buildNavItem("MISC",    "MISC",   res("ic_check",    "drawable"));
+        // Nav items: VISUALS, COMBAT, MISC — Vision_Tw icons
+        tabVisual = buildNavItem("VISUALS", "VISUAL", res("esp",      "drawable"));
+        tabAim    = buildNavItem("COMBAT",  "AIM",    res("aimbot",   "drawable"));
+        tabMisc   = buildNavItem("MISC",    "MISC",   res("security", "drawable"));
         sidebar.addView(tabVisual);
         sidebar.addView(tabAim);
         sidebar.addView(tabMisc);
@@ -297,7 +297,7 @@ public class OverlayService extends Service {
 
         // Bottom border on header
         View headLine = new View(this);
-        headLine.setBackgroundColor(Color.parseColor("#2b2b2b"));
+        headLine.setBackgroundColor(Color.parseColor("#1affffff"));
         FrameLayout.LayoutParams hllp = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, dp(1));
         hllp.gravity = Gravity.BOTTOM;
@@ -305,7 +305,7 @@ public class OverlayService extends Service {
 
         // Title
         TextView titleTv = new TextView(this);
-        titleTv.setText("ZERO KILL");
+        titleTv.setText("Vision");
         titleTv.setTextColor(C_WHITE);
         titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
         titleTv.setTypeface(fHeading, Typeface.BOLD);
@@ -320,7 +320,7 @@ public class OverlayService extends Service {
         FrameLayout closeBtn = new FrameLayout(this);
         GradientDrawable cbg = new GradientDrawable();
         cbg.setCornerRadius(dp(5));
-        cbg.setColor(Color.parseColor("#3a3a3a"));
+        cbg.setColor(Color.parseColor("#33ffffff"));
         closeBtn.setBackground(cbg);
         TextView closeX = new TextView(this);
         closeX.setText("✕");
@@ -581,23 +581,30 @@ public class OverlayService extends Service {
         return box;
     }
 
-    // Checked: purple fill + white tick; unchecked: transparent + gray stroke
+    // Checked: Vision_Tw check.xml; unchecked: Vision_Tw uncheck.xml
     private void applyCheck(TextView box, boolean on) {
-        GradientDrawable bg = new GradientDrawable();
-        bg.setShape(GradientDrawable.RECTANGLE);
-        bg.setCornerRadius(dp(4));
-        if (on) {
-            bg.setColor(C_PURPLE);
-            bg.setStroke(dp(1.5f), C_PURPLE);
-            box.setText("✔");
-            box.setTextColor(C_WHITE);
-            box.setTypeface(null, Typeface.BOLD);
+        int drawRes = on ? res("check", "drawable") : res("uncheck", "drawable");
+        if (drawRes != 0) {
+            box.setBackground(getResources().getDrawable(drawRes, null));
+            box.setText(on ? "✔" : "");
+            box.setTextColor(on ? C_WHITE : Color.TRANSPARENT);
         } else {
-            bg.setColor(Color.TRANSPARENT);
-            bg.setStroke(dp(1.6f), Color.parseColor("#8e8e9a"));
-            box.setText("");
+            GradientDrawable bg = new GradientDrawable();
+            bg.setShape(GradientDrawable.RECTANGLE);
+            bg.setCornerRadius(dp(4));
+            if (on) {
+                bg.setColor(C_PURPLE);
+                bg.setStroke(dp(1.5f), C_PURPLE);
+                box.setText("✔");
+                box.setTextColor(C_WHITE);
+                box.setTypeface(null, Typeface.BOLD);
+            } else {
+                bg.setColor(Color.TRANSPARENT);
+                bg.setStroke(dp(1.6f), Color.parseColor("#8e8e9a"));
+                box.setText("");
+            }
+            box.setBackground(bg);
         }
-        box.setBackground(bg);
     }
 
     // Slider: purple fill track, purple thumb with white border

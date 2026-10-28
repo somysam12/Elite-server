@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -76,9 +77,16 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(0xFF04070F);
-        getWindow().setNavigationBarColor(0xFF04070F);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         setContentView(R.layout.tron_two);
+
+        // Start animated gradient background
+        View root = findViewById(R.id.main_layout);
+        if (root != null && root.getBackground() instanceof AnimationDrawable) {
+            ((AnimationDrawable) root.getBackground()).start();
+        }
 
         prefs = Prefs.with(this);
         bindViews();
@@ -233,38 +241,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void runEntryAnim() {
-        View logo = findViewById(R.id.splashLogo);
-        if (logo == null) return;
-        View[] views = {
-            logo,
-            findViewById(R.id.splashTitle),
-            findViewById(R.id.et1),
-            findViewById(R.id.img1),
-            findViewById(R.id.btnSignIn)
-        };
-        long delay = 0;
-        for (View v : views) {
-            if (v == null) { delay += 80; continue; }
-            v.setAlpha(0f); v.setTranslationY(48f);
-            ObjectAnimator a = ObjectAnimator.ofFloat(v, "alpha", 0f, 1f);
-            ObjectAnimator t = ObjectAnimator.ofFloat(v, "translationY", 48f, 0f);
-            a.setDuration(460); t.setDuration(460);
-            a.setStartDelay(delay); t.setStartDelay(delay);
-            a.setInterpolator(new DecelerateInterpolator(1.6f));
-            t.setInterpolator(new DecelerateInterpolator(1.6f));
-            if (delay == 0) {
-                v.setScaleX(0.7f); v.setScaleY(0.7f);
-                ObjectAnimator sx = ObjectAnimator.ofFloat(v, "scaleX", 0.7f, 1f);
-                ObjectAnimator sy = ObjectAnimator.ofFloat(v, "scaleY", 0.7f, 1f);
-                sx.setDuration(600); sy.setDuration(600);
-                sx.setInterpolator(new OvershootInterpolator(1.5f));
-                sy.setInterpolator(new OvershootInterpolator(1.5f));
-                AnimatorSet s = new AnimatorSet(); s.playTogether(a, t, sx, sy); s.start();
-            } else {
-                AnimatorSet s = new AnimatorSet(); s.playTogether(a, t); s.start();
-            }
-            delay += 90;
-        }
+        // Vision_Tw: no entry animation — background AnimationDrawable handles visual
     }
 
     private void bindViews() {
@@ -460,17 +437,6 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void setTitle() {
-        TextView tv = findViewById(R.id.splashTitle);
-        if (tv == null) return;
-        try {
-            tv.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.rajdhani_bold));
-        } catch (Throwable ignored) {}
-        tv.setShadowLayer(26f, 0f, 0f, 0xFFC0003A);
-        android.text.SpannableString ss = new android.text.SpannableString("ZERO KILL");
-        ss.setSpan(new android.text.style.ForegroundColorSpan(0xFFC0003A), 0, 4,
-            android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss.setSpan(new android.text.style.ForegroundColorSpan(0xFFFFFFFF), 4, 9,
-            android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        tv.setText(ss);
+        // Vision_Tw style: no custom title on login screen
     }
 }
