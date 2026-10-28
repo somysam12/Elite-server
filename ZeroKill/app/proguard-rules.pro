@@ -31,14 +31,14 @@
 }
 
 # ── App entry points (must survive R8) ───────────────────────────────────────
--keep class com.zerokill.ArkApplication { *; }
--keep class com.zerokill.DexDecryptor   { *; }
--keep class com.zerokill.SplashActivity { *; }
--keep class com.zerokill.LoginActivity  { *; }
--keep class com.zerokill.MainActivity   { *; }
--keep class com.zerokill.BaseActivity   { *; }
--keep class com.zerokill.OverlayService { *; }
--keep class com.zerokill.utils.**       { *; }
+-keep class com.visionpro.ArkApplication { *; }
+-keep class com.visionpro.DexDecryptor   { *; }
+-keep class com.visionpro.SplashActivity { *; }
+-keep class com.visionpro.LoginActivity  { *; }
+-keep class com.visionpro.MainActivity   { *; }
+-keep class com.visionpro.BaseActivity   { *; }
+-keep class com.visionpro.OverlayService { *; }
+-keep class com.visionpro.utils.**       { *; }
 
 # ── Virtual space SDK ─────────────────────────────────────────────────────────
 # REMOVED (Hcore): -keep class com.mundo.**         { *; }
@@ -100,9 +100,9 @@
 -dontwarn top.bienvenido.**
 
 # ArkCheat specific
--keep class com.zerokill.HeartbeatManager       { *; }
--keep class com.zerokill.OverlayService         { *; }
--keepclassmembers class com.zerokill.HeartbeatManager {
+-keep class com.visionpro.HeartbeatManager       { *; }
+-keep class com.visionpro.OverlayService         { *; }
+-keepclassmembers class com.visionpro.HeartbeatManager {
     static native <methods>;
     public static <methods>;
 }
