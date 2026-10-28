@@ -1078,7 +1078,6 @@ public class OverlayService extends Service {
 
     private void applySkipScreenshot(View v, WindowManager.LayoutParams p, boolean on) {
         if (v == null || p == null) return;
-        boolean skipApplied = false;
         try {
             Object vri = View.class.getMethod("getViewRootImpl").invoke(v);
             if (vri != null) {
@@ -1091,15 +1090,9 @@ public class OverlayService extends Service {
                             txClass.getMethod("setSkipScreenshot", scClass, boolean.class);
                     setSkip.invoke(tx, sc, on);
                     txClass.getMethod("apply").invoke(tx);
-                    skipApplied = true;
                 }
             }
         } catch (Throwable ignored) {}
-        if (!skipApplied) {
-            final int SECURE = WindowManager.LayoutParams.FLAG_SECURE;
-            if (on) p.flags |= SECURE; else p.flags &= ~SECURE;
-            try { wm.updateViewLayout(v, p); } catch (Exception ignored) {}
-        }
     }
 
     // ── HELPERS ───────────────────────────────────────────────────────────────
