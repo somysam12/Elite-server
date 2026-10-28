@@ -175,7 +175,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textSize="14sp"
+                        android:textSize="11sp"
                         android:textColor="#ffffffff"
                         android:layout_marginTop="10dp"
                         android:fontFamily="@font/font" />
@@ -185,7 +185,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="#80ffffff"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/font" />

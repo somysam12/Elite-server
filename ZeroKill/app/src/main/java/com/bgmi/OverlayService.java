@@ -195,17 +195,12 @@ public class OverlayService extends Service {
 
     // ── BUILD MENU — XDCheat Elite style ────────────────────────────────────
     private void buildMenu() {
-        // Root: panel bg + border radius 17dp (matches 34px / 2)
+        // Root: transparent container — sidebar and rightPanel each have their own backgrounds
         FrameLayout outer = new FrameLayout(this);
-        GradientDrawable outerBg = new GradientDrawable();
-        outerBg.setCornerRadius(dp(17));
-        outerBg.setColor(C_PANEL);
-        outerBg.setStroke(dp(1.5f), C_PANEL_BRD);
-        outer.setBackground(outerBg);
 
         LinearLayout inner = new LinearLayout(this);
         inner.setOrientation(LinearLayout.HORIZONTAL);
-        inner.setPadding(dp(9), dp(9), dp(9), dp(9));
+        inner.setPadding(0, 0, 0, 0);
 
         // Drag from outer (non-interactive area)
         outer.setOnTouchListener(new View.OnTouchListener() {
@@ -298,9 +293,11 @@ public class OverlayService extends Service {
         titleTv.setTypeface(fHeading, Typeface.BOLD);
         titleTv.setLetterSpacing(0.15f);
         FrameLayout.LayoutParams ttlp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT);
-        ttlp.gravity = Gravity.CENTER_VERTICAL | Gravity.START;
+        ttlp.gravity = Gravity.CENTER;
+        ttlp.rightMargin = dp(44);
+        titleTv.setGravity(Gravity.CENTER);
         header.addView(titleTv, ttlp);
 
         // Close button: 32×32dp, #33ffffff bg, 6dp radius, × inside
@@ -350,7 +347,7 @@ public class OverlayService extends Service {
                 FrameLayout.LayoutParams.MATCH_PARENT));
 
         menuParams = new WindowManager.LayoutParams(
-                dp(500), dp(380), overlayType(),
+                dp(500), dp(295), overlayType(),
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         menuParams.gravity = Gravity.TOP | Gravity.START;
@@ -502,12 +499,12 @@ public class OverlayService extends Service {
 
         final TextView box = new TextView(this);
         box.setGravity(Gravity.CENTER);
-        box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         box.setClickable(false);
         box.setFocusable(false);
         box.setDuplicateParentStateEnabled(true);
         applyCheck(box, initial);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(22), dp(22));
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(26), dp(26));
         blp.rightMargin = dp(7);
         row.addView(box, blp);
 
@@ -546,11 +543,11 @@ public class OverlayService extends Service {
 
         final TextView box = new TextView(this);
         box.setGravity(Gravity.CENTER);
-        box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         box.setClickable(false);
         box.setFocusable(false);
         applyCheck(box, initial);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(22), dp(22));
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(26), dp(26));
         blp.rightMargin = dp(7);
         row.addView(box, blp);
 
@@ -703,55 +700,7 @@ public class OverlayService extends Service {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        // BT Hit% row (hidden until Bullet Track ON) — Vision_Tw layout2.xml btPercentRow
-        LinearLayout btPctRow = new LinearLayout(this);
-        btPctRow.setOrientation(LinearLayout.VERTICAL);
-        btPctRow.setVisibility(View.GONE);
-        btPctRow.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        LinearLayout btPctHeader = new LinearLayout(this);
-        btPctHeader.setOrientation(LinearLayout.HORIZONTAL);
-        btPctHeader.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams bphl = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        bphl.topMargin = dp(4); bphl.bottomMargin = dp(2);
-        btPctHeader.setLayoutParams(bphl);
-
-        TextView btPctLbl = new TextView(this);
-        btPctLbl.setText("Bullet Hit Percentage: (" + stBtHit + " %)");
-        btPctLbl.setTextColor(Color.parseColor("#d2d2d2"));
-        btPctLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        btPctLbl.setTypeface(fMono);
-        btPctHeader.addView(btPctLbl, new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-
-        TextView btUnsafe = new TextView(this);
-        btUnsafe.setText("UNSAFE");
-        btUnsafe.setTextColor(Color.parseColor("#ff4444"));
-        btUnsafe.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
-        btUnsafe.setTypeface(fHeading, Typeface.BOLD);
-        btPctHeader.addView(btUnsafe);
-        btPctRow.addView(btPctHeader);
-
-        SeekBar btHitBar = makeSeekBar(10, 100, stBtHit);
-        btHitBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
-            public void onProgressChanged(SeekBar s, int p, boolean u){
-                stBtHit = p + 10;
-                btPctLbl.setText("Bullet Hit Percentage: (" + stBtHit + " %)");
-                sendTcp("bthit=" + stBtHit);
-            }
-            public void onStartTrackingTouch(SeekBar s){}
-            public void onStopTrackingTouch(SeekBar s){}
-        });
-        btPctRow.addView(btHitBar);
-
-        checkRowRet(col, "Bullet Track", stBtrack, on->{
-            stBtrack=on; sendTcp("btrack="+(on?1:0));
-            btPctRow.setVisibility(on ? View.VISIBLE : View.GONE);
-        });
-        col.addView(btPctRow);
+        checkRow(col, "Bullet Track", stBtrack, on->{ stBtrack=on; sendTcp("btrack="+(on?1:0)); });
 
         // Distance slider
         TextView distLbl = new TextView(this);
@@ -989,21 +938,30 @@ public class OverlayService extends Service {
 
     // ── FLAG WARNING DIALOG ───────────────────────────────────────────────────
     private void showFlagWarning(Runnable onConfirm, Runnable onCancel) {
-        FrameLayout dialogRoot = new FrameLayout(this);
+        if (menuView == null) return;
+        FrameLayout menuRoot = (FrameLayout) menuView;
+
+        // Scrim layer — semi-dark, covers just the menu area (no new window)
+        FrameLayout dialogHolder = new FrameLayout(this);
+        View scrim = new View(this);
+        scrim.setBackgroundColor(Color.parseColor("#99000000"));
+        dialogHolder.addView(scrim, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
 
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(dp(20), dp(20), dp(20), dp(20));
         GradientDrawable cardBg = new GradientDrawable();
-        cardBg.setCornerRadius(dp(12));
-        cardBg.setColor(C_PANEL);
-        cardBg.setStroke(dp(1.5f), Color.parseColor("#ff4444"));
+        cardBg.setCornerRadius(dp(14));
+        cardBg.setColor(Color.parseColor("#1a1a1a"));
+        cardBg.setStroke(dp(2), Color.parseColor("#cc2222"));
         card.setBackground(cardBg);
 
         TextView msgTv = new TextView(this);
         msgTv.setText("Exceeding limit may Flag your id for 7 Day Ban\nProceed with caution.");
         msgTv.setTextColor(C_WHITE);
-        msgTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        msgTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         msgTv.setGravity(Gravity.CENTER);
         msgTv.setTypeface(fBody);
         card.addView(msgTv, new LinearLayout.LayoutParams(
@@ -1015,7 +973,7 @@ public class OverlayService extends Service {
         LinearLayout.LayoutParams brlp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        brlp.topMargin = dp(16);
+        brlp.topMargin = dp(18);
         btnRow.setLayoutParams(brlp);
 
         TextView cancelBtn = new TextView(this);
@@ -1024,10 +982,10 @@ public class OverlayService extends Service {
         cancelBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         cancelBtn.setTypeface(fHeading, Typeface.BOLD);
         cancelBtn.setGravity(Gravity.CENTER);
-        cancelBtn.setPadding(dp(8), dp(10), dp(8), dp(10));
+        cancelBtn.setPadding(dp(8), dp(12), dp(8), dp(12));
         GradientDrawable cxBg = new GradientDrawable();
-        cxBg.setCornerRadius(dp(6));
-        cxBg.setColor(C_BTN);
+        cxBg.setCornerRadius(dp(8));
+        cxBg.setColor(Color.parseColor("#3a3a3a"));
         cancelBtn.setBackground(cxBg);
 
         final TextView confirmBtn = new TextView(this);
@@ -1036,15 +994,15 @@ public class OverlayService extends Service {
         confirmBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         confirmBtn.setTypeface(fHeading, Typeface.BOLD);
         confirmBtn.setGravity(Gravity.CENTER);
-        confirmBtn.setPadding(dp(8), dp(10), dp(8), dp(10));
+        confirmBtn.setPadding(dp(8), dp(12), dp(8), dp(12));
         GradientDrawable cfBg = new GradientDrawable();
-        cfBg.setCornerRadius(dp(6));
-        cfBg.setColor(Color.parseColor("#cc3333"));
+        cfBg.setCornerRadius(dp(8));
+        cfBg.setColor(Color.parseColor("#c0392b"));
         confirmBtn.setBackground(cfBg);
 
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        bl.rightMargin = dp(8);
+        bl.rightMargin = dp(10);
         cancelBtn.setLayoutParams(bl);
         confirmBtn.setLayoutParams(new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
@@ -1052,18 +1010,15 @@ public class OverlayService extends Service {
         btnRow.addView(confirmBtn);
         card.addView(btnRow);
 
-        FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(dp(280),
+        FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(dp(300),
                 FrameLayout.LayoutParams.WRAP_CONTENT);
         cardLp.gravity = Gravity.CENTER;
-        dialogRoot.addView(card, cardLp);
+        dialogHolder.addView(card, cardLp);
 
-        WindowManager.LayoutParams dlgParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                overlayType(),
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT);
-        try { wm.addView(dialogRoot, dlgParams); } catch (Exception ignored) { return; }
+        FrameLayout.LayoutParams holderLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        menuRoot.addView(dialogHolder, holderLp);
 
         final int[] cd = {10};
         final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -1079,12 +1034,12 @@ public class OverlayService extends Service {
 
         cancelBtn.setOnClickListener(v -> {
             h.removeCallbacks(ticker[0]);
-            try { wm.removeView(dialogRoot); } catch (Exception ig) {}
+            try { menuRoot.removeView(dialogHolder); } catch (Exception ig) {}
             onCancel.run();
         });
         confirmBtn.setOnClickListener(v -> {
             h.removeCallbacks(ticker[0]);
-            try { wm.removeView(dialogRoot); } catch (Exception ig) {}
+            try { menuRoot.removeView(dialogHolder); } catch (Exception ig) {}
             onConfirm.run();
         });
     }

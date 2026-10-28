@@ -241,28 +241,6 @@ public class LoginActivity extends BaseActivity {
         if (btnLogin != null) btnLogin.setEnabled(true);
         getWindow().getDecorView().post(this::runEntryAnim);
         setTitle();
-        setupKeyboardBehavior();
-    }
-
-    private void setupKeyboardBehavior() {
-        android.view.View rootDecor = getWindow().getDecorView();
-        android.view.View topSection = findViewById(R.id.topLogoLayout);
-        if (topSection == null) return;
-        rootDecor.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            android.graphics.Rect r = new android.graphics.Rect();
-            rootDecor.getWindowVisibleDisplayFrame(r);
-            int screenH = rootDecor.getHeight();
-            boolean kbOpen = screenH > 0 && (screenH - r.bottom) > screenH * 0.15f;
-            android.widget.LinearLayout.LayoutParams lp =
-                (android.widget.LinearLayout.LayoutParams) topSection.getLayoutParams();
-            if (lp == null) return;
-            boolean wasWeight0 = lp.weight == 0f;
-            if (kbOpen && !wasWeight0) {
-                lp.weight = 0f; lp.height = 0; topSection.setLayoutParams(lp);
-            } else if (!kbOpen && wasWeight0) {
-                lp.weight = 1f; lp.height = 0; topSection.setLayoutParams(lp);
-            }
-        });
     }
 
     private void runEntryAnim() {
@@ -311,6 +289,19 @@ public class LoginActivity extends BaseActivity {
                         else Toast.makeText(this, "Invalid key", Toast.LENGTH_SHORT).show();
                     }
                 }
+            });
+        }
+        // Keyboard push-up: collapse logo when key input focused, restore on blur
+        if (etKey != null) {
+            etKey.setOnFocusChangeListener((v, hasFocus) -> {
+                android.view.View topSection = findViewById(R.id.topLogoLayout);
+                if (topSection == null) return;
+                android.widget.LinearLayout.LayoutParams lp =
+                    (android.widget.LinearLayout.LayoutParams) topSection.getLayoutParams();
+                if (lp == null) return;
+                lp.weight = hasFocus ? 0f : 1f;
+                lp.height = 0;
+                topSection.setLayoutParams(lp);
             });
         }
         if (btnLogin != null) {
