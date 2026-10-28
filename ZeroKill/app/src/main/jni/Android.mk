@@ -13,7 +13,7 @@ include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := mundoproxy
+LOCAL_MODULE := ZeroKill
 
 LOCAL_CFLAGS := -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions -fpermissive

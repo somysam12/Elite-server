@@ -147,11 +147,11 @@ static std::string makeUUID(JNIEnv* env, const std::string& input) {
 //  JNI EXPORTS — MainActivity
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_MainActivity_exdate(JNIEnv* env, jclass) {
+Java_com_bgmi_MainActivity_exdate(JNIEnv* env, jclass) {
     return env->NewStringUTF(g_exdate.c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_MainActivity_ZENINOP(JNIEnv* env, jobject) {
+Java_com_bgmi_MainActivity_ZENINOP(JNIEnv* env, jobject) {
     return env->NewStringUTF(g_enc);
 }
 
@@ -159,14 +159,14 @@ Java_com_visionpro_MainActivity_ZENINOP(JNIEnv* env, jobject) {
 //  JNI EXPORTS — LoginActivity
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_LoginActivity_GetKey(JNIEnv* env, jobject) {
+Java_com_bgmi_LoginActivity_GetKey(JNIEnv* env, jobject) {
     if (g_tgRedirectApk && !g_tgUrlApk.empty())
         return env->NewStringUTF(g_tgUrlApk.c_str());
     return env->NewStringUTF(oxorany("https://t.me/"));
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_visionpro_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject context) {
+Java_com_bgmi_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, jobject context) {
     jclass contextClass = env->GetObjectClass(context);
     jmethodID midGetPM  = env->GetMethodID(contextClass, "getPackageManager", "()Landroid/content/pm/PackageManager;");
     jobject pm          = env->CallObjectMethod(context, midGetPM);
@@ -197,11 +197,11 @@ Java_com_visionpro_LoginActivity_nativeVerifySignature(JNIEnv* env, jobject, job
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_LoginActivity_nativeApkKillUrl(JNIEnv* env, jclass) {
+Java_com_bgmi_LoginActivity_nativeApkKillUrl(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("https://zerokill.authapi.xyz/server/apk_kill.php"));
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
+Java_com_bgmi_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("https://zerokill.authapi.xyz/uploads/apk/"));
 }
 
@@ -209,7 +209,7 @@ Java_com_visionpro_LoginActivity_nativeApkDownloadUrl(JNIEnv* env, jclass) {
 //  LOGIN — FrozenFire JSON protocol
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
+Java_com_bgmi_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, jstring mUserKey) {
     const char* keyC = env->GetStringUTFChars(mUserKey, nullptr);
     std::string user_key(keyC);
     env->ReleaseStringUTFChars(mUserKey, keyC);
@@ -345,7 +345,7 @@ Java_com_visionpro_LoginActivity_Check(JNIEnv* env, jclass, jobject mContext, js
 
 // Login token verify — anti-smali-patch: checks bValid then clears it
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_visionpro_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
+Java_com_bgmi_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jstring token) {
     if (!bValid || !token) return JNI_FALSE;
     const char* c = env->GetStringUTFChars(token, nullptr);
     bool ok = (strcmp(c, oxorany("OK")) == 0);
@@ -355,7 +355,7 @@ Java_com_visionpro_LoginActivity_nativeVerifyLoginToken(JNIEnv* env, jclass, jst
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
+Java_com_bgmi_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
     return env->NewStringUTF(g_serial.c_str());
 }
 
@@ -363,23 +363,23 @@ Java_com_visionpro_LoginActivity_nativeGetSerial(JNIEnv* env, jclass) {
 //  JNI EXPORTS — Downtwo (lib download)
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_utils_Downtwo_Version(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_Version(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("https://github.com/somysam12/KingCheatsAuto/releases/download/KingCheats/version.txt"));
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_utils_Downtwo_Link(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_Link(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("https://github.com/somysam12/KingCheatsAuto/releases/download/KingCheats/ZeroKill.zip"));
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_utils_Downtwo_UnlockUrl(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_UnlockUrl(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("https://zerokill.authapi.xyz/secure/unlock"));
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_utils_Downtwo_AesKey(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_AesKey(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("5c3d9f2a8b1e4c6079d2f3a4b5c6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8"));
 }
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("X9kL2mQ7vR4nB1eY3pT8wS5uJ6dA0cF"));
 }
 
@@ -387,7 +387,7 @@ Java_com_visionpro_utils_Downtwo_HmacKey(JNIEnv* env, jclass) {
 //  JNI EXPORTS — ArkApplication SDK key
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_ArkApplication_getSdkKey(JNIEnv* env, jclass) {
+Java_com_bgmi_ArkApplication_getSdkKey(JNIEnv* env, jclass) {
     return env->NewStringUTF(oxorany("HCORE"));
 }
 
@@ -395,6 +395,6 @@ Java_com_visionpro_ArkApplication_getSdkKey(JNIEnv* env, jclass) {
 //  JNI EXPORTS — IntegrityGuard (signature hash)
 // ═══════════════════════════════════════════════════════════════════════
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_visionpro_utils_IntegrityGuard_expectedSigHash(JNIEnv* env, jclass) {
+Java_com_bgmi_utils_IntegrityGuard_expectedSigHash(JNIEnv* env, jclass) {
     return env->NewStringUTF(EXPECTED_SIGNATURE);
 }

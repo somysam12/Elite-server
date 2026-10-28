@@ -16,7 +16,7 @@ import java.io.File;
 public class ArkApplication extends Application {
 
     static {
-        try { System.loadLibrary("mundoproxy"); }
+        try { System.loadLibrary("ZeroKill"); }
         catch (UnsatisfiedLinkError ignored) {}
     }
 
