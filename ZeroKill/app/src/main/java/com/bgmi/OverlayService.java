@@ -525,24 +525,24 @@ public class OverlayService extends Service {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(2), dp(4), dp(2), dp(4));
+        row.setPadding(dp(2), dp(3), dp(2), dp(3));
         row.setClickable(true);
         row.setFocusable(true);
 
         final TextView box = new TextView(this);
         box.setGravity(Gravity.CENTER);
-        box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         box.setClickable(false);
         box.setFocusable(false);
         applyCheck(box, initial);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(26), dp(26));
-        blp.rightMargin = dp(7);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(22), dp(22));
+        blp.rightMargin = dp(6);
         row.addView(box, blp);
 
         TextView name = new TextView(this);
         name.setText(label);
         name.setTextColor(C_LABEL);
-        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         name.setTypeface(fBody);
         name.setClickable(false);
         name.setFocusable(false);
@@ -607,8 +607,8 @@ public class OverlayService extends Service {
         int drawRes = on ? res("check", "drawable") : res("uncheck", "drawable");
         if (drawRes != 0) {
             box.setBackground(getResources().getDrawable(drawRes, null));
-            box.setText(on ? "✔" : "");
-            box.setTextColor(on ? C_WHITE : Color.TRANSPARENT);
+            box.setText("");
+            box.setTextColor(Color.TRANSPARENT);
         } else {
             GradientDrawable bg = new GradientDrawable();
             if (on) {
@@ -671,7 +671,7 @@ public class OverlayService extends Service {
         return sb;
     }
 
-    // Action button: dark gray inactive, purple active
+    // Action button: dark gray inactive, brownish-amber active — rectangular
     private TextView makeActionBtn(String label, boolean active) {
         TextView t = new TextView(this);
         t.setText(label);
@@ -686,8 +686,9 @@ public class OverlayService extends Service {
 
     private void styleActionBtn(TextView t, boolean active) {
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(3));
-        bg.setColor(active ? C_PURPLE : C_BTN);
+        bg.setCornerRadius(dp(4));
+        // Active: brownish-amber (#a05a00); Inactive: dark gray
+        bg.setColor(active ? Color.parseColor("#a05a00") : C_BTN);
         t.setBackground(bg);
     }
 
@@ -1009,49 +1010,28 @@ public class OverlayService extends Service {
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         contentPanel.addView(changeBtn);
 
-        // "Restart Game" button (hidden initially)
-        final TextView restartBtn = new TextView(this);
-        restartBtn.setText("Restart Game");
-        restartBtn.setTextColor(C_WHITE);
-        restartBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        restartBtn.setTypeface(fBody, Typeface.BOLD);
-        restartBtn.setGravity(Gravity.CENTER);
-        restartBtn.setPadding(dp(10), dp(12), dp(10), dp(12));
-        GradientDrawable rBg = new GradientDrawable();
-        rBg.setCornerRadius(dp(8));
-        rBg.setColor(Color.parseColor("#9425bd"));
-        restartBtn.setBackground(rBg);
-        LinearLayout.LayoutParams rlp2 = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        rlp2.topMargin = dp(8);
-        restartBtn.setLayoutParams(rlp2);
-        restartBtn.setVisibility(View.GONE);
-        contentPanel.addView(restartBtn);
-
         // Generate a simple new random ID (hex string)
         final String[] newId = {""};
 
         changeBtn.setOnClickListener(v -> {
             vibrate();
             newId[0] = Long.toHexString(Double.doubleToLongBits(Math.random())).substring(0, 16);
-            SpannableString updated = buildIdSpan(
-                "Game Android ID: ", curId,
-                "New Android ID (pending): ", newId[0]);
-            statusTv.setText(updated);
-            // Append restart note as plain text after spannable
             SpannableString withNote = buildIdSpanWithNote(
                 "Game Android ID: ", curId,
                 "New Android ID (pending): ", newId[0]);
             statusTv.setText(withNote);
-            restartBtn.setVisibility(View.VISIBLE);
             sendTcp("changedeviceid=1");
-        });
-
-        restartBtn.setOnClickListener(v -> {
-            vibrate();
-            cleanupOverlay();
-            restartApp();
+            // Transform button into "Restart Game"
+            changeBtn.setText("Restart Game");
+            GradientDrawable rBg = new GradientDrawable();
+            rBg.setCornerRadius(dp(8));
+            rBg.setColor(Color.parseColor("#9425bd"));
+            changeBtn.setBackground(rBg);
+            changeBtn.setOnClickListener(v2 -> {
+                vibrate();
+                cleanupOverlay();
+                restartApp();
+            });
         });
     }
 
