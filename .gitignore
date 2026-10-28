@@ -7,3 +7,4 @@ local.properties
 
 # macOS
 .DS_Store
+*.apk
