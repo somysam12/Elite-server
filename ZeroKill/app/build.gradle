@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace 'com.visionpro'
+    namespace 'com.zerokill'
     compileSdk 34
 buildToolsVersion '34.0.0'
     signingConfigs {

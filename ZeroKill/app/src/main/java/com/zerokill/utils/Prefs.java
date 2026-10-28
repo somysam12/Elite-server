@@ -1,4 +1,4 @@
-package com.visionpro.utils;
+package com.zerokill.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;

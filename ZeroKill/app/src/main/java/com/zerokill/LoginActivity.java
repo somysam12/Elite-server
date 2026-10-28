@@ -1,4 +1,4 @@
-package com.visionpro;
+package com.zerokill;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -36,8 +36,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 
-import com.visionpro.utils.Downtwo;
-import com.visionpro.utils.Prefs;
+import com.zerokill.utils.Downtwo;
+import com.zerokill.utils.Prefs;
 import com.mundo.MundoCore;
 
 @SuppressWarnings({"unused", "deprecation"})

@@ -1,4 +1,4 @@
-package com.visionpro.utils;
+package com.zerokill.utils;
 
 @SuppressWarnings({"unused","deprecation"})
 public final class AntiTamper {

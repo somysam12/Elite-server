@@ -1,4 +1,4 @@
-package com.visionpro;
+package com.zerokill;
 
 import android.content.Context;
 import android.content.res.AssetManager;
