@@ -235,6 +235,7 @@ public class OverlayService extends Service {
             menuView = null;
         }
         menuOpen = false;
+        if (iconRoot != null) iconRoot.setVisibility(View.VISIBLE);
     }
 
     // ── BUILD MENU — new horizontal layout ──────────────────────────────────
@@ -248,27 +249,6 @@ public class OverlayService extends Service {
         root.setBackground(rootBg);
         root.setClipToOutline(true);
 
-        // Drag the whole menu
-        root.setOnTouchListener(new View.OnTouchListener() {
-            int ix, iy; float tx, ty; long lastMs=0;
-            @Override public boolean onTouch(View v, MotionEvent e) {
-                switch (e.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ix=menuParams.x; iy=menuParams.y;
-                        tx=e.getRawX(); ty=e.getRawY(); return true;
-                    case MotionEvent.ACTION_MOVE:
-                        long now=System.currentTimeMillis();
-                        if(now-lastMs<8) return true; lastMs=now;
-                        menuParams.x=ix+(int)(e.getRawX()-tx);
-                        menuParams.y=iy+(int)(e.getRawY()-ty);
-                        try { wm.updateViewLayout(menuView, menuParams); } catch (Exception ig) {
-                            ArkCrashLogger.logScreenBlink("updateViewLayout/menu", ig);
-                        }
-                        return true;
-                }
-                return false;
-            }
-        });
 
         // Horizontal split: sidebar | content
         LinearLayout split = new LinearLayout(this);
@@ -381,7 +361,45 @@ public class OverlayService extends Service {
             menuParams.x = iconParams.x + dp(60); menuParams.y = iconParams.y;
         }
 
-        menuView = root;
+        // Outer black rectangle — Vision-style solid black border around menu
+        FrameLayout outerFrame = new FrameLayout(this);
+        outerFrame.setBackgroundColor(Color.BLACK);
+        FrameLayout.LayoutParams rootInnerLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        rootInnerLp.setMargins(dp(2), dp(2), dp(2), dp(2));
+        outerFrame.addView(root, rootInnerLp);
+
+        // Drag handle — top-left corner ONLY (tap & drag the ≡ grip to move menu)
+        View dragHandle = new View(this);
+        dragHandle.setClickable(true);
+        dragHandle.setFocusable(false);
+        dragHandle.setOnTouchListener(new View.OnTouchListener() {
+            int ix, iy; float tx, ty; long lastMs=0;
+            @Override public boolean onTouch(View v, MotionEvent e) {
+                switch (e.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ix=menuParams.x; iy=menuParams.y;
+                        tx=e.getRawX(); ty=e.getRawY(); return true;
+                    case MotionEvent.ACTION_MOVE:
+                        long now=System.currentTimeMillis();
+                        if(now-lastMs<8) return true; lastMs=now;
+                        menuParams.x=ix+(int)(e.getRawX()-tx);
+                        menuParams.y=iy+(int)(e.getRawY()-ty);
+                        try { wm.updateViewLayout(menuView, menuParams); } catch (Exception ig) {
+                            ArkCrashLogger.logScreenBlink("updateViewLayout/menu", ig);
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+        FrameLayout.LayoutParams handleLp = new FrameLayout.LayoutParams(dp(44), dp(44));
+        handleLp.gravity = Gravity.TOP | Gravity.START;
+        outerFrame.addView(dragHandle, handleLp);
+
+        menuView = outerFrame;
+        if (iconRoot != null) iconRoot.setVisibility(View.GONE);
         ArkCrashLogger.breadcrumb("render", "addView menu overlay");
         try {
                     wm.addView(menuView, menuParams);
