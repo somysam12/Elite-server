@@ -82,7 +82,14 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
         getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
-        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+        }
+        //noinspection deprecation
+        getWindow().getDecorView().setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         setContentView(R.layout.tron_two);
 
         // Start animated gradient background
@@ -96,7 +103,6 @@ public class LoginActivity extends BaseActivity {
         setTitle();
         setupListeners();
         etKey.setText(prefs.read(USER, ""));
-        setupKeyboardAdjustment();
         checkPermissions();
     }
 
@@ -552,31 +558,4 @@ public class LoginActivity extends BaseActivity {
         // Vision_Tw style: no custom title on login screen
     }
 
-    private void setupKeyboardAdjustment() {
-        View rootView = getWindow().getDecorView();
-        View topLogo = findViewById(R.id.topLogoLayout);
-        if (topLogo == null) return;
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            android.graphics.Rect r = new android.graphics.Rect();
-            rootView.getWindowVisibleDisplayFrame(r);
-            int keypadHeight = rootView.getHeight() - r.bottom;
-            boolean kbOpen = keypadHeight > rootView.getHeight() * 0.15;
-            android.view.ViewGroup.LayoutParams lp = topLogo.getLayoutParams();
-            if (lp instanceof LinearLayout.LayoutParams) {
-                LinearLayout.LayoutParams llp = (LinearLayout.LayoutParams) lp;
-                if (kbOpen) {
-                    llp.weight = 0;
-                    llp.height = dpLogin(72);
-                } else {
-                    llp.weight = 1;
-                    llp.height = 0;
-                }
-                topLogo.setLayoutParams(llp);
-            }
-        });
-    }
-
-    private int dpLogin(int v) {
-        return Math.round(v * getResources().getDisplayMetrics().density);
-    }
 }
