@@ -192,6 +192,7 @@ public class OverlayService extends Service {
             menuView = null;
         }
         menuOpen = false;
+        if (iconRoot != null) iconRoot.setVisibility(View.VISIBLE);
     }
 
     // ── BUILD MENU — XDCheat Elite style ────────────────────────────────────
@@ -202,30 +203,6 @@ public class OverlayService extends Service {
         LinearLayout inner = new LinearLayout(this);
         inner.setOrientation(LinearLayout.HORIZONTAL);
         inner.setPadding(0, 0, 0, 0);
-
-        // Drag from outer (non-interactive area)
-        outer.setOnTouchListener(new View.OnTouchListener() {
-            int initX, initY; float tx, ty;
-            boolean dragging = false;
-            @Override public boolean onTouch(View v, MotionEvent e) {
-                switch (e.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initX=menuParams.x; initY=menuParams.y;
-                        tx=e.getRawX(); ty=e.getRawY(); dragging=false;
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        float dx=e.getRawX()-tx, dy=e.getRawY()-ty;
-                        if (!dragging && (Math.abs(dx)>4||Math.abs(dy)>4)) dragging=true;
-                        if (dragging) {
-                            menuParams.x=initX+(int)(e.getRawX()-tx);
-                            menuParams.y=initY+(int)(e.getRawY()-ty);
-                            try { wm.updateViewLayout(menuView, menuParams); } catch (Exception ig) {}
-                        }
-                        return dragging;
-                }
-                return false;
-            }
-        });
 
         // ── SIDEBAR (110dp wide, radius 17dp) ────────────────────────────────
         LinearLayout sidebar = new LinearLayout(this);
@@ -360,7 +337,43 @@ public class OverlayService extends Service {
             menuParams.y = iconParams.y;
         }
 
-        menuView = outer;
+        // Black border rectangle wrapper
+        FrameLayout outerFrame = new FrameLayout(this);
+        outerFrame.setBackgroundColor(Color.BLACK);
+        FrameLayout.LayoutParams rootInnerLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        rootInnerLp.setMargins(dp(2), dp(2), dp(2), dp(2));
+        outerFrame.addView(outer, rootInnerLp);
+
+        // Top-left corner drag handle only
+        View dragHandle = new View(this);
+        dragHandle.setClickable(true);
+        dragHandle.setFocusable(false);
+        dragHandle.setOnTouchListener(new View.OnTouchListener() {
+            int initX, initY; float tx, ty; long lastMs = 0;
+            @Override public boolean onTouch(View v, MotionEvent e) {
+                switch (e.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initX=menuParams.x; initY=menuParams.y;
+                        tx=e.getRawX(); ty=e.getRawY(); return true;
+                    case MotionEvent.ACTION_MOVE:
+                        long now=System.currentTimeMillis();
+                        if (now-lastMs<8) return true; lastMs=now;
+                        menuParams.x=initX+(int)(e.getRawX()-tx);
+                        menuParams.y=initY+(int)(e.getRawY()-ty);
+                        try { wm.updateViewLayout(menuView, menuParams); } catch (Exception ig) {}
+                        return true;
+                }
+                return false;
+            }
+        });
+        FrameLayout.LayoutParams handleLp = new FrameLayout.LayoutParams(dp(44), dp(44));
+        handleLp.gravity = Gravity.TOP | Gravity.START;
+        outerFrame.addView(dragHandle, handleLp);
+
+        menuView = outerFrame;
+        if (iconRoot != null) iconRoot.setVisibility(View.GONE);
         wm.addView(menuView, menuParams);
         selectTab(currentTab);
         if (stHideEsp) menuView.post(() -> updateHideEspWindows(true));
