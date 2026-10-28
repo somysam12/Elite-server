@@ -1075,7 +1075,7 @@ public class OverlayService extends Service {
                         : PendingIntent.FLAG_CANCEL_CURRENT;
                 PendingIntent pi = PendingIntent.getActivity(this, 0, launch, flags);
                 AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                if (am != null) am.set(AlarmManager.RTC, System.currentTimeMillis() + 500, pi);
+                if (am != null) am.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pi);
             }
         } catch (Exception ignored) {}
         android.os.Process.killProcess(android.os.Process.myPid());
