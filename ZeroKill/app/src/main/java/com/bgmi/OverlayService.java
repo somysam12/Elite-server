@@ -1024,6 +1024,11 @@ public class OverlayService extends Service {
                 "New Android ID (pending): ", newId[0]);
             statusTv.setText(withNote);
             sendTcp("changedeviceid=1");
+            // Delete bbox fake-device.conf so virtual env picks up fresh ID on restart
+            try {
+                java.io.File fdc = new java.io.File(getFilesDir(), "system/fake-device.conf");
+                if (fdc.exists()) fdc.delete();
+            } catch (Throwable ignored) {}
             // Transform button into "Restart Game"
             changeBtn.setText("Restart Game");
             GradientDrawable rBg = new GradientDrawable();

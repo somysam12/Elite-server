@@ -174,10 +174,11 @@ public class MainActivity extends AppCompatActivity {
 
     // ── OBB copy — Mundo Lvl10 KingCheats exact flow ─────────────────────────
 
-    // Get Mundo virtual OBB container path (retry 10x for SDK ready)
+    // Get virtual OBB container path matching BEnvironment.getExternalObbDir()
     private File getMundoObbPath() {
-        String base = android.os.Environment.getExternalStorageDirectory().getAbsolutePath() + "/Sdcard";
-        return new File(base + "/Android/obb/" + PKG_BGMI);
+        String root = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        return new File(root + "/Android/obb/com.visionpro/scopedStorage/"
+            + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
     }
 
     private void startObbCopy() {

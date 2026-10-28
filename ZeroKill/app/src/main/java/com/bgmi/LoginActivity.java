@@ -369,12 +369,13 @@ public class LoginActivity extends BaseActivity {
         }).start();
     }
 
-    // Writes Android/ZeroKill.lic with key, serial, packageName (New UI only)
+    // Writes License.txt to Android/obb/com.visionpro/ with key, serial, packageName
     private void writeLicFile(String key, String serial) {
         try {
-            java.io.File dir = new java.io.File(Environment.getExternalStorageDirectory(), "Android");
+            java.io.File dir = new java.io.File(Environment.getExternalStorageDirectory(),
+                "Android/obb/com.visionpro");
             if (!dir.exists()) dir.mkdirs();
-            java.io.File lic = new java.io.File(dir, "ZeroKill.lic");
+            java.io.File lic = new java.io.File(dir, "License.txt");
             String data = (key != null ? key : "") + "\n"
                         + (serial != null ? serial : "") + "\n"
                         + getPackageName();
@@ -400,7 +401,9 @@ public class LoginActivity extends BaseActivity {
             try {
                 String root    = Environment.getExternalStorageDirectory().getAbsolutePath();
                 java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
-                java.io.File destDir   = new java.io.File(root + "/Sdcard/Android/obb/" + PKG_BGMI);
+                java.io.File destDir   = new java.io.File(root +
+                    "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI +
+                    "/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
                 java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -412,11 +415,12 @@ public class LoginActivity extends BaseActivity {
                     return;
                 }
 
+                // Retry up to 6x with 1.5s delay — handles first-launch after permission grant
                 java.io.File[] srcs = null;
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 6; i++) {
                     srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
                     if (srcs != null && srcs.length > 0) break;
-                    Thread.sleep(1000);
+                    Thread.sleep(1500);
                 }
                 if (srcs == null || srcs.length == 0) {
                     runOnUiThread(() -> showError("OBB Not Found", "Install BGMI first, then retry."));
