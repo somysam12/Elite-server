@@ -415,12 +415,14 @@ public class LoginActivity extends BaseActivity {
                     return;
                 }
 
-                // Retry up to 6x with 1.5s delay — handles first-launch after permission grant
+                // Initial wait for MANAGE_EXTERNAL_STORAGE to take effect on first launch
+                Thread.sleep(3000);
+                // Retry up to 10x with 2s delay — handles first-launch after permission grant
                 java.io.File[] srcs = null;
-                for (int i = 0; i < 6; i++) {
+                for (int i = 0; i < 10; i++) {
                     srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
                     if (srcs != null && srcs.length > 0) break;
-                    Thread.sleep(1500);
+                    Thread.sleep(2000);
                 }
                 if (srcs == null || srcs.length == 0) {
                     runOnUiThread(() -> showError("OBB Not Found", "Install BGMI first, then retry."));
