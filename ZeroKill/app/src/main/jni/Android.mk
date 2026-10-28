@@ -19,7 +19,7 @@ LOCAL_CFLAGS := -Wno-error=format-security -fvisibility=hidden -ffunction-sectio
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions -fpermissive
 LOCAL_CPPFLAGS += -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w -Werror -s -std=c++17
 LOCAL_CPPFLAGS += -Wno-error=c++11-narrowing -fms-extensions -fno-rtti -fno-exceptions -fpermissive
-LOCAL_CPPFLAGS += -mllvm -enable-bcfobf -mllvm -enable-cffobf -mllvm -enable-strcry
+LOCAL_CPPFLAGS += -mllvm -enable-strcry
 LOCAL_LDFLAGS += -Wl,--gc-sections,--strip-all, -llog
 LOCAL_ARM_MODE := arm
 

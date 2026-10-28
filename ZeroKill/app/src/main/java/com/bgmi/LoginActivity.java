@@ -188,23 +188,12 @@ public class LoginActivity extends BaseActivity {
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req == RC_STORAGE) {
-            // On Android 11+ MANAGE_EXTERNAL_STORAGE takes full kernel-level effect
-            // only after the app process restarts. Always restart unconditionally —
-            // after restart checkPermissions() re-checks and either proceeds or re-asks.
+            // On Android 11+ MANAGE_EXTERNAL_STORAGE takes full kernel-level effect only
+            // after the app process restarts, and the system state may lag a few hundred ms
+            // after the user taps Allow. Poll until isExternalStorageManager() returns true
+            // (up to 3 s) before restarting so the new process always has the permission.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    try {
-                        Intent restart = getPackageManager()
-                                .getLaunchIntentForPackage(getPackageName());
-                        if (restart != null) {
-                            restart.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                    | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(restart);
-                        }
-                    } finally {
-                        android.os.Process.killProcess(android.os.Process.myPid());
-                    }
-                }, 500);
+                pollStoragePermissionThenRestart(0);
                 return;
             }
             if (!hasInstall()) { askInstall(); return; }
@@ -215,6 +204,36 @@ public class LoginActivity extends BaseActivity {
             onPermissionsReady();
         } else if (req == RC_OVERLAY) {
             onPermissionsReady();
+        }
+    }
+
+    private void pollStoragePermissionThenRestart(int attempts) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+            // Permission is active — restart now
+            try {
+                Intent restart = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                if (restart != null) {
+                    restart.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(restart);
+                }
+            } finally {
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        } else if (attempts < 15) {
+            // Not yet active — check again in 200 ms (max ~3 s total)
+            new Handler(Looper.getMainLooper()).postDelayed(
+                () -> pollStoragePermissionThenRestart(attempts + 1), 200);
+        } else {
+            // Timed out — restart anyway so the user doesn't get stuck
+            try {
+                Intent restart = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                if (restart != null) {
+                    restart.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(restart);
+                }
+            } finally {
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
         }
     }
 
@@ -234,25 +253,15 @@ public class LoginActivity extends BaseActivity {
 
     @SuppressLint("SetTextI18n")
     private void updateDownloadUI(int pct, long done, long total) {
-        if (progressBar != null)    progressBar.setVisibility(View.GONE);
-        if (progressText != null)   progressText.setText("Downloading...");
-        if (downloadProgressBar != null) {
-            downloadProgressBar.setVisibility(View.VISIBLE);
-            downloadProgressBar.setProgress(pct);
-        }
-        if (percentText != null) { percentText.setVisibility(View.VISIBLE); percentText.setText(pct + "%"); }
-        if (downloadSizeText != null) {
-            downloadSizeText.setVisibility(View.VISIBLE);
-            downloadSizeText.setText(total > 0 ? fmt(done) + " / " + fmt(total) : fmt(done));
-        }
-        if (speedText != null && dlStartMs > 0) {
-            long elapsed = System.currentTimeMillis() - dlStartMs;
-            if (elapsed > 300) {
-                if (speedRow != null) speedRow.setVisibility(View.VISIBLE);
-                speedText.setVisibility(View.VISIBLE);
-                speedText.setText(fmt((long)(done / (elapsed / 1000.0))) + "/s");
-            }
-        }
+        if (processingCard      != null) processingCard.setVisibility(View.VISIBLE);
+        if (loadingText         != null) loadingText.setText("Downloading game update...");
+        if (progressText        != null) { progressText.setVisibility(View.VISIBLE); progressText.setText("Downloaded " + pct + "%"); }
+        if (progressBar         != null) progressBar.setVisibility(View.VISIBLE);
+        if (downloadProgressBar != null) downloadProgressBar.setVisibility(View.GONE);
+        if (percentText         != null) percentText.setVisibility(View.GONE);
+        if (downloadSizeText    != null) downloadSizeText.setVisibility(View.GONE);
+        if (speedRow            != null) speedRow.setVisibility(View.GONE);
+        if (okButton            != null) okButton.setVisibility(View.GONE);
     }
 
     private static String fmt(long b) {
@@ -410,15 +419,16 @@ public class LoginActivity extends BaseActivity {
     // ── OBB copy (runs before download, on login screen) ───────────────────────
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        // Destination matches BEnvironment.getExternalStorageDirectory()
+        java.io.File destDir = new java.io.File(root + "/Android/obb/com.visionpro/scopedStorage/"
+                + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+
         if (prefs.getBool(KEY_OBB_DONE, false)) {
-            // Verify OBB is actually present at the expected internal-storage path.
-            // Handles the case where the user upgraded from a build that copied to a
-            // different location, so we re-copy rather than silently failing to launch.
-            java.io.File obbCheck = new java.io.File(getFilesDir(), "external/Android/obb/" + PKG_BGMI);
-            java.io.File[] obbFiles = obbCheck.listFiles((d, n) -> n.endsWith(".obb"));
+            java.io.File[] obbFiles = destDir.listFiles((d, n) -> n.endsWith(".obb"));
             if (obbFiles != null && obbFiles.length > 0) {
                 showProcessingMsg("Opening game...");
-                new Handler(Looper.getMainLooper()).postDelayed(() -> launchGameAndFinish(), 800);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> launchGameAndFinish(), 100);
                 return;
             }
             prefs.setBool(KEY_OBB_DONE, false); // reset — OBB not at expected location
@@ -426,39 +436,32 @@ public class LoginActivity extends BaseActivity {
         showProcessingMsg("Copying Obb...");
         new Thread(() -> {
             try {
-                String root    = Environment.getExternalStorageDirectory().getAbsolutePath();
                 java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
-                // Destination is inside internal storage — matches BEnvironment.getExternalStorageDirectory()
-                // (sVBoxRoot/external). Path starts with /data/, not /storage/emulated/0,
-                // so VCore I/O redirect never double-translates it.
-                java.io.File destDir = new java.io.File(getFilesDir(), "external/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
                 java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
                 if (existing != null && existing.length > 0) {
                     prefs.setBool(KEY_OBB_DONE, true);
                     runOnUiThread(() -> showProcessingMsg("Opening game..."));
-                    Thread.sleep(600);
                     runOnUiThread(() -> startLibDownloadSilent(key, serial));
                     return;
                 }
 
-                // Initial wait for MANAGE_EXTERNAL_STORAGE to take effect on first launch
-                Thread.sleep(3000);
-                // Retry up to 10x with 2s delay — handles first-launch after permission grant
+                // Poll for OBB — permission was verified before we reach here,
+                // so the file should appear almost immediately. Retry 5x with 500ms.
                 java.io.File[] srcs = null;
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 5; i++) {
                     srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
                     if (srcs != null && srcs.length > 0) break;
-                    Thread.sleep(2000);
+                    Thread.sleep(500);
                 }
                 if (srcs == null || srcs.length == 0) {
                     runOnUiThread(() -> showError("OBB Not Found", "Install BGMI first, then retry."));
                     return;
                 }
 
-                java.io.File src   = srcs[0];
-                java.io.File dst   = new java.io.File(destDir, src.getName());
+                java.io.File src = srcs[0];
+                java.io.File dst = new java.io.File(destDir, src.getName());
                 long total = src.length();
 
                 try (FileInputStream  fin  = new FileInputStream(src);
@@ -466,7 +469,7 @@ public class LoginActivity extends BaseActivity {
                      FileChannel inCh  = fin.getChannel();
                      FileChannel outCh = fout.getChannel()) {
                     long position  = 0L;
-                    long chunkSize = 16L * 1024 * 1024;
+                    long chunkSize = 32L * 1024 * 1024;
                     int lastPct    = -1;
                     while (position < total) {
                         long transferred = inCh.transferTo(position, chunkSize, outCh);
@@ -483,7 +486,6 @@ public class LoginActivity extends BaseActivity {
 
                 prefs.setBool(KEY_OBB_DONE, true);
                 runOnUiThread(() -> showProcessingMsg("Opening game..."));
-                Thread.sleep(700);
                 runOnUiThread(() -> startLibDownloadSilent(key, serial));
 
             } catch (Exception e) {
@@ -511,13 +513,10 @@ public class LoginActivity extends BaseActivity {
     private void showObbProgress(int pct) {
         if (processingCard      != null) processingCard.setVisibility(View.VISIBLE);
         if (loadingText         != null) loadingText.setText("Copying Obb...");
-        if (progressText        != null) progressText.setText("Copying " + pct + "%");
+        if (progressText        != null) { progressText.setVisibility(View.VISIBLE); progressText.setText(pct + "%"); }
         if (progressBar         != null) progressBar.setVisibility(View.GONE);
-        if (downloadProgressBar != null) {
-            downloadProgressBar.setVisibility(View.VISIBLE);
-            downloadProgressBar.setProgress(pct);
-        }
-        if (percentText         != null) { percentText.setVisibility(View.VISIBLE); percentText.setText(pct + "%"); }
+        if (downloadProgressBar != null) downloadProgressBar.setVisibility(View.GONE);
+        if (percentText         != null) percentText.setVisibility(View.GONE);
         if (downloadSizeText    != null) downloadSizeText.setVisibility(View.GONE);
         if (speedRow            != null) speedRow.setVisibility(View.GONE);
         if (okButton            != null) okButton.setVisibility(View.GONE);
@@ -527,7 +526,8 @@ public class LoginActivity extends BaseActivity {
         dlStartMs = System.currentTimeMillis();
         Downtwo dl = new Downtwo(this, success -> launchGameAndFinish());
         dl.setCredentials(key, serial, getPackageName());
-        dl.setSizeProgressListener((pct, done, total) -> {}); // silent — no UI
+        dl.setSizeProgressListener((pct, done, total) ->
+            runOnUiThread(() -> updateDownloadUI(pct, done, total)));
         dl.execute();
     }
 
@@ -535,7 +535,7 @@ public class LoginActivity extends BaseActivity {
         showProcessingMsg("Opening game...");
         new Thread(() -> {
             try {
-                Thread.sleep(700);
+                Thread.sleep(100);
                 try {
                     if (MundoCore.get() != null && !MundoCore.get().isInstalled(PKG_BGMI, 0))
                         MundoCore.get().installPackageAsUser(PKG_BGMI, 0);

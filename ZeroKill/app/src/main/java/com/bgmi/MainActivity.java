@@ -176,8 +176,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Get virtual OBB container path matching BEnvironment.getExternalObbDir()
     private File getMundoObbPath() {
-        // Must match BEnvironment.getExternalStorageDirectory() = sVBoxRoot/external
-        return new File(getFilesDir(), "external/Android/obb/" + PKG_BGMI);
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        return new File(root + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
     }
 
     private void startObbCopy() {
