@@ -188,18 +188,23 @@ public class LoginActivity extends BaseActivity {
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req == RC_STORAGE) {
-            // On Android 11+ MANAGE_EXTERNAL_STORAGE needs a process restart to take
-            // full kernel-level effect — restart the app immediately after grant.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-                    && Environment.isExternalStorageManager()) {
+            // On Android 11+ MANAGE_EXTERNAL_STORAGE takes full kernel-level effect
+            // only after the app process restarts. Always restart unconditionally —
+            // after restart checkPermissions() re-checks and either proceeds or re-asks.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    Intent restart = getPackageManager().getLaunchIntentForPackage(getPackageName());
-                    if (restart != null) {
-                        restart.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(restart);
+                    try {
+                        Intent restart = getPackageManager()
+                                .getLaunchIntentForPackage(getPackageName());
+                        if (restart != null) {
+                            restart.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(restart);
+                        }
+                    } finally {
+                        android.os.Process.killProcess(android.os.Process.myPid());
                     }
-                    android.os.Process.killProcess(android.os.Process.myPid());
-                }, 300);
+                }, 500);
                 return;
             }
             if (!hasInstall()) { askInstall(); return; }
