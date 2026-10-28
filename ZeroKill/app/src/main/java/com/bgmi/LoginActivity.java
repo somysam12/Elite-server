@@ -43,7 +43,7 @@ import com.bgmi.utils.Prefs;
 public class LoginActivity extends BaseActivity {
 
     static {
-        try { System.loadLibrary("ZeroKill"); }
+        try { System.loadLibrary("mundoproxy"); }
         catch (UnsatisfiedLinkError ignored) {}
     }
 
