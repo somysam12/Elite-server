@@ -1032,6 +1032,7 @@ public class OverlayService extends Service {
             changeBtn.setBackground(rBg);
             changeBtn.setOnClickListener(v2 -> {
                 vibrate();
+                cleanupOverlay();
                 restartApp();
             });
         });
@@ -1069,20 +1070,15 @@ public class OverlayService extends Service {
 
     private void restartApp() {
         try {
-            Intent launch = new Intent(this, LoginActivity.class);
-            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                    ? PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
-                    : PendingIntent.FLAG_CANCEL_CURRENT;
-            PendingIntent pi = PendingIntent.getActivity(this, 0, launch, flags);
-            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            if (am != null) {
-                long fireAt = System.currentTimeMillis() + 100;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fireAt, pi);
-                } else {
-                    am.setExact(AlarmManager.RTC_WAKEUP, fireAt, pi);
-                }
+            Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        ? PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                        : PendingIntent.FLAG_CANCEL_CURRENT;
+                PendingIntent pi = PendingIntent.getActivity(this, 0, launch, flags);
+                AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                if (am != null) am.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pi);
             }
         } catch (Exception ignored) {}
         android.os.Process.killProcess(android.os.Process.myPid());
