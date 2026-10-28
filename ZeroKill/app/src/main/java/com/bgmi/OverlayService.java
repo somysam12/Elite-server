@@ -158,6 +158,7 @@ public class OverlayService extends Service {
         iconParams.x = dp(20); iconParams.y = dp(200);
         iconRoot = wrap;
         wm.addView(iconRoot, iconParams);
+        if (stHideEsp) iconRoot.post(() -> applySkipScreenshot(iconRoot, iconParams, true));
 
         wrap.setOnTouchListener(new View.OnTouchListener() {
             int initX, initY; float tx, ty; long downMs;
@@ -273,9 +274,10 @@ public class OverlayService extends Service {
         FrameLayout.LayoutParams ttlp = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT);
-        ttlp.gravity = Gravity.CENTER;
+        ttlp.gravity = Gravity.CENTER_VERTICAL | Gravity.START;
+        ttlp.leftMargin = dp(4);
         ttlp.rightMargin = dp(44);
-        titleTv.setGravity(Gravity.CENTER);
+        titleTv.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         header.addView(titleTv, ttlp);
 
         // Close button: 32×32dp, #33ffffff bg, 6dp radius, × inside
@@ -343,7 +345,7 @@ public class OverlayService extends Service {
         FrameLayout.LayoutParams rootInnerLp = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT);
-        rootInnerLp.setMargins(dp(2), dp(2), dp(2), dp(2));
+        rootInnerLp.setMargins(dp(4), dp(4), dp(4), dp(4));
         outerFrame.addView(outer, rootInnerLp);
 
         // Top-left corner drag handle only
@@ -1033,14 +1035,23 @@ public class OverlayService extends Service {
                 FrameLayout.LayoutParams.MATCH_PARENT);
         menuRoot.addView(dialogHolder, holderLp);
 
+        confirmBtn.setClickable(false);
+        confirmBtn.setAlpha(0.4f);
+
         final int[] cd = {10};
         final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
         final Runnable[] ticker = new Runnable[1];
         ticker[0] = () -> {
             if (cd[0] > 0) {
                 cd[0]--;
-                confirmBtn.setText(cd[0] > 0 ? "CONFIRM (" + cd[0] + ")" : "CONFIRM");
-                h.postDelayed(ticker[0], 1000);
+                if (cd[0] > 0) {
+                    confirmBtn.setText("CONFIRM (" + cd[0] + ")");
+                    h.postDelayed(ticker[0], 1000);
+                } else {
+                    confirmBtn.setText("CONFIRM");
+                    confirmBtn.setClickable(true);
+                    confirmBtn.setAlpha(1.0f);
+                }
             }
         };
         h.postDelayed(ticker[0], 1000);
@@ -1059,7 +1070,10 @@ public class OverlayService extends Service {
 
     // ── SCREENSHOT PROTECTION ──────────────────────────────────────────────────
     private void updateHideEspWindows(boolean on) {
-        // FLAG_SECURE/SurfaceControl reflection disabled — causes game zoom; handled via TCP
+        if (menuView != null && menuParams != null)
+            applySkipScreenshot(menuView, menuParams, on);
+        if (iconRoot != null && iconParams != null)
+            applySkipScreenshot(iconRoot, iconParams, on);
     }
 
     private void applySkipScreenshot(View v, WindowManager.LayoutParams p, boolean on) {
