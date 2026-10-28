@@ -685,11 +685,14 @@ public class OverlayService extends Service {
     }
 
     private void styleActionBtn(TextView t, boolean active) {
-        GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(4));
-        // Active: brownish-amber (#a05a00); Inactive: dark gray
-        bg.setColor(active ? Color.parseColor("#a05a00") : C_BTN);
-        t.setBackground(bg);
+        if (active) {
+            GradientDrawable bg = new GradientDrawable();
+            bg.setCornerRadius(dp(4));
+            bg.setColor(C_BTN);
+            t.setBackground(bg);
+        } else {
+            t.setBackground(null);
+        }
     }
 
     interface CB { void onToggle(boolean on); }
@@ -739,7 +742,7 @@ public class OverlayService extends Service {
         distLbl.setText("Distance: (" + stDistance + " m)");
         distLbl.setTextColor(Color.parseColor("#d2d2d2"));
         distLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        distLbl.setTypeface(fMono);
+        distLbl.setTypeface(fBody);
         distLbl.setPadding(dp(2), dp(8), 0, dp(4));
         distLbl.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -866,7 +869,7 @@ public class OverlayService extends Service {
         ipadRangeTv[0].setText(" (" + stIpadRange + ")");
         ipadRangeTv[0].setTextColor(Color.parseColor("#d2d2d2"));
         ipadRangeTv[0].setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-        ipadRangeTv[0].setTypeface(fMono);
+        ipadRangeTv[0].setTypeface(fBody);
         ipadRangeTv[0].setClickable(false);
         ipadRangeTv[0].setFocusable(false);
         ipadRow.addView(ipadRangeTv[0], new LinearLayout.LayoutParams(
