@@ -1,4 +1,4 @@
-package com.zerokill;
+package com.bgmi;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;

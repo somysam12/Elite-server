@@ -1,4 +1,4 @@
-package com.zerokill;
+package com.bgmi;
 
 import android.app.Application;
 import android.content.Context;

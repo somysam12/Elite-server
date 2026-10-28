@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace 'com.zerokill'
+    namespace 'com.bgmi'
     compileSdk 34
 buildToolsVersion '34.0.0'
     signingConfigs {

@@ -1,4 +1,4 @@
-package com.zerokill.utils;
+package com.bgmi.utils;
 
 @SuppressWarnings({"unused","deprecation"})
 public final class AntiTamper {

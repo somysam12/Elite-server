@@ -31,14 +31,14 @@
 }
 
 # ── App entry points (must survive R8) ───────────────────────────────────────
--keep class com.zerokill.ArkApplication { *; }
--keep class com.zerokill.DexDecryptor   { *; }
--keep class com.zerokill.SplashActivity { *; }
--keep class com.zerokill.LoginActivity  { *; }
--keep class com.zerokill.MainActivity   { *; }
--keep class com.zerokill.BaseActivity   { *; }
--keep class com.zerokill.OverlayService { *; }
--keep class com.zerokill.utils.**       { *; }
+-keep class com.bgmi.ArkApplication { *; }
+-keep class com.bgmi.DexDecryptor   { *; }
+-keep class com.bgmi.SplashActivity { *; }
+-keep class com.bgmi.LoginActivity  { *; }
+-keep class com.bgmi.MainActivity   { *; }
+-keep class com.bgmi.BaseActivity   { *; }
+-keep class com.bgmi.OverlayService { *; }
+-keep class com.bgmi.utils.**       { *; }
 
 # ── Virtual space SDK ─────────────────────────────────────────────────────────
 # REMOVED (Hcore): -keep class com.mundo.**         { *; }
@@ -100,9 +100,9 @@
 -dontwarn top.bienvenido.**
 
 # ArkCheat specific
--keep class com.zerokill.HeartbeatManager       { *; }
--keep class com.zerokill.OverlayService         { *; }
--keepclassmembers class com.zerokill.HeartbeatManager {
+-keep class com.bgmi.HeartbeatManager       { *; }
+-keep class com.bgmi.OverlayService         { *; }
+-keepclassmembers class com.bgmi.HeartbeatManager {
     static native <methods>;
     public static <methods>;
 }

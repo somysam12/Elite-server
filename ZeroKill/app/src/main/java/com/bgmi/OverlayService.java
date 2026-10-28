@@ -1,4 +1,4 @@
-package com.zerokill;
+package com.bgmi;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
