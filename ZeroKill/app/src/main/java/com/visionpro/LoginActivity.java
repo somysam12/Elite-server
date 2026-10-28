@@ -1,4 +1,4 @@
-package com.bgmi;
+package com.visionpro;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -36,8 +36,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 
-import com.bgmi.utils.Downtwo;
-import com.bgmi.utils.Prefs;
+import com.visionpro.utils.Downtwo;
+import com.visionpro.utils.Prefs;
 import com.mundo.MundoCore;
 
 @SuppressWarnings({"unused", "deprecation"})

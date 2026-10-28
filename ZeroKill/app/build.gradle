@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace 'com.bgmi'
+    namespace 'com.visionpro'
     compileSdk 34
 buildToolsVersion '34.0.0'
     signingConfigs {
@@ -39,7 +39,7 @@ buildToolsVersion '34.0.0'
     }
 
     defaultConfig {
-        applicationId "com.zerokill"
+        applicationId "com.visionpro"
         minSdk 24
         targetSdk 34
         versionCode 1

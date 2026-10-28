@@ -1,4 +1,4 @@
-package com.bgmi.utils;
+package com.visionpro.utils;
 
 import android.util.Base64;
 import java.nio.charset.StandardCharsets;

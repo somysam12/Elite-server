@@ -1,4 +1,4 @@
-package com.bgmi.utils;
+package com.visionpro.utils;
 
 @SuppressWarnings({"unused","deprecation"})
 public final class AntiTamper {

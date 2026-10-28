@@ -1,5 +1,5 @@
-package com.bgmi;
-import com.bgmi.R;
+package com.visionpro;
+import com.visionpro.R;
 
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
@@ -20,7 +20,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
-import com.bgmi.utils.Prefs;
+import com.visionpro.utils.Prefs;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import net_62v.external.MetaActivationManager;

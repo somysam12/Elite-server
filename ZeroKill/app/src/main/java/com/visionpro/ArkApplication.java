@@ -1,4 +1,4 @@
-package com.bgmi;
+package com.visionpro;
 
 import android.app.Application;
 import android.content.Context;

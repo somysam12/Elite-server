@@ -1,4 +1,4 @@
-package com.bgmi;
+package com.visionpro;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
