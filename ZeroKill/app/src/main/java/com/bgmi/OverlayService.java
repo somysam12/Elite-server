@@ -68,6 +68,8 @@ public class OverlayService extends Service {
     private boolean stBtrack=false;
     private boolean stTimeFixer=false, stFps120=false, stWide=false, stHideEsp=false;
     private int     stDistance=120;
+    private int     stBtHit=33;
+    private int     stIpadRange=120;
     private boolean stIgnBot=false, stIgnKnocked=false;
 
     @Override public IBinder onBind(Intent i) { return null; }
@@ -288,60 +290,60 @@ public class OverlayService extends Service {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT));
 
-        // ── HEADER BAR (42dp tall) ───────────────────────────────────────────
+        // ── HEADER BAR (45dp tall, Vision_Tw exact) ──────────────────────────
         FrameLayout header = new FrameLayout(this);
         LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(42));
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(45));
         header.setLayoutParams(hlp);
-        header.setPadding(dp(14), 0, dp(10), 0);
+        header.setPadding(dp(16), 0, dp(16), 0);
 
-        // Bottom border on header
-        View headLine = new View(this);
-        headLine.setBackgroundColor(Color.parseColor("#1affffff"));
-        FrameLayout.LayoutParams hllp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, dp(1));
-        hllp.gravity = Gravity.BOTTOM;
-        header.addView(headLine, hllp);
-
-        // Title
+        // Title: "ZERO KILL", 12sp, bold, letterSpacing=0.2
         TextView titleTv = new TextView(this);
-        titleTv.setText("Vision");
+        titleTv.setText("ZERO KILL");
         titleTv.setTextColor(C_WHITE);
-        titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         titleTv.setTypeface(fHeading, Typeface.BOLD);
-        titleTv.setLetterSpacing(0.21f);
+        titleTv.setLetterSpacing(0.2f);
         FrameLayout.LayoutParams ttlp = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.MATCH_PARENT);
         ttlp.gravity = Gravity.CENTER_VERTICAL | Gravity.START;
         header.addView(titleTv, ttlp);
 
-        // Close button (30×30dp, radius 5dp)
+        // Close button: 32×32dp, #33ffffff bg, 6dp radius, × inside
         FrameLayout closeBtn = new FrameLayout(this);
         GradientDrawable cbg = new GradientDrawable();
-        cbg.setCornerRadius(dp(5));
+        cbg.setCornerRadius(dp(6));
         cbg.setColor(Color.parseColor("#33ffffff"));
         closeBtn.setBackground(cbg);
         TextView closeX = new TextView(this);
         closeX.setText("✕");
         closeX.setTextColor(C_WHITE);
-        closeX.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        closeX.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         closeX.setGravity(Gravity.CENTER);
         closeBtn.addView(closeX, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
         closeBtn.setOnClickListener(v -> { vibrate(); closeMenu(); });
-        FrameLayout.LayoutParams clp = new FrameLayout.LayoutParams(dp(30), dp(30));
+        FrameLayout.LayoutParams clp = new FrameLayout.LayoutParams(dp(32), dp(32));
         clp.gravity = Gravity.CENTER_VERTICAL | Gravity.END;
         header.addView(closeBtn, clp);
         rightPanel.addView(header);
+
+        // Divider: #1affffff, 1dp, marginH=16dp
+        View headLine = new View(this);
+        headLine.setBackgroundColor(Color.parseColor("#1affffff"));
+        LinearLayout.LayoutParams hllp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
+        hllp.leftMargin = dp(16); hllp.rightMargin = dp(16);
+        rightPanel.addView(headLine, hllp);
 
         // Content scroll area
         ScrollView scroll = new ScrollView(this);
         scroll.setVerticalScrollBarEnabled(false);
         contentPanel = new LinearLayout(this);
         contentPanel.setOrientation(LinearLayout.VERTICAL);
-        contentPanel.setPadding(dp(5), dp(10), dp(5), dp(8));
+        contentPanel.setPadding(dp(12), dp(12), dp(12), dp(8));
         scroll.addView(contentPanel, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -355,7 +357,7 @@ public class OverlayService extends Service {
                 FrameLayout.LayoutParams.MATCH_PARENT));
 
         menuParams = new WindowManager.LayoutParams(
-                dp(430), dp(280), overlayType(),
+                dp(460), dp(300), overlayType(),
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         menuParams.gravity = Gravity.TOP | Gravity.START;
@@ -373,25 +375,25 @@ public class OverlayService extends Service {
         if (stHideEsp) menuView.post(() -> updateHideEspWindows(true));
     }
 
-    // Nav item: 34dp tall, radius 8dp, purple→indigo gradient when active
+    // Nav item: 36dp tall, Vision_Tw exact dimensions
     private LinearLayout buildNavItem(String label, String key, int iconRes) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(11), 0, dp(8), 0);
+        row.setPadding(dp(12), 0, dp(12), 0);
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(34));
-        rlp.bottomMargin = dp(7);
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(36));
+        rlp.bottomMargin = dp(8);
         row.setLayoutParams(rlp);
         row.setClickable(true);
         row.setFocusable(true);
 
-        // Icon wrapper (17×17dp, radius 5dp)
+        // Icon wrapper: 18×18dp, 4dp radius
         FrameLayout iconWrap = new FrameLayout(this);
         iconWrap.setTag("iw");
         GradientDrawable iwBg = new GradientDrawable();
-        iwBg.setCornerRadius(dp(5));
-        iwBg.setColor(Color.TRANSPARENT);
+        iwBg.setCornerRadius(dp(4));
+        iwBg.setColor(Color.parseColor("#0dffffff"));
         iconWrap.setBackground(iwBg);
         ImageView icon = new ImageView(this);
         if (iconRes != 0) {
@@ -399,22 +401,22 @@ public class OverlayService extends Service {
             icon.setColorFilter(C_WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
         }
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        FrameLayout.LayoutParams iilp = new FrameLayout.LayoutParams(dp(11), dp(11));
+        FrameLayout.LayoutParams iilp = new FrameLayout.LayoutParams(dp(12), dp(12));
         iilp.gravity = Gravity.CENTER;
         iconWrap.addView(icon, iilp);
-        row.addView(iconWrap, new LinearLayout.LayoutParams(dp(17), dp(17)));
+        row.addView(iconWrap, new LinearLayout.LayoutParams(dp(18), dp(18)));
 
-        // Label
+        // Label: 9sp, bold, letterSpacing=0.1
         TextView tv = new TextView(this);
         tv.setText(label);
-        tv.setTextColor(C_WHITE);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 7.5f);
+        tv.setTextColor(Color.parseColor("#8cffffff"));
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f);
         tv.setTypeface(fHeading, Typeface.BOLD);
-        tv.setLetterSpacing(0.09f);
+        tv.setLetterSpacing(0.1f);
         LinearLayout.LayoutParams tvlp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        tvlp.leftMargin = dp(9);
+        tvlp.leftMargin = dp(10);
         row.addView(tv, tvlp);
         row.setTag(tv);
         row.setOnClickListener(v -> { vibrate(); selectTab(key); });
@@ -434,56 +436,51 @@ public class OverlayService extends Service {
         }
     }
 
-    // Active: purple→indigo gradient; inactive: raised dark bg
+    // Active: #33ffffff solid 4dp; inactive: transparent — Vision_Tw exact
     private void applyNavStyle(LinearLayout row, boolean active) {
         if (row == null) return;
-        GradientDrawable bg;
+        GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(dp(4));
         if (active) {
-            bg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    new int[]{C_PURPLE, C_INDIGO});
-            bg.setCornerRadius(dp(8));
+            bg.setColor(Color.parseColor("#33ffffff"));
             if (row.getTag() instanceof TextView)
                 ((TextView) row.getTag()).setTextColor(C_WHITE);
             View iw = row.findViewWithTag("iw");
             if (iw instanceof FrameLayout) {
                 GradientDrawable iwBg = new GradientDrawable();
-                iwBg.setCornerRadius(dp(5));
-                iwBg.setColor(Color.parseColor("#38ffffff"));
+                iwBg.setCornerRadius(dp(4));
+                iwBg.setColor(Color.parseColor("#33ffffff"));
                 iw.setBackground(iwBg);
-                View child = ((FrameLayout) iw).getChildAt(0);
-                if (child instanceof ImageView)
-                    ((ImageView) child).setColorFilter(C_WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
             }
         } else {
-            bg = new GradientDrawable();
-            bg.setCornerRadius(dp(8));
-            bg.setColor(C_RAISED);
+            bg.setColor(Color.TRANSPARENT);
             if (row.getTag() instanceof TextView)
-                ((TextView) row.getTag()).setTextColor(C_WHITE);
+                ((TextView) row.getTag()).setTextColor(Color.parseColor("#8cffffff"));
             View iw = row.findViewWithTag("iw");
             if (iw instanceof FrameLayout) {
-                iw.setBackground(null);
-                View child = ((FrameLayout) iw).getChildAt(0);
-                if (child instanceof ImageView)
-                    ((ImageView) child).setColorFilter(C_WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
+                GradientDrawable iwBg = new GradientDrawable();
+                iwBg.setCornerRadius(dp(4));
+                iwBg.setColor(Color.parseColor("#0dffffff"));
+                iw.setBackground(iwBg);
             }
         }
         row.setBackground(bg);
     }
 
-    // Section header: #1c1c1c bg, #9232E0 text, top radius 7dp
+    // Section header: Vision_Tw exact — #0dffffff bg, top-only 8dp radius, purple text 11sp
     private void sectionHeader(LinearLayout parent, String text) {
         TextView t = new TextView(this);
         t.setText(text);
         t.setTextColor(C_HEAD_TEXT);
-        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         t.setTypeface(fHeading, Typeface.BOLD);
         t.setLetterSpacing(0.1f);
-        t.setGravity(Gravity.CENTER);
-        t.setPadding(0, dp(5), 0, dp(5));
+        t.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        t.setPadding(dp(8), dp(4), dp(8), dp(4));
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(7));
-        bg.setColor(C_SECTION);
+        // top-only 8dp corners (TL, TR, BR, BL each as two values)
+        bg.setCornerRadii(new float[]{dp(8),dp(8), dp(8),dp(8), 0,0, 0,0});
+        bg.setColor(Color.parseColor("#0dffffff"));
         t.setBackground(bg);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -711,9 +708,55 @@ public class OverlayService extends Service {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
+        // BT Hit% row (hidden until Bullet Track ON) — Vision_Tw layout2.xml btPercentRow
+        LinearLayout btPctRow = new LinearLayout(this);
+        btPctRow.setOrientation(LinearLayout.VERTICAL);
+        btPctRow.setVisibility(View.GONE);
+        btPctRow.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        LinearLayout btPctHeader = new LinearLayout(this);
+        btPctHeader.setOrientation(LinearLayout.HORIZONTAL);
+        btPctHeader.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams bphl = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        bphl.topMargin = dp(4); bphl.bottomMargin = dp(2);
+        btPctHeader.setLayoutParams(bphl);
+
+        TextView btPctLbl = new TextView(this);
+        btPctLbl.setText("Bullet Hit Percentage: (" + stBtHit + " %)");
+        btPctLbl.setTextColor(Color.parseColor("#d2d2d2"));
+        btPctLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        btPctLbl.setTypeface(fMono);
+        btPctHeader.addView(btPctLbl, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView btUnsafe = new TextView(this);
+        btUnsafe.setText("UNSAFE");
+        btUnsafe.setTextColor(Color.parseColor("#ff4444"));
+        btUnsafe.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        btUnsafe.setTypeface(fHeading, Typeface.BOLD);
+        btPctHeader.addView(btUnsafe);
+        btPctRow.addView(btPctHeader);
+
+        SeekBar btHitBar = makeSeekBar(10, 100, stBtHit);
+        btHitBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(SeekBar s, int p, boolean u){
+                stBtHit = p + 10;
+                btPctLbl.setText("Bullet Hit Percentage: (" + stBtHit + " %)");
+                sendTcp("bthit=" + stBtHit);
+            }
+            public void onStartTrackingTouch(SeekBar s){}
+            public void onStopTrackingTouch(SeekBar s){}
+        });
+        btPctRow.addView(btHitBar);
+
         checkRowRet(col, "Bullet Track", stBtrack, on->{
             stBtrack=on; sendTcp("btrack="+(on?1:0));
+            btPctRow.setVisibility(on ? View.VISIBLE : View.GONE);
         });
+        col.addView(btPctRow);
 
         // Distance slider
         TextView distLbl = new TextView(this);
@@ -794,7 +837,45 @@ public class OverlayService extends Service {
 
         checkRow(c1, "6H Time Fixer", stTimeFixer, on->{ stTimeFixer=on; sendTcp("timefixer="+(on?1:0)); });
         checkRow(c2, "120 FPS",       stFps120,    on->{ stFps120=on;    sendTcp("fps120="+(on?1:0)); });
-        checkRow(c3, "IPad View",     stWide,      on->{ stWide=on;      sendTcp("wideview="+(on?1:0)); });
+        // IPad View — Vision_Tw: shows range display "(120)" and SeekBar when checked
+        LinearLayout ipadSection = new LinearLayout(this);
+        ipadSection.setOrientation(LinearLayout.VERTICAL);
+        ipadSection.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        // Hidden range row (GONE until IPad View checked)
+        LinearLayout ipadRangeRow = new LinearLayout(this);
+        ipadRangeRow.setOrientation(LinearLayout.VERTICAL);
+        ipadRangeRow.setVisibility(View.GONE);
+        ipadRangeRow.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        TextView ipadRangeLbl = new TextView(this);
+        ipadRangeLbl.setText("IPad View Range: (" + stIpadRange + ")");
+        ipadRangeLbl.setTextColor(Color.parseColor("#d2d2d2"));
+        ipadRangeLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        ipadRangeLbl.setTypeface(fMono);
+        LinearLayout.LayoutParams irll = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        irll.topMargin = dp(4); irll.bottomMargin = dp(2);
+        ipadRangeLbl.setLayoutParams(irll);
+        ipadRangeRow.addView(ipadRangeLbl);
+
+        SeekBar ipadBar = makeSeekBar(90, 130, stIpadRange);
+        ipadBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(SeekBar s, int p, boolean u){
+                stIpadRange = p + 90;
+                ipadRangeLbl.setText("IPad View Range: (" + stIpadRange + ")");
+                sendTcp("ipadrange=" + stIpadRange);
+            }
+            public void onStartTrackingTouch(SeekBar s){}
+            public void onStopTrackingTouch(SeekBar s){}
+        });
+        ipadRangeRow.addView(ipadBar);
+
+        checkRow(c3, "IPad View",     stWide,      on->{ stWide=on;      sendTcp("wideview="+(on?1:0));
+            ipadRangeRow.setVisibility(on ? View.VISIBLE : View.GONE); });
+        c3.addView(ipadRangeRow);
         checkRow(c4, "Hide Recording",stHideEsp,   on->{ stHideEsp=on;   sendTcp("hideesp="+(on?1:0)); updateHideEspWindows(on); });
 
         row1.addView(c1); row1.addView(c2);
