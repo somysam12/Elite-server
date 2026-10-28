@@ -67,6 +67,7 @@ public class OverlayService extends Service {
     private boolean stVehicle=false, stItems=false, stGrenade=false;
     private boolean stBtrack=true;
     private boolean stTimeFixer=false, stFps120=false, stWide=false, stHideEsp=false;
+    private boolean menuSkipActive=false, iconSkipActive=false;
     private int     stDistance=120;
     private int     stBtHit=33;
     private int     stIpadRange=120;
@@ -193,6 +194,7 @@ public class OverlayService extends Service {
             menuView = null;
         }
         menuOpen = false;
+        menuSkipActive = false;
         if (iconRoot != null) iconRoot.setVisibility(View.VISIBLE);
     }
 
@@ -1070,10 +1072,20 @@ public class OverlayService extends Service {
 
     // ── SCREENSHOT PROTECTION ──────────────────────────────────────────────────
     private void updateHideEspWindows(boolean on) {
-        if (menuView != null && menuParams != null)
-            applySkipScreenshot(menuView, menuParams, on);
-        if (iconRoot != null && iconParams != null)
-            applySkipScreenshot(iconRoot, iconParams, on);
+        // Only ever call SurfaceControl when transitioning TO active (never to false).
+        // Calling setSkipScreenshot false → true on the same surface triggers SurfaceFlinger
+        // recomposition which the game reads as a display resize → zoom/blink bug.
+        // menuSkipActive resets in closeMenu() so reopening the menu gets a fresh surface.
+        if (on) {
+            if (menuView != null && menuParams != null && !menuSkipActive) {
+                applySkipScreenshot(menuView, menuParams, true);
+                menuSkipActive = true;
+            }
+            if (iconRoot != null && iconParams != null && !iconSkipActive) {
+                applySkipScreenshot(iconRoot, iconParams, true);
+                iconSkipActive = true;
+            }
+        }
     }
 
     private void applySkipScreenshot(View v, WindowManager.LayoutParams p, boolean on) {
