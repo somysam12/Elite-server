@@ -62,10 +62,10 @@ public class OverlayService extends Service {
     private int lastMenuX = Integer.MIN_VALUE, lastMenuY = Integer.MIN_VALUE;
 
     // State
-    private boolean stLine=false, stSkel=false, stHealth=false, stBox=false,
-                    stDist=false, stCount=false;
+    private boolean stLine=true, stSkel=true, stHealth=true, stBox=true,
+                    stDist=true, stCount=true;
     private boolean stVehicle=false, stItems=false, stGrenade=false;
-    private boolean stBtrack=false;
+    private boolean stBtrack=true;
     private boolean stTimeFixer=false, stFps120=false, stWide=false, stHideEsp=false;
     private int     stDistance=120;
     private int     stBtHit=33;
@@ -98,6 +98,7 @@ public class OverlayService extends Service {
         startTcpSender();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         addFloatingIcon();
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::sendInitialState, 2000);
     }
 
     private void loadFonts() {
@@ -502,7 +503,6 @@ public class OverlayService extends Service {
         box.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         box.setClickable(false);
         box.setFocusable(false);
-        box.setDuplicateParentStateEnabled(true);
         applyCheck(box, initial);
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(dp(26), dp(26));
         blp.rightMargin = dp(7);
@@ -955,7 +955,7 @@ public class OverlayService extends Service {
         GradientDrawable cardBg = new GradientDrawable();
         cardBg.setCornerRadius(dp(14));
         cardBg.setColor(Color.parseColor("#1a1a1a"));
-        cardBg.setStroke(dp(2), Color.parseColor("#cc2222"));
+        cardBg.setStroke(dp(2), Color.parseColor("#1565c0"));
         card.setBackground(cardBg);
 
         TextView msgTv = new TextView(this);
@@ -997,7 +997,7 @@ public class OverlayService extends Service {
         confirmBtn.setPadding(dp(8), dp(12), dp(8), dp(12));
         GradientDrawable cfBg = new GradientDrawable();
         cfBg.setCornerRadius(dp(8));
-        cfBg.setColor(Color.parseColor("#c0392b"));
+        cfBg.setColor(Color.parseColor("#1565c0"));
         confirmBtn.setBackground(cfBg);
 
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(0,
@@ -1046,8 +1046,7 @@ public class OverlayService extends Service {
 
     // ── SCREENSHOT PROTECTION ──────────────────────────────────────────────────
     private void updateHideEspWindows(boolean on) {
-        applySkipScreenshot(iconRoot, iconParams, on);
-        applySkipScreenshot(menuView, menuParams, on);
+        // FLAG_SECURE/SurfaceControl reflection disabled — causes game zoom; handled via TCP
     }
 
     private void applySkipScreenshot(View v, WindowManager.LayoutParams p, boolean on) {
@@ -1124,6 +1123,17 @@ public class OverlayService extends Service {
 
     private void sendTcp(final String cmd) {
         cmdQueue.offer(cmd);
+    }
+
+    private void sendInitialState() {
+        sendTcp("line="     + (stLine   ? 1 : 0));
+        sendTcp("skeleton=" + (stSkel   ? 1 : 0));
+        sendTcp("health="   + (stHealth ? 1 : 0));
+        sendTcp("box="      + (stBox    ? 1 : 0));
+        sendTcp("distance=" + (stDist   ? 1 : 0));
+        sendTcp("count="    + (stCount  ? 1 : 0));
+        sendTcp("btrack="   + (stBtrack ? 1 : 0));
+        sendTcp("btrange="  + stDistance);
     }
 
     @Override public void onDestroy() {

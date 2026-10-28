@@ -291,19 +291,6 @@ public class LoginActivity extends BaseActivity {
                 }
             });
         }
-        // Keyboard push-up: collapse logo when key input focused, restore on blur
-        if (etKey != null) {
-            etKey.setOnFocusChangeListener((v, hasFocus) -> {
-                android.view.View topSection = findViewById(R.id.topLogoLayout);
-                if (topSection == null) return;
-                android.widget.LinearLayout.LayoutParams lp =
-                    (android.widget.LinearLayout.LayoutParams) topSection.getLayoutParams();
-                if (lp == null) return;
-                lp.weight = hasFocus ? 0f : 1f;
-                lp.height = 0;
-                topSection.setLayoutParams(lp);
-            });
-        }
         if (btnLogin != null) {
             btnLogin.setOnClickListener(v -> {
                 String key = etKey.getText().toString().trim();
