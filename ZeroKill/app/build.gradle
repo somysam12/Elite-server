@@ -42,8 +42,8 @@ buildToolsVersion '34.0.0'
         applicationId "com.visionpro"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "0.05"
+        versionCode 2
+        versionName "0.06"
         vectorDrawables { useSupportLibrary true }
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters "arm64-v8a" }

@@ -188,6 +188,20 @@ public class LoginActivity extends BaseActivity {
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req == RC_STORAGE) {
+            // On Android 11+ MANAGE_EXTERNAL_STORAGE needs a process restart to take
+            // full kernel-level effect — restart the app immediately after grant.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                    && Environment.isExternalStorageManager()) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    Intent restart = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                    if (restart != null) {
+                        restart.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(restart);
+                    }
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                }, 300);
+                return;
+            }
             if (!hasInstall()) { askInstall(); return; }
             if (!hasOverlay()) { askOverlay(); return; }
             onPermissionsReady();
@@ -392,18 +406,27 @@ public class LoginActivity extends BaseActivity {
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
         if (prefs.getBool(KEY_OBB_DONE, false)) {
-            showProcessingMsg("Opening game...");
-            new Handler(Looper.getMainLooper()).postDelayed(() -> launchGameAndFinish(), 800);
-            return;
+            // Verify OBB is actually present at the expected internal-storage path.
+            // Handles the case where the user upgraded from a build that copied to a
+            // different location, so we re-copy rather than silently failing to launch.
+            java.io.File obbCheck = new java.io.File(getFilesDir(), "external/Android/obb/" + PKG_BGMI);
+            java.io.File[] obbFiles = obbCheck.listFiles((d, n) -> n.endsWith(".obb"));
+            if (obbFiles != null && obbFiles.length > 0) {
+                showProcessingMsg("Opening game...");
+                new Handler(Looper.getMainLooper()).postDelayed(() -> launchGameAndFinish(), 800);
+                return;
+            }
+            prefs.setBool(KEY_OBB_DONE, false); // reset — OBB not at expected location
         }
         showProcessingMsg("Copying Obb...");
         new Thread(() -> {
             try {
                 String root    = Environment.getExternalStorageDirectory().getAbsolutePath();
                 java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
-                java.io.File destDir   = new java.io.File(root +
-                    "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI +
-                    "/Android/obb/" + PKG_BGMI);
+                // Destination is inside internal storage — matches BEnvironment.getExternalStorageDirectory()
+                // (sVBoxRoot/external). Path starts with /data/, not /storage/emulated/0,
+                // so VCore I/O redirect never double-translates it.
+                java.io.File destDir = new java.io.File(getFilesDir(), "external/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
                 java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
