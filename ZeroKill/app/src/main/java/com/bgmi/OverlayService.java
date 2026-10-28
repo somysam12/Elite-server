@@ -55,7 +55,7 @@ public class OverlayService extends Service {
     private boolean menuOpen = false;
 
     private LinearLayout contentPanel;
-    private LinearLayout tabVisual, tabAim, tabMisc;
+    private LinearLayout tabVisual, tabAim, tabMisc, tabDeviceId;
     private String currentTab = "VISUAL";
     private Typeface fHeading, fBody, fMono;
     private Vibrator vibrator;
@@ -141,16 +141,11 @@ public class OverlayService extends Service {
     // ── FLOATING ICON ────────────────────────────────────────────────────────
     private void addFloatingIcon() {
         FrameLayout wrap = new FrameLayout(this);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setShape(GradientDrawable.OVAL);
-        bg.setColor(C_RAISED);
-        bg.setStroke(dp(1.5f), C_PURPLE);
-        wrap.setBackground(bg);
 
         ImageView img = new ImageView(this);
-        img.setImageResource(res("icon", "drawable"));
-        img.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        FrameLayout.LayoutParams ilp = new FrameLayout.LayoutParams(dp(36), dp(36));
+        img.setImageResource(res("logopng", "drawable"));
+        img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        FrameLayout.LayoutParams ilp = new FrameLayout.LayoutParams(dp(44), dp(44));
         ilp.gravity = Gravity.CENTER;
         wrap.addView(img, ilp);
 
@@ -253,14 +248,10 @@ public class OverlayService extends Service {
 
         // Logo box (50dp tall)
         FrameLayout logoBox = new FrameLayout(this);
-        GradientDrawable logoBg = new GradientDrawable();
-        logoBg.setShape(GradientDrawable.OVAL);
-        logoBg.setColor(C_RAISED);
-        logoBox.setBackground(logoBg);
         ImageView logoImg = new ImageView(this);
-        logoImg.setImageResource(res("icon", "drawable"));
-        logoImg.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        FrameLayout.LayoutParams lilp = new FrameLayout.LayoutParams(dp(38), dp(38));
+        logoImg.setImageResource(res("logopng", "drawable"));
+        logoImg.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        FrameLayout.LayoutParams lilp = new FrameLayout.LayoutParams(dp(44), dp(44));
         lilp.gravity = Gravity.CENTER;
         logoBox.addView(logoImg, lilp);
         LinearLayout.LayoutParams lblp = new LinearLayout.LayoutParams(dp(50), dp(50));
@@ -269,13 +260,15 @@ public class OverlayService extends Service {
         lblp.topMargin = dp(6);
         sidebar.addView(logoBox, lblp);
 
-        // Nav items: VISUALS, COMBAT, MISC — Vision_Tw icons
-        tabVisual = buildNavItem("VISUALS", "VISUAL", res("esp",      "drawable"));
-        tabAim    = buildNavItem("COMBAT",  "AIM",    res("aimbot",   "drawable"));
-        tabMisc   = buildNavItem("MISC",    "MISC",   res("security", "drawable"));
+        // Nav items: VISUALS, COMBAT, MISC, DEVICE ID — Vision_Tw icons
+        tabVisual  = buildNavItem("VISUALS",   "VISUAL", res("esp",      "drawable"));
+        tabAim     = buildNavItem("COMBAT",    "AIM",    res("aimbot",   "drawable"));
+        tabMisc    = buildNavItem("MISC",      "MISC",   res("security", "drawable"));
+        tabDeviceId = buildNavItem("DEVICE ID","DEVID",  res("security", "drawable"));
         sidebar.addView(tabVisual);
         sidebar.addView(tabAim);
         sidebar.addView(tabMisc);
+        sidebar.addView(tabDeviceId);
         inner.addView(sidebar);
 
         // ── RIGHT PANEL ──────────────────────────────────────────────────────
@@ -297,9 +290,9 @@ public class OverlayService extends Service {
         header.setLayoutParams(hlp);
         header.setPadding(dp(16), 0, dp(16), 0);
 
-        // Title: "ZERO KILL", 12sp, bold, letterSpacing=0.2
+        // Title: "VISION ELITE", 12sp, bold, letterSpacing=0.2
         TextView titleTv = new TextView(this);
-        titleTv.setText("ZERO KILL");
+        titleTv.setText("VISION ELITE");
         titleTv.setTextColor(C_WHITE);
         titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         titleTv.setTypeface(fHeading, Typeface.BOLD);
@@ -425,14 +418,16 @@ public class OverlayService extends Service {
 
     private void selectTab(String key) {
         currentTab = key;
-        applyNavStyle(tabVisual, key.equals("VISUAL"));
-        applyNavStyle(tabAim,    key.equals("AIM"));
-        applyNavStyle(tabMisc,   key.equals("MISC"));
+        applyNavStyle(tabVisual,   key.equals("VISUAL"));
+        applyNavStyle(tabAim,      key.equals("AIM"));
+        applyNavStyle(tabMisc,     key.equals("MISC"));
+        applyNavStyle(tabDeviceId, key.equals("DEVID"));
         contentPanel.removeAllViews();
         switch (key) {
-            case "VISUAL": buildVisual(); break;
-            case "AIM":    buildAim();    break;
-            case "MISC":   buildMisc();   break;
+            case "VISUAL": buildVisual();  break;
+            case "AIM":    buildAim();     break;
+            case "MISC":   buildMisc();    break;
+            case "DEVID":  buildDeviceId(); break;
         }
     }
 
@@ -771,11 +766,33 @@ public class OverlayService extends Service {
         col.addView(distLbl);
 
         SeekBar distBar = makeSeekBar(10, 150, stDistance);
+        final boolean[] flagWarningActive = {false};
         distBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
-            public void onProgressChanged(SeekBar s, int p, boolean u){
-                stDistance=p+10;
-                distLbl.setText("Distance: ("+stDistance+" m)");
-                sendTcp("btrange="+stDistance);
+            public void onProgressChanged(SeekBar s, int p, boolean fromUser){
+                int newVal = p + 10;
+                if (fromUser && newVal > 120 && !flagWarningActive[0]) {
+                    flagWarningActive[0] = true;
+                    final int chosenVal = newVal;
+                    showFlagWarning(
+                        () -> { // CONFIRM
+                            flagWarningActive[0] = false;
+                            stDistance = chosenVal;
+                            distLbl.setText("Distance: (" + stDistance + " m)");
+                            sendTcp("btrange=" + stDistance);
+                        },
+                        () -> { // CANCEL — reset to 120
+                            flagWarningActive[0] = false;
+                            stDistance = 120;
+                            distBar.setProgress(110); // 120 - 10 = 110
+                            distLbl.setText("Distance: (120 m)");
+                            sendTcp("btrange=120");
+                        }
+                    );
+                } else if (!flagWarningActive[0]) {
+                    stDistance = newVal;
+                    distLbl.setText("Distance: (" + stDistance + " m)");
+                    sendTcp("btrange=" + stDistance);
+                }
             }
             public void onStartTrackingTouch(SeekBar s){}
             public void onStopTrackingTouch(SeekBar s){}
@@ -882,6 +899,160 @@ public class OverlayService extends Service {
         row2.addView(c3); row2.addView(c4);
         contentPanel.addView(row1);
         contentPanel.addView(row2);
+    }
+
+    // ── DEVICE ID TAB ────────────────────────────────────────────────────────
+    private void buildDeviceId() {
+        sectionHeader(contentPanel, "DEVICE IDENTITY");
+
+        String androidId = "";
+        try {
+            androidId = android.provider.Settings.Secure.getString(
+                getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        } catch (Exception ignored) {}
+
+        TextView idLabel = new TextView(this);
+        idLabel.setText("Game Android ID");
+        idLabel.setTextColor(C_DIMMED);
+        idLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        idLabel.setTypeface(fBody);
+        LinearLayout.LayoutParams illp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        illp.topMargin = dp(8); illp.bottomMargin = dp(4);
+        idLabel.setLayoutParams(illp);
+        contentPanel.addView(idLabel);
+
+        TextView idValue = new TextView(this);
+        idValue.setText(androidId.isEmpty() ? "Unknown" : androidId);
+        idValue.setTextColor(C_WHITE);
+        idValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        idValue.setTypeface(fMono);
+        contentPanel.addView(idValue, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        TextView changeBtn = new TextView(this);
+        changeBtn.setText("Change Device ID");
+        changeBtn.setTextColor(C_WHITE);
+        changeBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        changeBtn.setTypeface(fBody);
+        changeBtn.setGravity(Gravity.CENTER);
+        changeBtn.setPadding(dp(10), dp(12), dp(10), dp(12));
+        GradientDrawable btnBg = new GradientDrawable();
+        btnBg.setCornerRadius(dp(6));
+        btnBg.setColor(Color.parseColor("#9425bd"));
+        changeBtn.setBackground(btnBg);
+        LinearLayout.LayoutParams cblp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        cblp.topMargin = dp(16);
+        changeBtn.setLayoutParams(cblp);
+        changeBtn.setOnClickListener(v -> { vibrate(); sendTcp("changedeviceid=1"); });
+        contentPanel.addView(changeBtn);
+    }
+
+    // ── FLAG WARNING DIALOG ───────────────────────────────────────────────────
+    private void showFlagWarning(Runnable onConfirm, Runnable onCancel) {
+        FrameLayout dialogRoot = new FrameLayout(this);
+        dialogRoot.setBackgroundColor(Color.parseColor("#cc000000"));
+
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(20), dp(20), dp(20), dp(20));
+        GradientDrawable cardBg = new GradientDrawable();
+        cardBg.setCornerRadius(dp(12));
+        cardBg.setColor(C_PANEL);
+        cardBg.setStroke(dp(1.5f), Color.parseColor("#ff4444"));
+        card.setBackground(cardBg);
+
+        TextView msgTv = new TextView(this);
+        msgTv.setText("Exceeding limit may Flag your id for 7 Day Ban\nProceed with caution.");
+        msgTv.setTextColor(C_WHITE);
+        msgTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        msgTv.setGravity(Gravity.CENTER);
+        msgTv.setTypeface(fBody);
+        card.addView(msgTv, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams brlp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        brlp.topMargin = dp(16);
+        btnRow.setLayoutParams(brlp);
+
+        TextView cancelBtn = new TextView(this);
+        cancelBtn.setText("CANCEL");
+        cancelBtn.setTextColor(C_WHITE);
+        cancelBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        cancelBtn.setTypeface(fHeading, Typeface.BOLD);
+        cancelBtn.setGravity(Gravity.CENTER);
+        cancelBtn.setPadding(dp(8), dp(10), dp(8), dp(10));
+        GradientDrawable cxBg = new GradientDrawable();
+        cxBg.setCornerRadius(dp(6));
+        cxBg.setColor(C_BTN);
+        cancelBtn.setBackground(cxBg);
+
+        final TextView confirmBtn = new TextView(this);
+        confirmBtn.setText("CONFIRM (7)");
+        confirmBtn.setTextColor(C_WHITE);
+        confirmBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        confirmBtn.setTypeface(fHeading, Typeface.BOLD);
+        confirmBtn.setGravity(Gravity.CENTER);
+        confirmBtn.setPadding(dp(8), dp(10), dp(8), dp(10));
+        GradientDrawable cfBg = new GradientDrawable();
+        cfBg.setCornerRadius(dp(6));
+        cfBg.setColor(Color.parseColor("#cc3333"));
+        confirmBtn.setBackground(cfBg);
+
+        LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        bl.rightMargin = dp(8);
+        cancelBtn.setLayoutParams(bl);
+        confirmBtn.setLayoutParams(new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        btnRow.addView(cancelBtn);
+        btnRow.addView(confirmBtn);
+        card.addView(btnRow);
+
+        FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(dp(280),
+                FrameLayout.LayoutParams.WRAP_CONTENT);
+        cardLp.gravity = Gravity.CENTER;
+        dialogRoot.addView(card, cardLp);
+
+        WindowManager.LayoutParams dlgParams = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                overlayType(),
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT);
+        try { wm.addView(dialogRoot, dlgParams); } catch (Exception ignored) { return; }
+
+        final int[] cd = {7};
+        final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+        final Runnable[] ticker = new Runnable[1];
+        ticker[0] = () -> {
+            if (cd[0] > 0) {
+                cd[0]--;
+                confirmBtn.setText(cd[0] > 0 ? "CONFIRM (" + cd[0] + ")" : "CONFIRM");
+                h.postDelayed(ticker[0], 1000);
+            }
+        };
+        h.postDelayed(ticker[0], 1000);
+
+        cancelBtn.setOnClickListener(v -> {
+            h.removeCallbacks(ticker[0]);
+            try { wm.removeView(dialogRoot); } catch (Exception ig) {}
+            onCancel.run();
+        });
+        confirmBtn.setOnClickListener(v -> {
+            h.removeCallbacks(ticker[0]);
+            try { wm.removeView(dialogRoot); } catch (Exception ig) {}
+            onConfirm.run();
+        });
     }
 
     // ── SCREENSHOT PROTECTION ──────────────────────────────────────────────────

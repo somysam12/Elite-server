@@ -68,6 +68,8 @@ public class LoginActivity extends BaseActivity {
     private static final int RC_INSTALL  = 200;
     private static final int RC_OVERLAY  = 300;
     private static final String KEY_PERMS_DONE = "ark_perms_done";
+    private static final String KEY_OBB_DONE   = "ark_obb_copied";
+    private static final String PKG_BGMI        = "com.pubg.imobile";
 
     // Native declarations
     private static native boolean nativeVerifyLoginToken(String token);
@@ -262,9 +264,10 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void setupListeners() {
-        if (etKey != null) etKey.setTransformationMethod(PasswordTransformationMethod.getInstance());
+        // Key is visible by default (no password masking) — matches real Vision behaviour
+        passwordVisible = true;
         if (eyeToggle != null) {
-            eyeToggle.setImageResource(R.drawable.ic_eye_off);
+            eyeToggle.setImageResource(R.drawable.ic_eye_open);
             eyeToggle.setOnClickListener(v -> {
                 passwordVisible = !passwordVisible;
                 etKey.setTransformationMethod(passwordVisible
@@ -310,11 +313,7 @@ public class LoginActivity extends BaseActivity {
                     String serial = "";
                     try { serial = nativeGetSerial(); } catch (Throwable ignored) {}
                     writeLicFile(key, serial);
-                    try {
-                        // Pass the native serial (the SAME device id the panel registered
-                        // at login) so the heartbeat always matches — not raw ANDROID_ID.
-                    } catch (Throwable ignored) {}
-                    startDownloadLib(key, serial);
+                    startObbCopyFromLogin(key, serial);
                 } else {
                     showError("Invalid Key", (String) msg.obj);
                 }
@@ -373,6 +372,108 @@ public class LoginActivity extends BaseActivity {
         } catch (Exception e) {
             android.util.Log.e("ARK_LIC", "writeLicFile failed: " + e.getMessage());
         }
+    }
+
+    // ── OBB copy (runs before download, on login screen) ───────────────────────
+    @android.annotation.SuppressLint("SetTextI18n")
+    private void startObbCopyFromLogin(String key, String serial) {
+        if (prefs.getBool(KEY_OBB_DONE, false)) {
+            showProcessingMsg("Opening game...");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> startDownloadLib(key, serial), 800);
+            return;
+        }
+        showProcessingMsg("Copying Obb...");
+        new Thread(() -> {
+            try {
+                String root    = Environment.getExternalStorageDirectory().getAbsolutePath();
+                java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
+                java.io.File destDir   = new java.io.File(root + "/Sdcard/Android/obb/" + PKG_BGMI);
+                if (!destDir.exists()) destDir.mkdirs();
+
+                java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
+                if (existing != null && existing.length > 0) {
+                    prefs.setBool(KEY_OBB_DONE, true);
+                    runOnUiThread(() -> showProcessingMsg("Opening game..."));
+                    Thread.sleep(600);
+                    runOnUiThread(() -> startDownloadLib(key, serial));
+                    return;
+                }
+
+                java.io.File[] srcs = null;
+                for (int i = 0; i < 3; i++) {
+                    srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
+                    if (srcs != null && srcs.length > 0) break;
+                    Thread.sleep(1000);
+                }
+                if (srcs == null || srcs.length == 0) {
+                    runOnUiThread(() -> showError("OBB Not Found", "Install BGMI first, then retry."));
+                    return;
+                }
+
+                java.io.File src   = srcs[0];
+                java.io.File dst   = new java.io.File(destDir, src.getName());
+                long total = src.length();
+
+                try (FileInputStream  fin  = new FileInputStream(src);
+                     FileOutputStream fout = new FileOutputStream(dst);
+                     FileChannel inCh  = fin.getChannel();
+                     FileChannel outCh = fout.getChannel()) {
+                    long position  = 0L;
+                    long chunkSize = 16L * 1024 * 1024;
+                    int lastPct    = -1;
+                    while (position < total) {
+                        long transferred = inCh.transferTo(position, chunkSize, outCh);
+                        if (transferred <= 0) break;
+                        position += transferred;
+                        int pct = total > 0 ? (int)((position * 100L) / total) : 0;
+                        if (pct != lastPct) {
+                            lastPct = pct;
+                            final int p = pct;
+                            runOnUiThread(() -> showObbProgress(p));
+                        }
+                    }
+                }
+
+                prefs.setBool(KEY_OBB_DONE, true);
+                runOnUiThread(() -> showProcessingMsg("Opening game..."));
+                Thread.sleep(700);
+                runOnUiThread(() -> startDownloadLib(key, serial));
+
+            } catch (Exception e) {
+                runOnUiThread(() -> showError("Copy Failed",
+                    e.getMessage() != null ? e.getMessage() : "Unknown error"));
+            }
+        }).start();
+    }
+
+    private void showProcessingMsg(String msg) {
+        runOnUiThread(() -> {
+            if (processingCard      != null) processingCard.setVisibility(View.VISIBLE);
+            if (loadingText         != null) loadingText.setText(msg);
+            if (progressText        != null) progressText.setText("");
+            if (progressBar         != null) progressBar.setVisibility(View.GONE);
+            if (downloadProgressBar != null) downloadProgressBar.setVisibility(View.GONE);
+            if (percentText         != null) percentText.setVisibility(View.GONE);
+            if (downloadSizeText    != null) downloadSizeText.setVisibility(View.GONE);
+            if (speedRow            != null) speedRow.setVisibility(View.GONE);
+            if (okButton            != null) okButton.setVisibility(View.GONE);
+        });
+    }
+
+    @android.annotation.SuppressLint("SetTextI18n")
+    private void showObbProgress(int pct) {
+        if (processingCard      != null) processingCard.setVisibility(View.VISIBLE);
+        if (loadingText         != null) loadingText.setText("Copying Obb...");
+        if (progressText        != null) progressText.setText("Copying " + pct + "%");
+        if (progressBar         != null) progressBar.setVisibility(View.GONE);
+        if (downloadProgressBar != null) {
+            downloadProgressBar.setVisibility(View.VISIBLE);
+            downloadProgressBar.setProgress(pct);
+        }
+        if (percentText         != null) { percentText.setVisibility(View.VISIBLE); percentText.setText(pct + "%"); }
+        if (downloadSizeText    != null) downloadSizeText.setVisibility(View.GONE);
+        if (speedRow            != null) speedRow.setVisibility(View.GONE);
+        if (okButton            != null) okButton.setVisibility(View.GONE);
     }
 
     private void startDownloadLib(String key, String serial) {

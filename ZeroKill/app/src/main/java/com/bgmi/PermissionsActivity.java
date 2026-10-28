@@ -1,8 +1,6 @@
 package com.bgmi;
 
 import android.Manifest;
-import android.app.AppOpsManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -24,6 +22,7 @@ public class PermissionsActivity extends AppCompatActivity {
     private static final int REQ_OVERLAY   = 1001;
     private static final int REQ_STORAGE   = 1002;
     private static final int REQ_INSTALL   = 1003;
+    private static final int REQ_NOTIF     = 1004;
 
     private TextView statusText;
     private Button retryBtn;
@@ -60,15 +59,32 @@ public class PermissionsActivity extends AppCompatActivity {
     }
 
     private void requestNext() {
+        if (!hasNotification()) {
+            if (statusText != null)
+                statusText.setText(getString(R.string.permissions_notifications));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
+            } else {
+                // Below Android 13 notifications are auto-granted
+                requestNext2();
+            }
+            return;
+        }
+        requestNext2();
+    }
+
+    private void requestNext2() {
         if (!hasOverlay()) {
-            statusText.setText(getString(R.string.permissions_overlay));
+            if (statusText != null)
+                statusText.setText(getString(R.string.permissions_overlay));
             Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:" + getPackageName()));
             startActivityForResult(i, REQ_OVERLAY);
             return;
         }
         if (!hasStorage()) {
-            statusText.setText(getString(R.string.permissions_storage));
+            if (statusText != null)
+                statusText.setText(getString(R.string.permissions_storage));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 Intent i = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
@@ -82,7 +98,8 @@ public class PermissionsActivity extends AppCompatActivity {
             return;
         }
         if (!hasInstall()) {
-            statusText.setText(getString(R.string.permissions_install));
+            if (statusText != null)
+                statusText.setText(getString(R.string.permissions_install));
             Intent i = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                 Uri.parse("package:" + getPackageName()));
             startActivityForResult(i, REQ_INSTALL);
@@ -92,7 +109,15 @@ public class PermissionsActivity extends AppCompatActivity {
     }
 
     private boolean allGranted() {
-        return hasOverlay() && hasStorage() && hasInstall();
+        return hasNotification() && hasOverlay() && hasStorage() && hasInstall();
+    }
+
+    private boolean hasNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
     }
 
     private boolean hasOverlay() {
@@ -116,6 +141,7 @@ public class PermissionsActivity extends AppCompatActivity {
 
     private void proceed() {
         startActivity(new Intent(this, LoginActivity.class));
+        overridePendingTransition(R.anim.slide_left_enter, R.anim.slide_right_exit);
         finish();
     }
 
@@ -123,5 +149,11 @@ public class PermissionsActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         requestNext();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        requestNext2();
     }
 }

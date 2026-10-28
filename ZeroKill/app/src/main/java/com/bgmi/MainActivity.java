@@ -91,15 +91,11 @@ public class MainActivity extends AppCompatActivity {
         bgmiInstalledRow = findViewById(R.id.bgmiInstalledRow);
         deviceNameTv     = findViewById(R.id.deviceName);
         setDeviceInfo();
-
-        AppCompatButton btnOk = findViewById(R.id.btnOk);
-        if (btnOk != null) btnOk.setVisibility(View.GONE);
-
         setAppNameFont();
         startCountdown();
-        // Show button immediately from saved state (no SDK wait)
-        boolean alreadyDone = new Prefs(this).getBool(KEY_OBB_DONE, false);
-        setButtonState(alreadyDone);
+        // OBB copy is done in LoginActivity; auto-launch game immediately
+        showLicense("Opening game...");
+        mainHandler.postDelayed(this::launchGame, DELAY);
     }
 
     // ── Expiry countdown ─────────────────────────────────────────────────────

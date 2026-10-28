@@ -15,6 +15,7 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -47,7 +48,14 @@ public class SplashActivity extends AppCompatActivity {
             ((AnimationDrawable) root.getBackground()).start();
         }
 
-        handler.postDelayed(this::exitSplash, 2800);
+        handler.postDelayed(this::showVerified, 2200);
+    }
+
+    private void showVerified() {
+        if (isFinishing() || isDestroyed()) return;
+        TextView tv = findViewById(R.id.tv_app_name);
+        if (tv != null) tv.setText("License verified. Opening login...");
+        handler.postDelayed(this::exitSplash, 700);
     }
 
     private void exitSplash() {
