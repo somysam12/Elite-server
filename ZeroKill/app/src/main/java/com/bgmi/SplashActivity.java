@@ -1,11 +1,17 @@
 package com.bgmi;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -46,9 +52,24 @@ public class SplashActivity extends AppCompatActivity {
 
     private void exitSplash() {
         if (isFinishing() || isDestroyed()) return;
-        startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+        Class<?> next = needsPermissions() ? PermissionsActivity.class : LoginActivity.class;
+        startActivity(new Intent(SplashActivity.this, next));
         overridePendingTransition(R.anim.slide_up_enter, R.anim.splash_exit);
         finish();
+    }
+
+    private boolean needsPermissions() {
+        if (!Settings.canDrawOverlays(this)) return true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) return true;
+        } else {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) return true;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!getPackageManager().canRequestPackageInstalls()) return true;
+        }
+        return false;
     }
 
     @Override

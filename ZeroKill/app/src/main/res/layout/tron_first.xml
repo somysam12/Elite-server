@@ -43,7 +43,7 @@
             android:textSize="18sp"
             android:textColor="#ffffffff"
             android:gravity="center"
-            android:fontFamily="@font/vfont" />
+            android:fontFamily="@font/font" />
 
         <Button
             android:id="@+id/splashRetry"
@@ -54,7 +54,7 @@
             android:text="Retry"
             android:textColor="#ffffffff"
             android:textAllCaps="false"
-            android:fontFamily="@font/vfont"
+            android:fontFamily="@font/font"
             android:backgroundTint="#ffd5630d"
             android:visibility="gone" />
 

@@ -42,7 +42,7 @@
                 android:text="Vision"
                 android:textSize="22sp"
                 android:textColor="#ffffffff"
-                android:fontFamily="@font/vbold"
+                android:fontFamily="@font/bold"
                 android:visibility="gone" />
 
         </RelativeLayout>
@@ -177,7 +177,7 @@
                         android:textSize="14sp"
                         android:textColor="#ffffffff"
                         android:layout_marginTop="10dp"
-                        android:fontFamily="@font/vfont" />
+                        android:fontFamily="@font/font" />
 
                     <TextView
                         android:id="@+id/progressText"
@@ -187,7 +187,7 @@
                         android:textSize="12sp"
                         android:textColor="#80ffffff"
                         android:layout_marginTop="4dp"
-                        android:fontFamily="@font/vfont" />
+                        android:fontFamily="@font/font" />
 
                     <!-- Download progress bar -->
                     <ProgressBar
@@ -211,7 +211,7 @@
                         android:textColor="#80ffffff"
                         android:layout_marginTop="4dp"
                         android:visibility="gone"
-                        android:fontFamily="@font/vfont" />
+                        android:fontFamily="@font/font" />
 
                     <TextView
                         android:id="@+id/downloadSizeText"
@@ -221,7 +221,7 @@
                         android:textSize="11sp"
                         android:textColor="#80ffffff"
                         android:visibility="gone"
-                        android:fontFamily="@font/vfont" />
+                        android:fontFamily="@font/font" />
 
                     <LinearLayout
                         android:id="@+id/speedRow"
@@ -238,7 +238,7 @@
                             android:text=""
                             android:textSize="11sp"
                             android:textColor="#80ffffff"
-                            android:fontFamily="@font/vfont" />
+                            android:fontFamily="@font/font" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.AppCompatButton

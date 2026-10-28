@@ -1,5 +1,27 @@
 <resources>
-    <string name="app_name">Zero Kill</string>
+    <string name="app_name">Vision</string>
+    <string name="permissions_title">Permissions required</string>
+    <string name="permissions_allow">Allow permission</string>
+    <string name="permissions_overlay">Allow Vision to display over other apps for the floating menu and canvas.</string>
+    <string name="permissions_storage">Allow file access to save your key and prepare game files.</string>
+    <string name="permissions_install">Allow Vision to install apps for the virtual game.</string>
+    <string name="permissions_notifications">Allow notifications to show the overlay service status.</string>
+    <string name="permissions_restart_failed">Close Vision and open it again to finish applying permissions.</string>
+    <string name="permissions_restarting">Applying permissions. Restarting Vision…</string>
+    <string name="permissions_settings_unavailable">Open Vision\'s permissions in Settings, allow the required access, then return and try again.</string>
+    <string name="search_menu_title">Search</string>
+    <string name="box">Box</string>
+    <string name="distance">Distance</string>
+    <string name="enemy_weapon">Enemy Weapon</string>
+    <string name="esp_features">ESP Visuals</string>
+    <string name="extra_features">World Visuals</string>
+    <string name="grenade_warning">Throwable Warning</string>
+    <string name="health">Health</string>
+    <string name="items">Items</string>
+    <string name="line">Line</string>
+    <string name="name">Name</string>
+    <string name="skeleton">Skeleton</string>
+    <string name="vehicles">Vehicles</string>
 
     <string name="erorserver">Check you connection</string>
     <string name="userorgamenotregis">USER OR GAME NOT REGISTERED</string>

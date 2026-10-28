@@ -55,4 +55,5 @@
     <color name="red">#FF1744</color>
     <color name="success">#00E676</color>
     <color name="primary">#C0003A</color>
+    <color name="ic_launcher_background">#000000</color>
 </resources>

@@ -38,7 +38,7 @@
             android:layout_below="@id/main_logo"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="8dp"
-            android:fontFamily="@font/vbold"
+            android:fontFamily="@font/bold"
             android:visibility="gone" />
 
     </RelativeLayout>
@@ -73,7 +73,7 @@
             android:text=""
             android:textSize="11sp"
             android:textColor="#80ffffff"
-            android:fontFamily="@font/vfont"
+            android:fontFamily="@font/font"
             android:visibility="gone" />
 
         <!-- Countdown timer (hidden, kept for logic) -->
@@ -84,13 +84,13 @@
             android:gravity="center"
             android:visibility="gone">
 
-            <TextView android:id="@+id/tvD" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/vbold" />
+            <TextView android:id="@+id/tvD" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/bold" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=":" android:textSize="28sp" android:textColor="#ffffffff" android:paddingHorizontal="4dp" />
-            <TextView android:id="@+id/tvH" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/vbold" />
+            <TextView android:id="@+id/tvH" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/bold" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=":" android:textSize="28sp" android:textColor="#ffffffff" android:paddingHorizontal="4dp" />
-            <TextView android:id="@+id/tvM" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/vbold" />
+            <TextView android:id="@+id/tvM" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/bold" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=":" android:textSize="28sp" android:textColor="#ffffffff" android:paddingHorizontal="4dp" />
-            <TextView android:id="@+id/tvS" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/vbold" />
+            <TextView android:id="@+id/tvS" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00" android:textSize="28sp" android:textColor="#ffffffff" android:fontFamily="@font/bold" />
 
         </LinearLayout>
 
@@ -118,7 +118,7 @@
                 android:textSize="13sp"
                 android:textColor="#ffffffff"
                 android:alpha="0.5"
-                android:fontFamily="@font/vfont" />
+                android:fontFamily="@font/font" />
 
             <TextView
                 android:id="@+id/download_progress"
@@ -128,7 +128,7 @@
                 android:text=""
                 android:textSize="11sp"
                 android:textColor="#80ffffff"
-                android:fontFamily="@font/vfont" />
+                android:fontFamily="@font/font" />
 
         </LinearLayout>
 
@@ -149,7 +149,7 @@
                 android:textSize="13sp"
                 android:textColor="#80ffffff"
                 android:gravity="center"
-                android:fontFamily="@font/vfont" />
+                android:fontFamily="@font/font" />
 
         </LinearLayout>
 
@@ -169,7 +169,7 @@
                 android:text=""
                 android:textSize="13sp"
                 android:textColor="#ffffffff"
-                android:fontFamily="@font/vfont"
+                android:fontFamily="@font/font"
                 android:layout_marginBottom="8dp" />
 
             <ProgressBar
@@ -197,7 +197,7 @@
                     android:text=""
                     android:textSize="11sp"
                     android:textColor="#80ffffff"
-                    android:fontFamily="@font/vfont" />
+                    android:fontFamily="@font/font" />
 
                 <TextView
                     android:id="@+id/obbPercentText"
@@ -206,7 +206,7 @@
                     android:text=""
                     android:textSize="11sp"
                     android:textColor="#ffffffff"
-                    android:fontFamily="@font/vfont" />
+                    android:fontFamily="@font/font" />
             </LinearLayout>
 
         </LinearLayout>
@@ -228,7 +228,7 @@
                 android:text=""
                 android:textSize="11sp"
                 android:textColor="#80ffffff"
-                android:fontFamily="@font/vfont" />
+                android:fontFamily="@font/font" />
 
         </LinearLayout>
 
