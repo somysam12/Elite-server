@@ -59,21 +59,6 @@ public class PermissionsActivity extends AppCompatActivity {
     }
 
     private void requestNext() {
-        if (!hasNotification()) {
-            if (statusText != null)
-                statusText.setText(getString(R.string.permissions_notifications));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
-            } else {
-                // Below Android 13 notifications are auto-granted
-                requestNext2();
-            }
-            return;
-        }
-        requestNext2();
-    }
-
-    private void requestNext2() {
         if (!hasOverlay()) {
             if (statusText != null)
                 statusText.setText(getString(R.string.permissions_overlay));
@@ -105,7 +90,21 @@ public class PermissionsActivity extends AppCompatActivity {
             startActivityForResult(i, REQ_INSTALL);
             return;
         }
+        if (!hasNotification()) {
+            if (statusText != null)
+                statusText.setText(getString(R.string.permissions_notifications));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
+            } else {
+                proceed();
+            }
+            return;
+        }
         proceed();
+    }
+
+    private void requestNext2() {
+        requestNext();
     }
 
     private boolean allGranted() {
@@ -154,6 +153,6 @@ public class PermissionsActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
-        requestNext2();
+        requestNext();
     }
 }

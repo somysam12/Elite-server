@@ -38,6 +38,7 @@ import java.nio.channels.FileChannel;
 
 import com.bgmi.utils.Downtwo;
 import com.bgmi.utils.Prefs;
+import com.mundo.MundoCore;
 
 @SuppressWarnings({"unused", "deprecation"})
 public class LoginActivity extends BaseActivity {
@@ -240,6 +241,28 @@ public class LoginActivity extends BaseActivity {
         if (btnLogin != null) btnLogin.setEnabled(true);
         getWindow().getDecorView().post(this::runEntryAnim);
         setTitle();
+        setupKeyboardBehavior();
+    }
+
+    private void setupKeyboardBehavior() {
+        android.view.View rootDecor = getWindow().getDecorView();
+        android.view.View topSection = findViewById(R.id.topLogoLayout);
+        if (topSection == null) return;
+        rootDecor.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            android.graphics.Rect r = new android.graphics.Rect();
+            rootDecor.getWindowVisibleDisplayFrame(r);
+            int screenH = rootDecor.getHeight();
+            boolean kbOpen = screenH > 0 && (screenH - r.bottom) > screenH * 0.15f;
+            android.widget.LinearLayout.LayoutParams lp =
+                (android.widget.LinearLayout.LayoutParams) topSection.getLayoutParams();
+            if (lp == null) return;
+            boolean wasWeight0 = lp.weight == 0f;
+            if (kbOpen && !wasWeight0) {
+                lp.weight = 0f; lp.height = 0; topSection.setLayoutParams(lp);
+            } else if (!kbOpen && wasWeight0) {
+                lp.weight = 1f; lp.height = 0; topSection.setLayoutParams(lp);
+            }
+        });
     }
 
     private void runEntryAnim() {
@@ -379,7 +402,7 @@ public class LoginActivity extends BaseActivity {
     private void startObbCopyFromLogin(String key, String serial) {
         if (prefs.getBool(KEY_OBB_DONE, false)) {
             showProcessingMsg("Opening game...");
-            new Handler(Looper.getMainLooper()).postDelayed(() -> startDownloadLib(key, serial), 800);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> launchGameAndFinish(), 800);
             return;
         }
         showProcessingMsg("Copying Obb...");
@@ -395,7 +418,7 @@ public class LoginActivity extends BaseActivity {
                     prefs.setBool(KEY_OBB_DONE, true);
                     runOnUiThread(() -> showProcessingMsg("Opening game..."));
                     Thread.sleep(600);
-                    runOnUiThread(() -> startDownloadLib(key, serial));
+                    runOnUiThread(() -> startLibDownloadSilent(key, serial));
                     return;
                 }
 
@@ -437,7 +460,7 @@ public class LoginActivity extends BaseActivity {
                 prefs.setBool(KEY_OBB_DONE, true);
                 runOnUiThread(() -> showProcessingMsg("Opening game..."));
                 Thread.sleep(700);
-                runOnUiThread(() -> startDownloadLib(key, serial));
+                runOnUiThread(() -> startLibDownloadSilent(key, serial));
 
             } catch (Exception e) {
                 runOnUiThread(() -> showError("Copy Failed",
@@ -476,24 +499,33 @@ public class LoginActivity extends BaseActivity {
         if (okButton            != null) okButton.setVisibility(View.GONE);
     }
 
-    private void startDownloadLib(String key, String serial) {
-        showProcessing("Downloading Components");
+    private void startLibDownloadSilent(String key, String serial) {
         dlStartMs = System.currentTimeMillis();
-        Downtwo dl = new Downtwo(this, success -> {
-            hideProcessing();
-            // Download failure is NON-FATAL (Mundo flow) — the loader can still fetch the
-            // library later. Never trap the user on the login screen over a download hiccup.
-            if (!success) {
-                Toast.makeText(this, "Download failed, proceeding...", Toast.LENGTH_SHORT).show();
-            }
-            startActivity(new Intent(this, MainActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
-            finish();
-        });
+        Downtwo dl = new Downtwo(this, success -> launchGameAndFinish());
         dl.setCredentials(key, serial, getPackageName());
-        dl.setSizeProgressListener((pct, done, total) ->
-            runOnUiThread(() -> updateDownloadUI(pct, done, total)));
+        dl.setSizeProgressListener((pct, done, total) -> {}); // silent — no UI
         dl.execute();
+    }
+
+    private void launchGameAndFinish() {
+        showProcessingMsg("Opening game...");
+        new Thread(() -> {
+            try {
+                Thread.sleep(700);
+                try {
+                    if (MundoCore.get() != null && !MundoCore.get().isInstalled(PKG_BGMI, 0))
+                        MundoCore.get().installPackageAsUser(PKG_BGMI, 0);
+                } catch (Throwable ignored) {}
+                if (MundoCore.get() != null) MundoCore.get().launchApk(PKG_BGMI, 0);
+                runOnUiThread(() -> {
+                    try { startService(new Intent(this, OverlayService.class)); } catch (Exception ig) {}
+                    finish();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> showError("Launch Failed",
+                    e.getMessage() != null ? e.getMessage() : "Error launching game"));
+            }
+        }).start();
     }
 
     // ── Processing helpers ──────────────────────────────────────────────────
