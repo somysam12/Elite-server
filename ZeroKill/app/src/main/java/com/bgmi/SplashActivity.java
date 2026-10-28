@@ -57,10 +57,10 @@ public class SplashActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.tv_app_name);
         if (showSdk) {
             if (tv != null) tv.setText("Checking SDK server...");
-            handler.postDelayed(this::showVerified, 900);
+            handler.postDelayed(this::showVerified, 350);
         } else {
             if (tv != null) tv.setText("License verified. Opening login...");
-            handler.postDelayed(this::exitSplash, 700);
+            handler.postDelayed(this::exitSplash, 400);
         }
     }
 
@@ -68,7 +68,7 @@ public class SplashActivity extends AppCompatActivity {
         if (isFinishing() || isDestroyed()) return;
         TextView tv = findViewById(R.id.tv_app_name);
         if (tv != null) tv.setText("License verified. Opening login...");
-        handler.postDelayed(this::exitSplash, 600);
+        handler.postDelayed(this::exitSplash, 350);
     }
 
     private void exitSplash() {
