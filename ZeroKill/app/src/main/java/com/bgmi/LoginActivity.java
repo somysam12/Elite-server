@@ -216,7 +216,7 @@ public class LoginActivity extends BaseActivity {
     @SuppressLint("SetTextI18n")
     private void updateDownloadUI(int pct, long done, long total) {
         if (progressBar != null)    progressBar.setVisibility(View.GONE);
-        if (progressText != null)   progressText.setText("Downloading update...");
+        if (progressText != null)   progressText.setText("Downloading...");
         if (downloadProgressBar != null) {
             downloadProgressBar.setVisibility(View.VISIBLE);
             downloadProgressBar.setProgress(pct);
@@ -300,6 +300,11 @@ public class LoginActivity extends BaseActivity {
         }
         if (btnLogin != null) {
             btnLogin.setOnClickListener(v -> {
+                // Dismiss keyboard and return card to bottom position
+                android.view.inputmethod.InputMethodManager imm =
+                    (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null && getCurrentFocus() != null)
+                    imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
                 String key = etKey.getText().toString().trim();
                 if (key.isEmpty()) {
                     etKey.setError("Enter your license key");

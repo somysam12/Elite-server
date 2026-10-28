@@ -48,14 +48,27 @@ public class SplashActivity extends AppCompatActivity {
             ((AnimationDrawable) root.getBackground()).start();
         }
 
-        handler.postDelayed(this::showVerified, 2200);
+        // "Checking SDK" shows only 3 out of every 5 launches; others skip straight to "verified"
+        android.content.SharedPreferences sp = getSharedPreferences("ark_splash", 0);
+        int count = sp.getInt("launch_count", 0);
+        sp.edit().putInt("launch_count", count + 1).apply();
+        boolean showSdk = (count % 5) < 3; // positions 0,1,2 → show; 3,4 → skip
+
+        TextView tv = findViewById(R.id.tv_app_name);
+        if (showSdk) {
+            if (tv != null) tv.setText("Checking SDK server...");
+            handler.postDelayed(this::showVerified, 900);
+        } else {
+            if (tv != null) tv.setText("License verified. Opening login...");
+            handler.postDelayed(this::exitSplash, 700);
+        }
     }
 
     private void showVerified() {
         if (isFinishing() || isDestroyed()) return;
         TextView tv = findViewById(R.id.tv_app_name);
         if (tv != null) tv.setText("License verified. Opening login...");
-        handler.postDelayed(this::exitSplash, 700);
+        handler.postDelayed(this::exitSplash, 600);
     }
 
     private void exitSplash() {

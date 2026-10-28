@@ -1,5 +1,7 @@
 package com.bgmi;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,8 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -64,9 +68,9 @@ public class OverlayService extends Service {
     // State
     private boolean stLine=true, stSkel=true, stHealth=true, stBox=true,
                     stDist=true, stCount=true;
-    private boolean stVehicle=false, stItems=false, stGrenade=false;
+    private boolean stVehicle=true, stItems=true, stGrenade=true;
     private boolean stBtrack=true;
-    private boolean stTimeFixer=false, stFps120=false, stWide=false, stHideEsp=false;
+    private boolean stTimeFixer=false, stFps120=false, stWide=true, stHideEsp=false;
     private boolean menuSkipActive=false, iconSkipActive=false;
     private int     stDistance=120;
     private int     stBtHit=33;
@@ -147,12 +151,13 @@ public class OverlayService extends Service {
         ImageView img = new ImageView(this);
         img.setImageResource(res("logopng", "drawable"));
         img.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        FrameLayout.LayoutParams ilp = new FrameLayout.LayoutParams(dp(44), dp(44));
+        img.setPadding(dp(10), dp(10), dp(10), dp(10));
+        FrameLayout.LayoutParams ilp = new FrameLayout.LayoutParams(dp(50), dp(50));
         ilp.gravity = Gravity.CENTER;
         wrap.addView(img, ilp);
 
         iconParams = new WindowManager.LayoutParams(
-                dp(48), dp(48), overlayType(),
+                dp(52), dp(52), overlayType(),
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         iconParams.gravity = Gravity.TOP | Gravity.START;
@@ -195,7 +200,14 @@ public class OverlayService extends Service {
         }
         menuOpen = false;
         menuSkipActive = false;
-        if (iconRoot != null) iconRoot.setVisibility(View.VISIBLE);
+        if (iconRoot != null) {
+            if (lastMenuX != Integer.MIN_VALUE && iconParams != null) {
+                iconParams.x = lastMenuX;
+                iconParams.y = lastMenuY;
+                try { wm.updateViewLayout(iconRoot, iconParams); } catch (Exception ignored) {}
+            }
+            iconRoot.setVisibility(View.VISIBLE);
+        }
     }
 
     // ── BUILD MENU — XDCheat Elite style ────────────────────────────────────
@@ -216,24 +228,26 @@ public class OverlayService extends Service {
         sideBg.setColor(C_PANEL);
         sideBg.setStroke(dp(1.5f), C_PANEL_BRD);
         sidebar.setBackground(sideBg);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(dp(150),
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(dp(120),
                 LinearLayout.LayoutParams.MATCH_PARENT);
         slp.rightMargin = dp(6);
         sidebar.setLayoutParams(slp);
         sidebar.setPadding(dp(7), dp(7), dp(7), dp(7));
 
-        // Logo box (50dp tall)
+        // Logo box
         FrameLayout logoBox = new FrameLayout(this);
         ImageView logoImg = new ImageView(this);
         logoImg.setImageResource(res("logopng", "drawable"));
         logoImg.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        FrameLayout.LayoutParams lilp = new FrameLayout.LayoutParams(dp(44), dp(44));
+        FrameLayout.LayoutParams lilp = new FrameLayout.LayoutParams(dp(60), dp(55));
         lilp.gravity = Gravity.CENTER;
         logoBox.addView(logoImg, lilp);
-        LinearLayout.LayoutParams lblp = new LinearLayout.LayoutParams(dp(50), dp(50));
+        LinearLayout.LayoutParams lblp = new LinearLayout.LayoutParams(dp(60), dp(55));
         lblp.gravity = Gravity.CENTER_HORIZONTAL;
-        lblp.bottomMargin = dp(10);
-        lblp.topMargin = dp(6);
+        lblp.bottomMargin = dp(24);
+        lblp.topMargin = dp(16);
+        logoBox.setClickable(true);
+        logoBox.setOnClickListener(v -> { vibrate(); closeMenu(); });
         sidebar.addView(logoBox, lblp);
 
         // Nav items: VISUALS, COMBAT, MISC, DEVICE ID — Vision_Tw icons
@@ -270,7 +284,7 @@ public class OverlayService extends Service {
         TextView titleTv = new TextView(this);
         titleTv.setText("VISION ELITE");
         titleTv.setTextColor(C_WHITE);
-        titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         titleTv.setTypeface(fHeading, Typeface.BOLD);
         titleTv.setLetterSpacing(0.15f);
         FrameLayout.LayoutParams ttlp = new FrameLayout.LayoutParams(
@@ -329,7 +343,7 @@ public class OverlayService extends Service {
                 FrameLayout.LayoutParams.MATCH_PARENT));
 
         menuParams = new WindowManager.LayoutParams(
-                dp(500), dp(295), overlayType(),
+                dp(460), dp(300), overlayType(),
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         menuParams.gravity = Gravity.TOP | Gravity.START;
@@ -347,7 +361,7 @@ public class OverlayService extends Service {
         FrameLayout.LayoutParams rootInnerLp = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT);
-        rootInnerLp.setMargins(dp(4), dp(4), dp(4), dp(4));
+        rootInnerLp.setMargins(dp(6), dp(6), dp(6), dp(6));
         outerFrame.addView(outer, rootInnerLp);
 
         // Top-left corner drag handle only
@@ -389,13 +403,13 @@ public class OverlayService extends Service {
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(12), 0, dp(12), 0);
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(44));
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(36));
         rlp.bottomMargin = dp(4);
         row.setLayoutParams(rlp);
         row.setClickable(true);
         row.setFocusable(true);
 
-        // Icon wrapper: 22×22dp, 4dp radius
+        // Icon wrapper: 18×18dp, 4dp radius
         FrameLayout iconWrap = new FrameLayout(this);
         iconWrap.setTag("iw");
         GradientDrawable iwBg = new GradientDrawable();
@@ -408,16 +422,16 @@ public class OverlayService extends Service {
             icon.setColorFilter(C_WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
         }
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        FrameLayout.LayoutParams iilp = new FrameLayout.LayoutParams(dp(14), dp(14));
+        FrameLayout.LayoutParams iilp = new FrameLayout.LayoutParams(dp(12), dp(12));
         iilp.gravity = Gravity.CENTER;
         iconWrap.addView(icon, iilp);
-        row.addView(iconWrap, new LinearLayout.LayoutParams(dp(22), dp(22)));
+        row.addView(iconWrap, new LinearLayout.LayoutParams(dp(18), dp(18)));
 
-        // Label: 10sp, bold, letterSpacing=0.1
+        // Label: 9sp, bold, letterSpacing=0.1
         TextView tv = new TextView(this);
         tv.setText(label);
         tv.setTextColor(Color.parseColor("#8cffffff"));
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f);
         tv.setTypeface(fHeading, Typeface.BOLD);
         tv.setLetterSpacing(0.1f);
         LinearLayout.LayoutParams tvlp = new LinearLayout.LayoutParams(
@@ -800,127 +814,186 @@ public class OverlayService extends Service {
     private void buildMisc() {
         sectionHeader(contentPanel, "STABILITY FEATURES");
 
-        // 2×2 grid via horizontal pairs
+        // Row 1: 6H Time Fixer | 120 FPS (equal weight)
         LinearLayout row1 = new LinearLayout(this);
         row1.setOrientation(LinearLayout.HORIZONTAL);
         row1.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
+        LinearLayout c1 = newCol(dp(4), dp(5));
+        LinearLayout c2 = newCol(dp(5), dp(4));
+        checkRow(c1, "6H Time Fixer", stTimeFixer, on->{ stTimeFixer=on; sendTcp("timefixer="+(on?1:0)); });
+        checkRow(c2, "120 FPS",       stFps120,    on->{ stFps120=on;    sendTcp("fps120="+(on?1:0)); });
+        row1.addView(c1); row1.addView(c2);
+        contentPanel.addView(row1);
 
-        LinearLayout row2 = new LinearLayout(this);
-        row2.setOrientation(LinearLayout.HORIZONTAL);
-        row2.setLayoutParams(new LinearLayout.LayoutParams(
+        // IPad View row: checkbox + "(range)" inline on same row
+        final TextView[] ipadRangeTv = {null};
+
+        LinearLayout ipadRow = new LinearLayout(this);
+        ipadRow.setOrientation(LinearLayout.HORIZONTAL);
+        ipadRow.setGravity(Gravity.CENTER_VERTICAL);
+        ipadRow.setPadding(dp(4), dp(4), dp(4), dp(4));
+        ipadRow.setClickable(true);
+        ipadRow.setFocusable(true);
+        ipadRow.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        LinearLayout c1 = newCol(dp(4), dp(5));
-        LinearLayout c2 = newCol(dp(5), dp(4));
-        LinearLayout c3 = newCol(dp(4), dp(5));
-        LinearLayout c4 = newCol(dp(5), dp(4));
+        final TextView ipadBox = new TextView(this);
+        ipadBox.setGravity(Gravity.CENTER);
+        ipadBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        ipadBox.setClickable(false);
+        ipadBox.setFocusable(false);
+        applyCheck(ipadBox, stWide);
+        LinearLayout.LayoutParams iblp = new LinearLayout.LayoutParams(dp(26), dp(26));
+        iblp.rightMargin = dp(7);
+        ipadRow.addView(ipadBox, iblp);
 
-        checkRow(c1, "6H Time Fixer", stTimeFixer, on->{ stTimeFixer=on; sendTcp("timefixer="+(on?1:0)); });
-        checkRow(c2, "120 FPS",       stFps120,    on->{ stFps120=on;    sendTcp("fps120="+(on?1:0)); });
-        // IPad View — Vision_Tw: shows range display "(120)" and SeekBar when checked
-        LinearLayout ipadSection = new LinearLayout(this);
-        ipadSection.setOrientation(LinearLayout.VERTICAL);
-        ipadSection.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        TextView ipadLbl = new TextView(this);
+        ipadLbl.setText("IPad View");
+        ipadLbl.setTextColor(C_LABEL);
+        ipadLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        ipadLbl.setTypeface(fBody);
+        ipadLbl.setClickable(false);
+        ipadLbl.setFocusable(false);
+        ipadRow.addView(ipadLbl, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        // Hidden range row (GONE until IPad View checked)
-        LinearLayout ipadRangeRow = new LinearLayout(this);
-        ipadRangeRow.setOrientation(LinearLayout.VERTICAL);
-        ipadRangeRow.setVisibility(View.GONE);
-        ipadRangeRow.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        ipadRangeTv[0] = new TextView(this);
+        ipadRangeTv[0].setText(" (" + stIpadRange + ")");
+        ipadRangeTv[0].setTextColor(Color.parseColor("#d2d2d2"));
+        ipadRangeTv[0].setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        ipadRangeTv[0].setTypeface(fMono);
+        ipadRangeTv[0].setClickable(false);
+        ipadRangeTv[0].setFocusable(false);
+        ipadRow.addView(ipadRangeTv[0], new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        TextView ipadRangeLbl = new TextView(this);
-        ipadRangeLbl.setText("IPad View Range: (" + stIpadRange + ")");
-        ipadRangeLbl.setTextColor(Color.parseColor("#d2d2d2"));
-        ipadRangeLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        ipadRangeLbl.setTypeface(fMono);
-        LinearLayout.LayoutParams irll = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        irll.topMargin = dp(4); irll.bottomMargin = dp(2);
-        ipadRangeLbl.setLayoutParams(irll);
-        ipadRangeRow.addView(ipadRangeLbl);
+        final boolean[] ipadSt = {stWide};
+        ipadRow.setOnClickListener(v -> {
+            ipadSt[0] = !ipadSt[0];
+            stWide = ipadSt[0];
+            applyCheck(ipadBox, ipadSt[0]);
+            vibrate();
+            sendTcp("wideview=" + (ipadSt[0] ? 1 : 0));
+        });
+        contentPanel.addView(ipadRow);
 
+        // SeekBar full width below IPad View row
         SeekBar ipadBar = makeSeekBar(90, 130, stIpadRange);
         ipadBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar s, int p, boolean u){
                 stIpadRange = p + 90;
-                ipadRangeLbl.setText("IPad View Range: (" + stIpadRange + ")");
+                if (ipadRangeTv[0] != null)
+                    ipadRangeTv[0].setText(" (" + stIpadRange + ")");
                 sendTcp("ipadrange=" + stIpadRange);
             }
             public void onStartTrackingTouch(SeekBar s){}
             public void onStopTrackingTouch(SeekBar s){}
         });
-        ipadRangeRow.addView(ipadBar);
+        LinearLayout.LayoutParams sbLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(24));
+        sbLp.topMargin = dp(2); sbLp.bottomMargin = dp(4);
+        ipadBar.setLayoutParams(sbLp);
+        contentPanel.addView(ipadBar);
 
-        checkRow(c3, "IPad View",     stWide,      on->{ stWide=on;      sendTcp("wideview="+(on?1:0));
-            ipadRangeRow.setVisibility(on ? View.VISIBLE : View.GONE); });
-        c3.addView(ipadRangeRow);
-        checkRow(c4, "Hide Recording",stHideEsp,   on->{ stHideEsp=on;   sendTcp("hideesp="+(on?1:0)); updateHideEspWindows(on); });
+        // Hide Recording — full width row
+        LinearLayout hideRow = new LinearLayout(this);
+        hideRow.setOrientation(LinearLayout.HORIZONTAL);
+        hideRow.setGravity(Gravity.CENTER_VERTICAL);
+        hideRow.setPadding(dp(4), dp(4), dp(4), dp(4));
+        hideRow.setClickable(true);
+        hideRow.setFocusable(true);
+        hideRow.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        row1.addView(c1); row1.addView(c2);
-        row2.addView(c3); row2.addView(c4);
-        contentPanel.addView(row1);
-        contentPanel.addView(row2);
+        final TextView hideBox = new TextView(this);
+        hideBox.setGravity(Gravity.CENTER);
+        hideBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        hideBox.setClickable(false);
+        hideBox.setFocusable(false);
+        applyCheck(hideBox, stHideEsp);
+        LinearLayout.LayoutParams hblp = new LinearLayout.LayoutParams(dp(26), dp(26));
+        hblp.rightMargin = dp(7);
+        hideRow.addView(hideBox, hblp);
+
+        TextView hideLbl = new TextView(this);
+        hideLbl.setText("Hide Recording");
+        hideLbl.setTextColor(C_LABEL);
+        hideLbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        hideLbl.setTypeface(fBody);
+        hideLbl.setClickable(false);
+        hideLbl.setFocusable(false);
+        hideRow.addView(hideLbl, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        final boolean[] hideSt = {stHideEsp};
+        hideRow.setOnClickListener(v -> {
+            hideSt[0] = !hideSt[0];
+            stHideEsp = hideSt[0];
+            applyCheck(hideBox, hideSt[0]);
+            vibrate();
+            sendTcp("hideesp=" + (hideSt[0] ? 1 : 0));
+            updateHideEspWindows(hideSt[0]);
+        });
+        contentPanel.addView(hideRow);
     }
 
     // ── DEVICE ID TAB ────────────────────────────────────────────────────────
     private void buildDeviceId() {
-        sectionHeader(contentPanel, "DEVICE IDENTITY");
+        // Title: "DEVICE ID" purple 13sp bold
+        TextView titleTv = new TextView(this);
+        titleTv.setText("DEVICE ID");
+        titleTv.setTextColor(Color.parseColor("#c252ff"));
+        titleTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        titleTv.setTypeface(fHeading, Typeface.BOLD);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        tlp.bottomMargin = dp(6);
+        titleTv.setLayoutParams(tlp);
+        contentPanel.addView(titleTv);
 
-        String androidId = "";
+        // Desc text
+        TextView descTv = new TextView(this);
+        descTv.setText("Change your device ID to avoid 1-day and 12-hour flag bans.");
+        descTv.setTextColor(Color.parseColor("#cccccc"));
+        descTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        descTv.setTypeface(fBody);
+        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        dlp.bottomMargin = dp(10);
+        descTv.setLayoutParams(dlp);
+        contentPanel.addView(descTv);
+
+        // Status text — shows current ID and optionally new pending ID
+        String currentId = "";
         try {
-            androidId = android.provider.Settings.Secure.getString(
+            currentId = android.provider.Settings.Secure.getString(
                 getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         } catch (Exception ignored) {}
+        final String curId = currentId.isEmpty() ? "unknown" : currentId;
 
-        // Info note above ID
-        TextView infoNote = new TextView(this);
-        infoNote.setText("Your device ID is used to generate a unique hardware fingerprint for anti-ban protection.");
-        infoNote.setTextColor(C_DIMMED);
-        infoNote.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        infoNote.setTypeface(fBody);
-        LinearLayout.LayoutParams inlp = new LinearLayout.LayoutParams(
+        final TextView statusTv = new TextView(this);
+        statusTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        statusTv.setTypeface(fBody);
+        SpannableString initial = buildIdSpan("Game Android ID: ", curId, null, null);
+        statusTv.setText(initial);
+        LinearLayout.LayoutParams slp2 = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        inlp.topMargin = dp(6); inlp.bottomMargin = dp(10);
-        infoNote.setLayoutParams(inlp);
-        contentPanel.addView(infoNote);
+        slp2.bottomMargin = dp(12);
+        statusTv.setLayoutParams(slp2);
+        contentPanel.addView(statusTv);
 
-        TextView idLabel = new TextView(this);
-        idLabel.setText("CURRENT DEVICE ID");
-        idLabel.setTextColor(C_HEAD_TEXT);
-        idLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        idLabel.setTypeface(fHeading, Typeface.BOLD);
-        idLabel.setLetterSpacing(0.08f);
-        LinearLayout.LayoutParams illp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        illp.bottomMargin = dp(4);
-        idLabel.setLayoutParams(illp);
-        contentPanel.addView(idLabel);
-
-        // Styled ID box — dark bg + purple border
-        TextView idValue = new TextView(this);
-        idValue.setText(androidId.isEmpty() ? "Unknown" : androidId);
-        idValue.setTextColor(C_WHITE);
-        idValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        idValue.setTypeface(fMono);
-        idValue.setPadding(dp(10), dp(8), dp(10), dp(8));
-        GradientDrawable idBg = new GradientDrawable();
-        idBg.setCornerRadius(dp(6));
-        idBg.setColor(Color.parseColor("#1a1a1a"));
-        idBg.setStroke(dp(1), C_PURPLE);
-        idValue.setBackground(idBg);
-        contentPanel.addView(idValue, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        // Change Device ID button
-        TextView changeBtn = new TextView(this);
+        // "Change Device ID" button
+        final TextView changeBtn = new TextView(this);
         changeBtn.setText("Change Device ID");
         changeBtn.setTextColor(C_WHITE);
         changeBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
@@ -931,26 +1004,101 @@ public class OverlayService extends Service {
         btnBg.setCornerRadius(dp(8));
         btnBg.setColor(Color.parseColor("#9425bd"));
         changeBtn.setBackground(btnBg);
-        LinearLayout.LayoutParams cblp = new LinearLayout.LayoutParams(
+        changeBtn.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        cblp.topMargin = dp(14);
-        changeBtn.setLayoutParams(cblp);
-        changeBtn.setOnClickListener(v -> { vibrate(); sendTcp("changedeviceid=1"); });
+                LinearLayout.LayoutParams.WRAP_CONTENT));
         contentPanel.addView(changeBtn);
 
-        // Warning note below button
-        TextView warnNote = new TextView(this);
-        warnNote.setText("⚠ Changing device ID will restart the process. Use only when flagged.");
-        warnNote.setTextColor(Color.parseColor("#ffcc00"));
-        warnNote.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        warnNote.setTypeface(fBody);
-        LinearLayout.LayoutParams wnlp = new LinearLayout.LayoutParams(
+        // "Restart Game" button (hidden initially)
+        final TextView restartBtn = new TextView(this);
+        restartBtn.setText("Restart Game");
+        restartBtn.setTextColor(C_WHITE);
+        restartBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        restartBtn.setTypeface(fBody, Typeface.BOLD);
+        restartBtn.setGravity(Gravity.CENTER);
+        restartBtn.setPadding(dp(10), dp(12), dp(10), dp(12));
+        GradientDrawable rBg = new GradientDrawable();
+        rBg.setCornerRadius(dp(8));
+        rBg.setColor(Color.parseColor("#9425bd"));
+        restartBtn.setBackground(rBg);
+        LinearLayout.LayoutParams rlp2 = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        wnlp.topMargin = dp(8);
-        warnNote.setLayoutParams(wnlp);
-        contentPanel.addView(warnNote);
+        rlp2.topMargin = dp(8);
+        restartBtn.setLayoutParams(rlp2);
+        restartBtn.setVisibility(View.GONE);
+        contentPanel.addView(restartBtn);
+
+        // Generate a simple new random ID (hex string)
+        final String[] newId = {""};
+
+        changeBtn.setOnClickListener(v -> {
+            vibrate();
+            newId[0] = Long.toHexString(Double.doubleToLongBits(Math.random())).substring(0, 16);
+            SpannableString updated = buildIdSpan(
+                "Game Android ID: ", curId,
+                "New Android ID (pending): ", newId[0]);
+            statusTv.setText(updated);
+            // Append restart note as plain text after spannable
+            SpannableString withNote = buildIdSpanWithNote(
+                "Game Android ID: ", curId,
+                "New Android ID (pending): ", newId[0]);
+            statusTv.setText(withNote);
+            restartBtn.setVisibility(View.VISIBLE);
+            sendTcp("changedeviceid=1");
+        });
+
+        restartBtn.setOnClickListener(v -> {
+            vibrate();
+            cleanupOverlay();
+            restartApp();
+        });
+    }
+
+    private SpannableString buildIdSpan(String label1, String id1, String label2, String id2) {
+        int tealColor = Color.parseColor("#00bcd4");
+        String text = label1 + id1;
+        if (label2 != null && id2 != null) {
+            text += "\n" + label2 + id2 + "\nRestart the game to apply the change.";
+        }
+        SpannableString ss = new SpannableString(text);
+        ss.setSpan(new ForegroundColorSpan(Color.parseColor("#cccccc")),
+                0, label1.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss.setSpan(new ForegroundColorSpan(tealColor),
+                label1.length(), label1.length() + id1.length(),
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (label2 != null && id2 != null) {
+            int off = label1.length() + id1.length() + 1;
+            ss.setSpan(new ForegroundColorSpan(Color.parseColor("#cccccc")),
+                    off, off + label2.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss.setSpan(new ForegroundColorSpan(tealColor),
+                    off + label2.length(), off + label2.length() + id2.length(),
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            int noteOff = off + label2.length() + id2.length() + 1;
+            ss.setSpan(new ForegroundColorSpan(Color.parseColor("#aaaaaa")),
+                    noteOff, text.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        return ss;
+    }
+
+    private SpannableString buildIdSpanWithNote(String l1, String id1, String l2, String id2) {
+        return buildIdSpan(l1, id1, l2, id2);
+    }
+
+    private void restartApp() {
+        try {
+            Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        ? PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                        : PendingIntent.FLAG_CANCEL_CURRENT;
+                PendingIntent pi = PendingIntent.getActivity(this, 0, launch, flags);
+                AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                if (am != null) am.set(AlarmManager.RTC, System.currentTimeMillis() + 500, pi);
+            }
+        } catch (Exception ignored) {}
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     // ── FLAG WARNING DIALOG ───────────────────────────────────────────────────
