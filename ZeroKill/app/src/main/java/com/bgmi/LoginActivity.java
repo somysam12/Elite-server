@@ -436,13 +436,13 @@ public class LoginActivity extends BaseActivity {
 
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
-        // destDir: use BEnvironment.getExternalObbDir() directly — same pattern as the
-        // reference (MetaStorageManager.obtainAppExternalStorageDir).  sExternalVBoxRoot
-        // inside BEnvironment was captured before HookManager.init(), so it always holds
-        // the real /storage/emulated/0 — immune to IStorageManagerProxy.
-        java.io.File destDir = com.mundo.core.env.BEnvironment.getExternalObbDir(PKG_BGMI);
-        // srcObbDir: realExternalRoot() bypasses the binder hook for the source path.
-        java.io.File srcObbDir0 = new java.io.File(realExternalRoot(), "Android/obb/" + PKG_BGMI);
+        // NEVER call BEnvironment.getExternalObbDir() or Environment.getExternalStorageDirectory()
+        // here. BEnvironment.sExternalVBoxRoot is captured at class-load time which may happen
+        // AFTER IStorageManagerProxy is installed, making getExternalObbDir() return the
+        // double-nested path 2. realExternalRoot() builds the path purely from a string literal.
+        String _r = realExternalRoot();
+        java.io.File destDir  = new java.io.File(_r + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+        java.io.File srcObbDir0 = new java.io.File(_r, "Android/obb/" + PKG_BGMI);
 
         if (prefs.getBool(KEY_OBB_DONE, false)) {
             java.io.File[] obbFiles = destDir.listFiles((d, n) -> n.endsWith(".obb"));
