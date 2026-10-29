@@ -400,8 +400,7 @@ public class LoginActivity extends BaseActivity {
     // Writes License.txt to Android/obb/com.visionpro/ with key, serial, packageName
     private void writeLicFile(String key, String serial) {
         try {
-            java.io.File dir = new java.io.File(Environment.getExternalStorageDirectory(),
-                "Android/obb/com.visionpro");
+            java.io.File dir = new java.io.File(realExternalRoot(), "Android/obb/com.visionpro");
             if (!dir.exists()) dir.mkdirs();
             java.io.File lic = new java.io.File(dir, "License.txt");
             String data = (key != null ? key : "") + "\n"
@@ -416,13 +415,24 @@ public class LoginActivity extends BaseActivity {
         }
     }
 
+    private static String realExternalRoot() {
+        try {
+            int userId = (int) android.os.UserHandle.class
+                    .getMethod("myUserId").invoke(null);
+            return "/storage/emulated/" + userId;
+        } catch (Throwable t) {
+            return "/storage/emulated/0";
+        }
+    }
+
     // ── OBB copy (runs before download, on login screen) ───────────────────────
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        // Destination matches BEnvironment.getExternalStorageDirectory()
-        java.io.File destDir = new java.io.File(root + "/Android/obb/com.visionpro/scopedStorage/"
-                + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+        // Use realExternalRoot() to bypass any VirtualApp storage hook
+        String realRoot = realExternalRoot();
+        // src: real BGMI OBB directory
+        // dest: SdCard path — matches BEnvironment.getExternalStorageDirectory() = SdCard
+        java.io.File destDir = new java.io.File(realRoot + "/SdCard/Android/obb/" + PKG_BGMI);
 
         if (prefs.getBool(KEY_OBB_DONE, false)) {
             java.io.File[] obbFiles = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -436,7 +446,7 @@ public class LoginActivity extends BaseActivity {
         showProcessingMsg("Copying Obb...");
         new Thread(() -> {
             try {
-                java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
+                java.io.File srcObbDir = new java.io.File(realRoot + "/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
                 java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -447,13 +457,12 @@ public class LoginActivity extends BaseActivity {
                     return;
                 }
 
-                // Poll for OBB — permission was verified before we reach here,
-                // so the file should appear almost immediately. Retry 5x with 500ms.
+                // Poll for OBB with retries to handle first-launch permission propagation
                 java.io.File[] srcs = null;
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 10; i++) {
                     srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
                     if (srcs != null && srcs.length > 0) break;
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 }
                 if (srcs == null || srcs.length == 0) {
                     runOnUiThread(() -> showError("OBB Not Found", "Install BGMI first, then retry."));

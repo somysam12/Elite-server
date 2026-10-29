@@ -172,19 +172,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ── OBB copy — Mundo Lvl10 KingCheats exact flow ─────────────────────────
+    private static String realExternalRoot() {
+        try {
+            int userId = (int) android.os.UserHandle.class
+                    .getMethod("myUserId").invoke(null);
+            return "/storage/emulated/" + userId;
+        } catch (Throwable t) {
+            return "/storage/emulated/0";
+        }
+    }
 
-    // Get virtual OBB container path matching BEnvironment.getExternalObbDir()
+    // ── OBB copy — copies to SdCard path matching BEnvironment ───────────────
+
+    // Get virtual OBB container path — SdCard base matching BEnvironment.getExternalStorageDirectory()
     private File getMundoObbPath() {
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        return new File(root + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+        return new File(realExternalRoot() + "/SdCard/Android/obb/" + PKG_BGMI);
     }
 
     private void startObbCopy() {
         new Thread(() -> {
             try {
-                String root    = Environment.getExternalStorageDirectory().getAbsolutePath();
-                File srcObbDir = new File(root + "/Android/obb/" + PKG_BGMI);
+                String realRoot = realExternalRoot();
+                File srcObbDir = new File(realRoot + "/Android/obb/" + PKG_BGMI);
 
                 // Step 1: get Mundo OBB container path (waits for SDK ready)
                 File destDir = getMundoObbPath();
