@@ -373,15 +373,19 @@ public class LoginActivity extends BaseActivity {
                         loginSuccess = true;
                         break;
                     }
-                    if (result != null && (
-                            result.toLowerCase().contains("invalid server") ||
+                    // Null or empty: curl not yet initialized on first call — always retry
+                    if (result == null || result.isEmpty()) {
+                        try { Thread.sleep(800); } catch (InterruptedException ignored) {}
+                        continue;
+                    }
+                    if (result.toLowerCase().contains("invalid server") ||
                             result.toLowerCase().contains("response") ||
                             result.toLowerCase().contains("json") ||
                             result.toLowerCase().contains("timeout") ||
                             result.toLowerCase().contains("network") ||
                             result.toLowerCase().contains("mismatch") ||
                             result.toLowerCase().contains("failed") ||
-                            result.toLowerCase().contains("curl"))) {
+                            result.toLowerCase().contains("curl")) {
                         try { Thread.sleep(800); } catch (InterruptedException ignored) {}
                         continue;
                     }
@@ -417,10 +421,27 @@ public class LoginActivity extends BaseActivity {
     }
 
     // ── OBB copy (runs before download, on login screen) ───────────────────────
+    // Returns the REAL primary external storage root, bypassing bbox's
+    // IStorageManagerProxy binder hook that makes Environment.getExternalStorageDirectory()
+    // return the virtual path instead of /storage/emulated/0.
+    private static String realExternalRoot() {
+        try {
+            int userId = (int) android.os.UserHandle.class
+                    .getMethod("myUserId").invoke(null);
+            return "/storage/emulated/" + userId;
+        } catch (Throwable t) {
+            return "/storage/emulated/0";
+        }
+    }
+
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        // Destination matches BEnvironment.getExternalStorageDirectory()
+        // NEVER use Environment.getExternalStorageDirectory() here — bbox hooks that API
+        // at the binder level (IStorageManagerProxy) and returns the virtual storage root
+        // instead of /storage/emulated/0.  Calling it and appending the virtual mapping
+        // a second time produces the double-nested path 2.  Use realExternalRoot() instead.
+        String root = realExternalRoot();
+        // Destination: path 1 — must match BEnvironment.getExternalObbDir("com.pubg.imobile")
         java.io.File destDir = new java.io.File(root + "/Android/obb/com.visionpro/scopedStorage/"
                 + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
 
@@ -436,6 +457,7 @@ public class LoginActivity extends BaseActivity {
         showProcessingMsg("Copying Obb...");
         new Thread(() -> {
             try {
+                // Source: BGMI's real OBB on the real external storage
                 java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
