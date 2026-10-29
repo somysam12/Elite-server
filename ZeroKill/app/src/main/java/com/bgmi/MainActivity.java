@@ -174,30 +174,17 @@ public class MainActivity extends AppCompatActivity {
 
     // ── OBB copy — Mundo Lvl10 KingCheats exact flow ─────────────────────────
 
-    // Returns /storage/emulated/<userId> as a string literal, bypassing bbox's
-    // IStorageManagerProxy binder hook that redirects Environment.getExternalStorageDirectory().
-    private static String realExternalRoot() {
-        try {
-            int userId = (int) android.os.UserHandle.class
-                    .getMethod("myUserId").invoke(null);
-            return "/storage/emulated/" + userId;
-        } catch (Throwable t) {
-            return "/storage/emulated/0";
-        }
-    }
-
-    // NEVER use BEnvironment.getExternalObbDir() — sExternalVBoxRoot may be loaded after
-    // the IStorageManagerProxy hook, making it return the double-nested path 2.
-    // Use realExternalRoot() + hardcoded suffix only.
+    // Get virtual OBB container path matching BEnvironment.getExternalObbDir()
     private File getMundoObbPath() {
-        return new File(realExternalRoot() + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        return new File(root + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
     }
 
     private void startObbCopy() {
         new Thread(() -> {
             try {
-                String _r = realExternalRoot();
-                File srcObbDir = new File(_r, "Android/obb/" + PKG_BGMI);
+                String root    = Environment.getExternalStorageDirectory().getAbsolutePath();
+                File srcObbDir = new File(root + "/Android/obb/" + PKG_BGMI);
 
                 // Step 1: get Mundo OBB container path (waits for SDK ready)
                 File destDir = getMundoObbPath();

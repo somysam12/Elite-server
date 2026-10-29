@@ -373,19 +373,15 @@ public class LoginActivity extends BaseActivity {
                         loginSuccess = true;
                         break;
                     }
-                    // Null or empty: curl not yet initialized on first call — always retry
-                    if (result == null || result.isEmpty()) {
-                        try { Thread.sleep(800); } catch (InterruptedException ignored) {}
-                        continue;
-                    }
-                    if (result.toLowerCase().contains("invalid server") ||
+                    if (result != null && (
+                            result.toLowerCase().contains("invalid server") ||
                             result.toLowerCase().contains("response") ||
                             result.toLowerCase().contains("json") ||
                             result.toLowerCase().contains("timeout") ||
                             result.toLowerCase().contains("network") ||
                             result.toLowerCase().contains("mismatch") ||
                             result.toLowerCase().contains("failed") ||
-                            result.toLowerCase().contains("curl")) {
+                            result.toLowerCase().contains("curl"))) {
                         try { Thread.sleep(800); } catch (InterruptedException ignored) {}
                         continue;
                     }
@@ -421,28 +417,12 @@ public class LoginActivity extends BaseActivity {
     }
 
     // ── OBB copy (runs before download, on login screen) ───────────────────────
-    // Returns the REAL primary external storage root, bypassing bbox's
-    // IStorageManagerProxy binder hook that makes Environment.getExternalStorageDirectory()
-    // return the virtual path instead of /storage/emulated/0.
-    private static String realExternalRoot() {
-        try {
-            int userId = (int) android.os.UserHandle.class
-                    .getMethod("myUserId").invoke(null);
-            return "/storage/emulated/" + userId;
-        } catch (Throwable t) {
-            return "/storage/emulated/0";
-        }
-    }
-
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
-        // NEVER call BEnvironment.getExternalObbDir() or Environment.getExternalStorageDirectory()
-        // here. BEnvironment.sExternalVBoxRoot is captured at class-load time which may happen
-        // AFTER IStorageManagerProxy is installed, making getExternalObbDir() return the
-        // double-nested path 2. realExternalRoot() builds the path purely from a string literal.
-        String _r = realExternalRoot();
-        java.io.File destDir  = new java.io.File(_r + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
-        java.io.File srcObbDir0 = new java.io.File(_r, "Android/obb/" + PKG_BGMI);
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        // Destination matches BEnvironment.getExternalStorageDirectory()
+        java.io.File destDir = new java.io.File(root + "/Android/obb/com.visionpro/scopedStorage/"
+                + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
 
         if (prefs.getBool(KEY_OBB_DONE, false)) {
             java.io.File[] obbFiles = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -456,6 +436,7 @@ public class LoginActivity extends BaseActivity {
         showProcessingMsg("Copying Obb...");
         new Thread(() -> {
             try {
+                java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
                 java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -470,7 +451,7 @@ public class LoginActivity extends BaseActivity {
                 // so the file should appear almost immediately. Retry 5x with 500ms.
                 java.io.File[] srcs = null;
                 for (int i = 0; i < 5; i++) {
-                    srcs = srcObbDir0.listFiles((d, n) -> n.endsWith(".obb"));
+                    srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
                     if (srcs != null && srcs.length > 0) break;
                     Thread.sleep(500);
                 }
