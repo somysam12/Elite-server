@@ -186,17 +186,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Get virtual OBB container path matching BEnvironment.getExternalObbDir()
+    // Get virtual OBB container path — uses BEnvironment directly (same as reference's
+    // MetaStorageManager.obtainAppExternalStorageDir). sExternalVBoxRoot inside BEnvironment
+    // was captured before HookManager.init() so it always holds the real /storage/emulated/0.
     private File getMundoObbPath() {
-        String root = realExternalRoot();
-        return new File(root + "/Android/obb/com.visionpro/scopedStorage/" + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+        return com.mundo.core.env.BEnvironment.getExternalObbDir(PKG_BGMI);
     }
 
     private void startObbCopy() {
         new Thread(() -> {
             try {
-                String root    = realExternalRoot();
-                File srcObbDir = new File(root + "/Android/obb/" + PKG_BGMI);
+                // Source: real path bypasses IStorageManagerProxy binder hook
+                File srcObbDir = new File(realExternalRoot(), "Android/obb/" + PKG_BGMI);
 
                 // Step 1: get Mundo OBB container path (waits for SDK ready)
                 File destDir = getMundoObbPath();

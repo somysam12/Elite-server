@@ -436,14 +436,13 @@ public class LoginActivity extends BaseActivity {
 
     @android.annotation.SuppressLint("SetTextI18n")
     private void startObbCopyFromLogin(String key, String serial) {
-        // NEVER use Environment.getExternalStorageDirectory() here — bbox hooks that API
-        // at the binder level (IStorageManagerProxy) and returns the virtual storage root
-        // instead of /storage/emulated/0.  Calling it and appending the virtual mapping
-        // a second time produces the double-nested path 2.  Use realExternalRoot() instead.
-        String root = realExternalRoot();
-        // Destination: path 1 — must match BEnvironment.getExternalObbDir("com.pubg.imobile")
-        java.io.File destDir = new java.io.File(root + "/Android/obb/com.visionpro/scopedStorage/"
-                + PKG_BGMI + "/Android/obb/" + PKG_BGMI);
+        // destDir: use BEnvironment.getExternalObbDir() directly — same pattern as the
+        // reference (MetaStorageManager.obtainAppExternalStorageDir).  sExternalVBoxRoot
+        // inside BEnvironment was captured before HookManager.init(), so it always holds
+        // the real /storage/emulated/0 — immune to IStorageManagerProxy.
+        java.io.File destDir = com.mundo.core.env.BEnvironment.getExternalObbDir(PKG_BGMI);
+        // srcObbDir: realExternalRoot() bypasses the binder hook for the source path.
+        java.io.File srcObbDir0 = new java.io.File(realExternalRoot(), "Android/obb/" + PKG_BGMI);
 
         if (prefs.getBool(KEY_OBB_DONE, false)) {
             java.io.File[] obbFiles = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -457,8 +456,6 @@ public class LoginActivity extends BaseActivity {
         showProcessingMsg("Copying Obb...");
         new Thread(() -> {
             try {
-                // Source: BGMI's real OBB on the real external storage
-                java.io.File srcObbDir = new java.io.File(root + "/Android/obb/" + PKG_BGMI);
                 if (!destDir.exists()) destDir.mkdirs();
 
                 java.io.File[] existing = destDir.listFiles((d, n) -> n.endsWith(".obb"));
@@ -473,7 +470,7 @@ public class LoginActivity extends BaseActivity {
                 // so the file should appear almost immediately. Retry 5x with 500ms.
                 java.io.File[] srcs = null;
                 for (int i = 0; i < 5; i++) {
-                    srcs = srcObbDir.listFiles((d, n) -> n.endsWith(".obb"));
+                    srcs = srcObbDir0.listFiles((d, n) -> n.endsWith(".obb"));
                     if (srcs != null && srcs.length > 0) break;
                     Thread.sleep(500);
                 }
